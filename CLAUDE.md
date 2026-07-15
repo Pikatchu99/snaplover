@@ -39,11 +39,13 @@ snaproom/
 │  │  └─ api/turn-credentials/route.ts
 │  ├─ src/components/
 │  │  ├─ ui/                    # shadcn
-│  │  ├─ room/                  # Lobby, CameraTile, Countdown, CaptureStage
+│  │  ├─ providers/             # QueryProvider (TanStack Query)
+│  │  ├─ room/                  # RoomClient, Lobby, CameraTile, Countdown, CaptureStage
 │  │  ├─ strip/                 # PhotoStrip, Frame, composer
 │  │  └─ landing/
+│  ├─ src/hooks/                # use-user-media, use-room-connection
 │  ├─ src/lib/
-│  │  ├─ webrtc/                # peer connection, ice config, turn-credentials
+│  │  ├─ webrtc/                # peer-connection, use-ice-servers, turn-credentials
 │  │  ├─ signaling/             # client WS
 │  │  ├─ realtime/              # clock-sync, capture scheduling
 │  │  ├─ capture/               # getFrame, compose, export PNG
@@ -150,6 +152,13 @@ simple "scrub avant de rendre public" :
   snaproom-hifi, snaproom-session, snaproom-etats.
 
 ## Séquencement du build
-Voir docs/SNAPROOM-SPEC.md §17 pour les jalons J1–J6. **J1 (fondations) est fait** : scaffold web/ +
-signaling/, endpoint turn-credentials, signaling testé bout en bout (join/peer-ready/signal).
-Prochaine étape : **J2 — Cœur temps réel** (client signaling + RTCPeerConnection + route `r/[code]`).
+Voir docs/SNAPROOM-SPEC.md §17 pour les jalons J1–J6.
+- **J1 (fondations)** fait : scaffold web/ + signaling/, endpoint turn-credentials, signaling
+  testé bout en bout (join/peer-ready/signal).
+- **J2 (cœur temps réel)** fait : client signaling (`lib/signaling/client.ts`), établissement
+  WebRTC (`lib/webrtc/peer-connection.ts`, offer/answer/ICE + data channel `ctrl`), route
+  `r/[code]` avec lobby (caméra locale + distante, états ready/connecting/off, room-full,
+  invalid-room, camera-denied). Vérifié bout en bout : 2 onglets Chrome headless (caméra fake),
+  connexion `connected` des deux côtés, flux vidéo réciproques confirmés.
+- Prochaine étape : **J3 — La séance** (clock-sync + déclenchement synchronisé multi-poses,
+  capture locale + échange + composition de la bande — voir docs/SNAPROOM-SPEC.md §9-§10).

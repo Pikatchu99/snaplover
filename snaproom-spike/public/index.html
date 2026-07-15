@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>SnapRoom — spike WebRTC</title>
+<style>
+  :root { --bg:#0e1216; --panel:#171e24; --line:#28323a; --ink:#eaf1f3; --muted:#8ea1a9; --accent:#fb5a46; --ok:#33c66a; --warn:#e5a92e; --bad:#e5544b; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--bg); color:var(--ink); padding:16px; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:720px; margin:0 auto; display:flex; flex-direction:column; gap:14px; }
+  h1 { font-size:17px; font-weight:700; }
+  .sub { color:var(--muted); font-size:12px; margin-top:3px; line-height:1.5; }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px; }
+  .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  input { font:inherit; font-size:14px; background:var(--bg); color:var(--ink); border:1px solid var(--line); border-radius:9px; padding:10px 12px; }
+  input.code { letter-spacing:.15em; text-transform:uppercase; width:120px; text-align:center; font-weight:700; }
+  button { font:inherit; font-size:14px; font-weight:600; border:1px solid var(--line); background:var(--panel); color:var(--ink); padding:10px 16px; border-radius:9px; cursor:pointer; transition:border-color .15s,opacity .15s; }
+  button:hover:not(:disabled) { border-color:var(--accent); }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  button:disabled { opacity:.4; cursor:not-allowed; }
+  .videos { display:grid; grid-template-columns:1fr 1fr; gap:10px; position:relative; }
+  .tile { position:relative; background:#000; border-radius:12px; overflow:hidden; aspect-ratio:3/4; border:1px solid var(--line); }
+  video { width:100%; height:100%; object-fit:cover; display:block; }
+  video.self { transform:scaleX(-1); }
+  .tag { position:absolute; bottom:6px; left:6px; font-size:11px; font-weight:700; background:rgba(0,0,0,.45); padding:3px 8px; border-radius:7px; }
+  .tile-empty { display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:12px; text-align:center; padding:8px; }
+  .countdown { position:absolute; inset:0; display:none; align-items:center; justify-content:center; flex-direction:column; background:rgba(0,0,0,.35); border-radius:12px; z-index:5; }
+  .countdown b { font-size:96px; font-weight:800; color:#fff; text-shadow:0 4px 20px rgba(251,90,70,.6); line-height:1; }
+  .countdown span { font-size:12px; letter-spacing:.2em; color:#fff; margin-top:8px; }
+  .metrics { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; }
+  .m { background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:10px 12px; }
+  .m .k { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+  .m .v { font-size:15px; font-weight:700; margin-top:3px; font-variant-numeric:tabular-nums; }
+  .dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; vertical-align:middle; background:var(--muted); }
+  .dot.ok{background:var(--ok)} .dot.warn{background:var(--warn)} .dot.bad{background:var(--bad)}
+  #result { display:none; text-align:center; }
+  #result canvas { max-width:100%; border-radius:10px; border:1px solid var(--line); background:#000; }
+  details { font-size:12px; color:var(--muted); }
+  summary { cursor:pointer; padding:4px 0; }
+  #log { font-family:ui-monospace,monospace; font-size:11px; color:var(--muted); background:var(--bg); border:1px solid var(--line); border-radius:9px; padding:10px; max-height:150px; overflow:auto; white-space:pre-wrap; margin-top:8px; }
+  .hint { font-size:11px; color:var(--muted); line-height:1.5; }
+  label.f { font-size:11px; color:var(--muted); display:flex; flex-direction:column; gap:4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div>
+    <h1>SnapRoom — spike de faisabilité WebRTC</h1>
+    <p class="sub">But : vérifier la connexion P2P entre 2 réseaux, la synchro du 3·2·1, et la capture locale. Ouvre cette page sur les 2 appareils, mets le même code, active la caméra, connecte.</p>
+  </div>
+
+  <div class="panel">
+    <div class="row">
+      <input id="room" class="code" maxlength="5" placeholder="CODE" value="TEST1" />
+      <button id="cam">Activer la caméra</button>
+      <button id="connect" class="primary" disabled>Se connecter</button>
+      <span id="conn" class="hint"><span class="dot" id="connDot"></span><span id="connText">non connecté</span></span>
+    </div>
+  </div>
+
+  <div class="videos panel" style="padding:10px">
+    <div class="tile">
+      <video id="localVideo" class="self" autoplay playsinline muted></video>
+      <span class="tag">Vous</span>
+      <div class="countdown" id="cd"><b id="cdNum">3</b><span>NE BOUGEZ PLUS</span></div>
+    </div>
+    <div class="tile">
+      <video id="remoteVideo" autoplay playsinline></video>
+      <div class="tile-empty" id="remoteEmpty">en attente<br>de l'autre appareil…</div>
+      <span class="tag" id="remoteTag" style="display:none">Partenaire</span>
+    </div>
+  </div>
+
+  <div class="row">
+    <button id="shoot" class="primary" disabled>Déclencher le 3·2·1</button>
+    <span class="hint" id="shootHint">Le déclencheur n'est actif que pour le 1er connecté (l'hôte).</span>
+  </div>
+
+  <div class="panel">
+    <div class="metrics">
+      <div class="m"><div class="k">État connexion</div><div class="v" id="mState">—</div></div>
+      <div class="m"><div class="k">Type (NAT)</div><div class="v" id="mType">—</div></div>
+      <div class="m"><div class="k">RTT (aller-retour)</div><div class="v" id="mRtt">—</div></div>
+      <div class="m"><div class="k">Offset horloge</div><div class="v" id="mOffset">—</div></div>
+      <div class="m"><div class="k">Écart de capture</div><div class="v" id="mDelta">—</div></div>
+      <div class="m"><div class="k">TURN nécessaire ?</div><div class="v" id="mTurn">—</div></div>
+    </div>
+    <p class="hint" style="margin-top:10px">« Type » = <b>host/srflx</b> ⇒ STUN a suffi (gratuit). <b>relay</b> ⇒ il faut un serveur TURN. C'est LA réponse qu'on cherche.</p>
+  </div>
+
+  <div class="panel" id="result">
+    <h1 style="font-size:14px">Photo composée (les 2 moitiés)</h1>
+    <p class="sub" style="margin-bottom:10px">Chaque appareil a capturé sa moitié en local, puis les a échangées via le data channel.</p>
+    <canvas id="composite"></canvas>
+    <div class="row" style="justify-content:center;margin-top:10px"><button id="download">Télécharger PNG</button></div>
+  </div>
+
+  <details class="panel">
+    <summary>Serveur TURN optionnel (à remplir seulement si « Type » affiche un échec de connexion)</summary>
+    <div class="row" style="margin-top:10px">
+      <label class="f">URL<input id="turnUrl" placeholder="turn:host:3478" style="width:200px" /></label>
+      <label class="f">User<input id="turnUser" placeholder="user" style="width:120px" /></label>
+      <label class="f">Cred<input id="turnCred" placeholder="secret" style="width:120px" /></label>
+    </div>
+    <p class="hint" style="margin-top:8px">Rempli avant de cliquer « Se connecter ». Sert à tester si TURN débloque un cas où STUN échoue.</p>
+  </details>
+
+  <details class="panel">
+    <summary>Journal technique</summary>
+    <div id="log"></div>
+  </details>
+
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+function log(...a){ const el=$("log"); el.textContent += a.join(" ")+"\n"; el.scrollTop=el.scrollHeight; console.log(...a); }
+
+let ws, pc, dc;
+let role = null;            // "initiator" (hôte, moitié gauche) ou "peer" (moitié droite)
+let localStream = null;
+let clockOffset = 0;       // hostClock - localClock (0 pour l'hôte)
+let rttMs = null;
+let myHalf = null, peerHalf = null;
+let myCaptureHostTime = null, peerCaptureHostTime = null;
+let statsTimer = null;
+
+const ICE_BASE = [{ urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] }];
+
+// ---------- Caméra ----------
+$("cam").onclick = async () => {
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({
+      video: { width:{ideal:1920}, height:{ideal:1080}, facingMode:"user" }, audio:false
+    });
+    $("localVideo").srcObject = localStream;
+    $("cam").textContent = "Caméra active";
+    $("cam").disabled = true;
+    $("connect").disabled = false;
+    const t = localStream.getVideoTracks()[0].getSettings();
+    log("Caméra ok :", t.width + "x" + t.height);
+  } catch (e) {
+    log("Erreur caméra :", e.message);
+    alert("Caméra refusée ou indisponible : " + e.message);
+  }
+};
+
+// ---------- Connexion ----------
+$("connect").onclick = () => {
+  const room = $("room").value.trim().toUpperCase();
+  if (!room) return;
+  $("connect").disabled = true;
+  connectWS(room);
+};
+
+function iceServers(){
+  const list = [...ICE_BASE];
+  const url = $("turnUrl").value.trim();
+  if (url) list.push({ urls:[url], username:$("turnUser").value.trim(), credential:$("turnCred").value.trim() });
+  return list;
+}
+
+function connectWS(room){
+  const proto = location.protocol === "https:" ? "wss" : "ws";
+  ws = new WebSocket(proto + "://" + location.host);
+  ws.onopen = () => { log("WS ouvert, join", room); ws.send(JSON.stringify({type:"join", room})); };
+  ws.onclose = () => log("WS fermé");
+  ws.onerror = (e) => log("WS erreur");
+  ws.onmessage = (ev) => {
+    const m = JSON.parse(ev.data);
+    if (m.type === "full") { alert("Room pleine (2/2)."); return; }
+    if (m.type === "joined") {
+      role = m.initiator ? "initiator" : "peer";
+      log("Rejoint comme", role, "· pairs:", m.peers);
+      setConn("warn", "en attente du 2e appareil…");
+      setupPC();
+      if (m.peers === 2 && role === "peer") { /* l'hôte lancera l'offer quand il verra peer-ready */ }
+    }
+    if (m.type === "peer-ready") {
+      log("2e pair présent");
+      if (role === "initiator") startOffer();
+    }
+    if (m.type === "peer-left") {
+      log("Pair déconnecté");
+      setConn("bad", "partenaire déconnecté");
+      $("remoteEmpty").style.display = "flex"; $("remoteTag").style.display="none";
+    }
+    if (m.type === "signal") handleSignal(m.data);
+  };
+}
+
+function setConn(cls, text){
+  $("connDot").className = "dot " + cls;
+  $("connText").textContent = text;
+}
+
+// ---------- WebRTC ----------
+function setupPC(){
+  pc = new RTCPeerConnection({ iceServers: iceServers() });
+
+  localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+
+  pc.ontrack = (e) => {
+    $("remoteVideo").srcObject = e.streams[0];
+    $("remoteEmpty").style.display = "none";
+    $("remoteTag").style.display = "block";
+  };
+
+  const seen = { host:0, srflx:0, relay:0 };
+  pc.onicecandidate = (e) => {
+    if (e.candidate) {
+      const ty = e.candidate.type || "?";
+      if (seen[ty] != null) seen[ty]++;
+      log("candidat local:", ty, "(" + (e.candidate.protocol||"") + ")");
+      ws.send(JSON.stringify({type:"signal", data:{candidate:e.candidate}}));
+    } else {
+      log("fin des candidats · récap local -> host:"+seen.host, "srflx:"+seen.srflx, "relay:"+seen.relay);
+      if (seen.srflx === 0 && seen.relay === 0) log("ATTENTION: aucun candidat public (srflx) — STUN injoignable ou bloqué.");
+    }
+  };
+
+  pc.onicegatheringstatechange = () => log("iceGathering:", pc.iceGatheringState);
+  pc.oniceconnectionstatechange = () => log("iceConnection:", pc.iceConnectionState);
+
+  pc.onconnectionstatechange = () => {
+    $("mState").textContent = pc.connectionState;
+    log("connectionState:", pc.connectionState);
+    if (pc.connectionState === "connected") {
+      setConn("ok", "connecté");
+      if (role === "initiator") { $("shoot").disabled = false; }
+      startStats();
+    }
+    if (["failed","disconnected"].includes(pc.connectionState)) {
+      setConn("bad", pc.connectionState);
+      if (pc.connectionState === "failed") {
+        log("DIAGNOSTIC: échec d'établissement du chemin direct.");
+        if (seen.srflx > 0) log("-> Candidats publics obtenus mais perçage NAT refusé (typique CGNAT mobile). Conclusion: TURN requis pour ce réseau.");
+        else log("-> Aucun candidat public: STUN n'a rien renvoyé (réseau/pare-feu). TURN requis.");
+        log("Pour confirmer: renseigne un serveur TURN puis reconnecte.");
+      }
+    }
+  };
+
+  // Data channel : l'initiateur le crée, le pair le reçoit.
+  if (role === "initiator") {
+    dc = pc.createDataChannel("ctrl");
+    wireDC();
+  } else {
+    pc.ondatachannel = (e) => { dc = e.channel; wireDC(); };
+  }
+}
+
+async function startOffer(){
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+  ws.send(JSON.stringify({type:"signal", data:{sdp:pc.localDescription}}));
+  log("Offer envoyée");
+}
+
+async function handleSignal(data){
+  if (data.sdp){
+    await pc.setRemoteDescription(data.sdp);
+    if (data.sdp.type === "offer"){
+      const ans = await pc.createAnswer();
+      await pc.setLocalDescription(ans);
+      ws.send(JSON.stringify({type:"signal", data:{sdp:pc.localDescription}}));
+      log("Answer envoyée");
+    }
+  } else if (data.candidate){
+    try { await pc.addIceCandidate(data.candidate); } catch(e){ log("addIce err", e.message); }
+  }
+}
+
+// ---------- Data channel : clock-sync, capture, échange image ----------
+let imgBuf = "";
+function wireDC(){
+  dc.onopen = () => { log("DataChannel ouvert"); startClockSync(); };
+  dc.onmessage = (ev) => {
+    const m = JSON.parse(ev.data);
+    if (m.t === "ping") { dc.send(JSON.stringify({t:"pong", c:m.c, s:Date.now()})); return; }
+    if (m.t === "pong") { onPong(m); return; }
+    if (m.t === "capture") { scheduleCapture(m.fireAtHost); return; }
+    if (m.t === "img-meta") { imgBuf=""; return; }
+    if (m.t === "img") { imgBuf += m.part; return; }
+    if (m.t === "img-end") { peerHalf = imgBuf; peerCaptureHostTime = m.hostTime; imgBuf=""; tryCompose(); return; }
+  };
+}
+
+// Estimation de l'offset d'horloge (peer -> host). L'hôte reste la référence.
+let syncSamples = [];
+function startClockSync(){
+  if (role === "initiator") { $("mOffset").textContent = "0 ms (hôte)"; return; }
+  let n = 0;
+  const iv = setInterval(() => {
+    if (!dc || dc.readyState !== "open" || n++ > 8) { clearInterval(iv); return; }
+    dc.send(JSON.stringify({t:"ping", c:Date.now()}));
+  }, 400);
+}
+function onPong(m){
+  const r = Date.now();
+  const rtt = r - m.c;
+  const offset = (m.s + rtt/2) - r;   // hostClock - localClock
+  syncSamples.push({rtt, offset});
+  // on garde l'échantillon au plus petit RTT (le plus fiable)
+  syncSamples.sort((a,b)=>a.rtt-b.rtt);
+  const best = syncSamples[0];
+  clockOffset = best.offset;
+  rttMs = best.rtt;
+  $("mRtt").textContent = Math.round(best.rtt) + " ms";
+  $("mOffset").textContent = Math.round(best.offset) + " ms";
+}
+
+// ---------- Déclenchement synchronisé ----------
+const LEAD_MS = 3200;
+$("shoot").onclick = () => {
+  if (role !== "initiator" || !dc || dc.readyState !== "open") return;
+  const fireAtHost = Date.now() + LEAD_MS;
+  dc.send(JSON.stringify({t:"capture", fireAtHost}));
+  scheduleCapture(fireAtHost);
+};
+
+function scheduleCapture(fireAtHost){
+  // Convertit l'instant (horloge hôte) en délai local.
+  const hostNow = Date.now() + clockOffset;      // clockOffset=0 pour l'hôte
+  let delay = fireAtHost - hostNow;
+  if (delay < 0) delay = 0;
+  runCountdown(delay, fireAtHost);
+}
+
+function runCountdown(delay, fireAtHost){
+  const cd = $("cd"); cd.style.display = "flex";
+  const start = Date.now();
+  const tick = () => {
+    const remain = delay - (Date.now() - start);
+    const n = Math.max(1, Math.ceil(remain/1000));
+    $("cdNum").textContent = n;
+    if (remain > 0) requestAnimationFrame(tick);
+  };
+  tick();
+  setTimeout(() => { cd.style.display = "none"; doCapture(fireAtHost); }, delay);
+}
+
+function doCapture(fireAtHost){
+  // Capture la frame locale (moitié). En prod : ImageCapture.takePhoto pour la pleine def capteur.
+  const v = $("localVideo");
+  const w = v.videoWidth, h = v.videoHeight;
+  const scale = Math.min(1, 900 / w);
+  const c = document.createElement("canvas");
+  c.width = Math.round(w*scale); c.height = Math.round(h*scale);
+  const ctx = c.getContext("2d");
+  if (role === "initiator"){ ctx.translate(c.width,0); ctx.scale(-1,1); } // dé-miroir de l'aperçu
+  ctx.drawImage(v, 0, 0, c.width, c.height);
+  myHalf = c.toDataURL("image/jpeg", 0.82);
+  myCaptureHostTime = Date.now() + clockOffset;
+  log("Capturé à (horloge hôte):", Math.round(myCaptureHostTime), "cible:", fireAtHost, "écart local:", Math.round(myCaptureHostTime-fireAtHost)+"ms");
+  sendImage(myHalf, myCaptureHostTime);
+  tryCompose();
+}
+
+function sendImage(dataUrl, hostTime){
+  if (!dc || dc.readyState !== "open") return;
+  dc.send(JSON.stringify({t:"img-meta"}));
+  const CH = 12000;
+  for (let i=0;i<dataUrl.length;i+=CH) dc.send(JSON.stringify({t:"img", part:dataUrl.slice(i,i+CH)}));
+  dc.send(JSON.stringify({t:"img-end", hostTime}));
+}
+
+function tryCompose(){
+  if (!myHalf || !peerHalf) return;
+  // écart de capture entre les 2 appareils (qualité de synchro)
+  if (myCaptureHostTime && peerCaptureHostTime){
+    const delta = Math.abs(myCaptureHostTime - peerCaptureHostTime);
+    $("mDelta").textContent = Math.round(delta) + " ms";
+  }
+  const leftSrc = role === "initiator" ? myHalf : peerHalf;
+  const rightSrc = role === "initiator" ? peerHalf : myHalf;
+  const L = new Image(), R = new Image();
+  let loaded = 0;
+  const done = () => {
+    if (++loaded < 2) return;
+    const cellW = 450, cellH = 600;
+    const cv = $("composite"); cv.width = cellW*2 + 12; cv.height = cellH;
+    const ctx = cv.getContext("2d");
+    ctx.fillStyle = "#fff"; ctx.fillRect(0,0,cv.width,cv.height);
+    drawCover(ctx, L, 0, 0, cellW, cellH);
+    drawCover(ctx, R, cellW+12, 0, cellW, cellH);
+    $("result").style.display = "block";
+  };
+  L.onload = done; R.onload = done; L.src = leftSrc; R.src = rightSrc;
+}
+
+function drawCover(ctx, img, x, y, w, h){
+  const ir = img.width/img.height, tr = w/h;
+  let sw, sh, sx, sy;
+  if (ir > tr){ sh=img.height; sw=sh*tr; sx=(img.width-sw)/2; sy=0; }
+  else { sw=img.width; sh=sw/tr; sx=0; sy=(img.height-sh)/2; }
+  ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+}
+
+$("download").onclick = () => {
+  const a = document.createElement("a");
+  a.download = "snaproom-spike.png";
+  a.href = $("composite").toDataURL("image/png");
+  a.click();
+};
+
+// ---------- Stats : type de candidat (host/srflx/relay) ----------
+function startStats(){
+  if (statsTimer) return;
+  statsTimer = setInterval(async () => {
+    if (!pc) return;
+    const stats = await pc.getStats();
+    let pair=null; const cands={};
+    stats.forEach(r => {
+      if (r.type==="candidate-pair" && (r.nominated || r.state==="succeeded")) pair = r;
+      if (r.type==="local-candidate" || r.type==="remote-candidate") cands[r.id]=r;
+    });
+    if (pair){
+      const loc = cands[pair.localCandidateId], rem = cands[pair.remoteCandidateId];
+      const lt = loc ? loc.candidateType : "?", rt = rem ? rem.candidateType : "?";
+      $("mType").textContent = lt + " / " + rt;
+      const relay = lt==="relay" || rt==="relay";
+      $("mTurn").innerHTML = relay
+        ? '<span class="dot bad"></span>oui (relay)'
+        : '<span class="dot ok"></span>non — STUN a suffi';
+      if (pair.currentRoundTripTime != null) $("mRtt").textContent = Math.round(pair.currentRoundTripTime*1000) + " ms";
+    }
+  }, 1500);
+}
+</script>
+</body>
+</html>

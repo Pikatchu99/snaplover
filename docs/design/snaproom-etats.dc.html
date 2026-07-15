@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1c1712;--paper:#fbf7f1;--muted:#8c8378;--soft:#efe8de;--line:#ece4d8;--coral:#fb5a46;--coral2:#ff7d54;--violet:#6a48f4;--dark:#161319}
+*{box-sizing:border-box}
+body{margin:0;background:#ebe3d8;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+a{color:var(--violet);text-decoration:none}a:hover{color:#5638d6}
+h1,h2,h3{font-family:'Bricolage Grotesque',system-ui;margin:0;letter-spacing:-.02em}
+.stack>*{animation:rise .5s cubic-bezier(.2,.7,.2,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.stack>*:nth-child(2){animation-delay:.05s}.stack>*:nth-child(3){animation-delay:.1s}.stack>*:nth-child(4){animation-delay:.15s}
+</style>
+</helmet>
+
+<div style="max-width:2500px;padding:44px 52px 64px;display:flex;flex-direction:column;gap:36px">
+
+<div style="display:flex;align-items:baseline;gap:16px">
+<h1 style="font-size:30px;font-weight:800">SnapRoom — états</h1>
+<span style="font:600 13px/1 'Plus Jakarta Sans';color:var(--muted)">Les cas à ne jamais oublier · FR · couple à distance — loading / erreur / limite, dégradation réseau (contexte Afrique &amp; diaspora)</span>
+</div>
+
+<div style="display:flex;gap:44px;align-items:flex-start;flex-wrap:wrap">
+
+<!-- s1 — Caméra refusée -->
+<div style="display:flex;flex-direction:column;gap:16px;flex:none">
+<span style="font:600 12px 'Plus Jakarta Sans';color:var(--muted);letter-spacing:.04em">CAMÉRA BLOQUÉE · error</span>
+<div style="width:352px;height:748px;border-radius:48px;background:var(--dark);color:#f3efe9;box-shadow:0 14px 30px -18px rgba(20,10,5,.6);overflow:hidden;position:relative">
+<div style="height:100%;display:flex;flex-direction:column;padding:22px 24px 26px;text-align:center;align-items:center" class="stack">
+<div style="align-self:stretch;display:flex;justify-content:space-between;align-items:center;font:600 12px 'Plus Jakarta Sans';color:#8f877d"><span>9:41</span><i style="width:16px;height:9px;border:1.5px solid #8f877d;border-radius:2px;display:inline-block"></i></div>
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px">
+<div style="width:64px;height:64px;border-radius:20px;border:2.5px solid var(--coral);display:flex;align-items:center;justify-content:center;font:800 30px 'Bricolage Grotesque';color:var(--coral)">!</div>
+<h2 style="font-size:26px;font-weight:800">Caméra bloquée</h2>
+<p style="font-size:14px;line-height:1.55;color:#a5a29b;max-width:250px">On a besoin de votre caméra pour la photo à deux. Autorisez-la dans les réglages de votre navigateur, puis réessayez.</p>
+<div style="width:100%;background:#221f28;border:1px solid #34313a;border-radius:14px;padding:12px 14px;display:flex;gap:11px;align-items:center;text-align:left">
+<span style="width:26px;height:26px;border-radius:8px;background:#34313a;flex:none;display:flex;align-items:center;justify-content:center;font:700 13px 'Bricolage Grotesque';color:#cfc7bc">i</span>
+<span style="font-size:11.5px;line-height:1.4;color:#a5a29b">Cliquez sur l'icône caméra dans la barre d'adresse › <b style="color:#f3efe9">Autoriser</b>.</span>
+</div>
+</div>
+<button style="align-self:stretch;border:none;border-radius:16px;padding:15px;background:linear-gradient(135deg,var(--coral),var(--coral2));color:#fff;font:700 15px 'Bricolage Grotesque';cursor:pointer">Comment autoriser ›</button>
+<button style="align-self:stretch;border:2px solid #54545a;border-radius:16px;padding:13px;margin-top:10px;background:transparent;color:#e6e3dd;font:700 14px 'Bricolage Grotesque';cursor:pointer">Réessayer</button>
+</div>
+</div>
+</div>
+
+<!-- s2 — Réseau faible (lobby) -->
+<div style="display:flex;flex-direction:column;gap:16px;flex:none">
+<span style="font:600 12px 'Plus Jakarta Sans';color:var(--muted);letter-spacing:.04em">RÉSEAU FAIBLE · salle d'attente</span>
+<div style="width:352px;height:748px;border-radius:48px;background:var(--dark);color:#f3efe9;box-shadow:0 14px 30px -18px rgba(20,10,5,.6);overflow:hidden;position:relative">
+<div style="height:100%;display:flex;flex-direction:column;padding:22px 24px 26px" class="stack">
+<div style="display:flex;justify-content:space-between;align-items:center;font:600 12px 'Plus Jakarta Sans';color:#8f877d"><span>9:41</span><i style="width:16px;height:9px;border:1.5px solid #8f877d;border-radius:2px;display:inline-block"></i></div>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px"><h2 style="font-size:26px;font-weight:800">Salle d'attente</h2><span style="display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:20px;border:1.5px solid #e5a92e;font:700 11px 'Bricolage Grotesque';color:#e5a92e">Signal faible</span></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px">
+<div style="position:relative;height:190px;border-radius:18px;overflow:hidden;border:1.5px solid rgba(255,255,255,.08)"><span style="position:absolute;inset:0;background:#ffb890"></span><span style="position:absolute;bottom:8px;left:8px;font:700 11px 'Bricolage Grotesque';color:#fff;background:rgba(0,0,0,.35);padding:3px 9px;border-radius:8px">Vous</span><span style="position:absolute;top:8px;right:8px;width:20px;height:20px;border-radius:50%;background:#33c66a;display:flex;align-items:center;justify-content:center;font:700 11px system-ui;color:#fff">✓</span></div>
+<div style="position:relative;height:190px;border-radius:18px;background:#26232c;overflow:hidden;border:1.5px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center"><span style="font:700 12px 'Bricolage Grotesque';color:#8f877d">reconnexion…</span><span style="position:absolute;bottom:8px;left:8px;font:700 11px 'Bricolage Grotesque';color:#fff;background:rgba(0,0,0,.35);padding:3px 9px;border-radius:8px">Lina</span><span style="position:absolute;top:8px;right:8px;width:20px;height:20px;border-radius:50%;background:#e5a92e;display:flex;align-items:center;justify-content:center;font:700 11px system-ui;color:#fff">…</span></div>
+</div>
+<div style="flex:1"></div>
+<div style="border:1px solid #34313a;border-radius:14px;padding:13px 15px;margin-bottom:14px"><p style="font-size:12.5px;line-height:1.45;color:#a5a29b;margin:0">Connexion de <b style="color:#f3efe9">Lina</b> instable… on attend. Le live passe en basse def — <b style="color:#f3efe9">votre photo restera pleine résolution.</b></p></div>
+<button style="border:none;border-radius:18px;padding:16px;background:#3a3740;color:#8f877d;font:700 16px 'Bricolage Grotesque';cursor:not-allowed">Lancer — en attente de Lina</button>
+</div>
+</div>
+</div>
+
+<!-- s3 — Réseau faible (pendant 3·2·1) -->
+<div style="display:flex;flex-direction:column;gap:16px;flex:none">
+<span style="font:600 12px 'Plus Jakarta Sans';color:var(--muted);letter-spacing:.04em">RÉSEAU FAIBLE · compte à rebours suspendu</span>
+<div style="width:352px;height:748px;border-radius:48px;background:#0f0d13;color:#f3efe9;box-shadow:0 14px 30px -18px rgba(20,10,5,.6);overflow:hidden;position:relative">
+<div style="height:100%;display:flex;flex-direction:column;padding:22px 20px 24px;position:relative">
+<div style="display:flex;justify-content:space-between;align-items:center;font:600 12px 'Plus Jakarta Sans';color:#8f877d"><span>9:41</span><span style="display:flex;align-items:center;gap:6px;color:#e5a92e;font-weight:700"><i style="width:8px;height:8px;border-radius:50%;background:#e5a92e"></i>PAUSE</span></div>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px"><span style="padding:8px 14px;border-radius:20px;background:rgba(255,255,255,.1);font:700 12px 'Bricolage Grotesque'">Pose 2 / 4</span></div>
+<div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px">
+<div style="border-radius:18px;background:#ffb890;position:relative;overflow:hidden"><span style="position:absolute;bottom:8px;left:8px;font:700 11px 'Bricolage Grotesque';color:#fff;background:rgba(0,0,0,.3);padding:3px 9px;border-radius:8px">Vous</span></div>
+<div style="border-radius:18px;background:#26232c;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span style="font:700 11px 'Bricolage Grotesque';color:#8f877d">reconnexion…</span><span style="position:absolute;bottom:8px;left:8px;font:700 11px 'Bricolage Grotesque';color:#fff;background:rgba(0,0,0,.3);padding:3px 9px;border-radius:8px">Lina</span></div>
+</div>
+<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.5);padding:0 34px;text-align:center">
+<div style="width:56px;height:56px;border-radius:50%;border:3px solid #e5a92e;display:flex;align-items:center;justify-content:center;font:800 24px 'Bricolage Grotesque';color:#e5a92e">…</div>
+<h2 style="font-size:22px;font-weight:800;margin-top:18px">On attend Lina</h2>
+<p style="font-size:13px;line-height:1.5;color:#c9c6c0;margin-top:8px">Le 3·2·1 ne se déclenche que si vous êtes prêts tous les deux. Reprise automatique dès que sa connexion se stabilise.</p>
+</div>
+</div>
+</div>
+</div>
+
+<!-- s4 — Partenaire déconnecté -->
+<div style="display:flex;flex-direction:column;gap:16px;flex:none">
+<span style="font:600 12px 'Plus Jakarta Sans';color:var(--muted);letter-spacing:.04em">PARTENAIRE DÉCONNECTÉ · reprise</span>
+<div style="width:352px;height:748px;border-radius:48px;background:#0f0d13;color:#f3efe9;box-shadow:0 14px 30px -18px rgba(20,10,5,.6);overflow:hidden;position:relative">
+<div style="height:100%;display:flex;flex-direction:column;padding:22px 20px 24px;position:relative">
+<div style="display:flex;justify-content:space-between;align-items:center;font:600 12px 'Plus Jakarta Sans';color:#8f877d"><span>9:41</span><i style="width:16px;height:9px;border:1.5px solid #8f877d;border-radius:2px;display:inline-block"></i></div>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px"><span style="padding:8px 14px;border-radius:20px;background:rgba(255,255,255,.1);font:700 12px 'Bricolage Grotesque'">Pose 2 / 4</span></div>
+<div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px">
+<div style="border-radius:18px;background:#ffb890;position:relative;overflow:hidden"><span style="position:absolute;bottom:8px;left:8px;font:700 11px 'Bricolage Grotesque';color:#fff;background:rgba(0,0,0,.3);padding:3px 9px;border-radius:8px">Vous</span></div>
+<div style="border-radius:18px;background:#201d25;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;border:1.5px dashed #3a3740"><span style="font:700 11px 'Bricolage Grotesque';color:#6d6560">hors ligne</span><span style="position:absolute;bottom:8px;left:8px;font:700 11px 'Bricolage Grotesque';color:#fff;background:rgba(0,0,0,.3);padding:3px 9px;border-radius:8px">Lina</span></div>
+</div>
+<div style="border:1px solid #34313a;border-radius:16px;padding:15px;margin-top:14px;display:flex;flex-direction:column;gap:12px">
+<p style="font-size:13px;line-height:1.45;color:#c9c6c0;margin:0"><b style="color:#f3efe9">Lina s'est déconnectée</b> — on reprend dès son retour. Vos poses déjà prises sont conservées.</p>
+<div style="display:flex;gap:10px">
+<button style="flex:1;border:2px solid #54545a;border-radius:14px;padding:12px;background:transparent;color:#e6e3dd;font:700 13px 'Bricolage Grotesque';cursor:pointer">Patienter</button>
+<button style="flex:1;border:none;border-radius:14px;padding:12px;background:linear-gradient(135deg,var(--coral),var(--coral2));color:#fff;font:700 13px 'Bricolage Grotesque';cursor:pointer">Renvoyer le lien</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- s5 — Lien invalide / expiré -->
+<div style="display:flex;flex-direction:column;gap:16px;flex:none">
+<span style="font:600 12px 'Plus Jakarta Sans';color:var(--muted);letter-spacing:.04em">LIEN INVALIDE / EXPIRÉ · error</span>
+<div style="width:352px;height:748px;border-radius:48px;background:var(--paper);box-shadow:0 14px 30px -18px rgba(60,30,10,.45),0 0 0 1px rgba(0,0,0,.04);overflow:hidden;position:relative">
+<div style="height:100%;display:flex;flex-direction:column;padding:22px 24px 26px;text-align:center;align-items:center" class="stack">
+<div style="align-self:stretch;display:flex;justify-content:space-between;align-items:center;font:600 12px 'Plus Jakarta Sans';color:var(--muted)"><span>9:41</span><i style="width:16px;height:9px;border:1.5px solid var(--muted);border-radius:2px;display:inline-block"></i></div>
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px">
+<div style="width:64px;height:64px;border-radius:20px;background:var(--soft);display:flex;align-items:center;justify-content:center;font:800 30px 'Bricolage Grotesque';color:var(--muted)">?</div>
+<h2 style="font-size:26px;font-weight:800">Lien introuvable</h2>
+<p style="font-size:14px;line-height:1.55;color:#6d645a;max-width:250px">Cette room a expiré ou le code est incorrect. Vérifiez avec la personne qui vous a invité.</p>
+<div style="width:100%;border:2px solid var(--line);border-radius:14px;padding:14px;display:flex;justify-content:center;font:600 13px 'Plus Jakarta Sans';color:var(--muted);background:#fff">Saisir le code manuellement</div>
+</div>
+<button style="align-self:stretch;border:none;border-radius:16px;padding:15px;background:linear-gradient(135deg,var(--coral),var(--coral2));color:#fff;font:700 15px 'Bricolage Grotesque';cursor:pointer">Créer une nouvelle room</button>
+<button style="align-self:stretch;border:2px solid var(--ink);border-radius:16px;padding:13px;margin-top:10px;background:transparent;color:var(--ink);font:700 14px 'Bricolage Grotesque';cursor:pointer">Retour à l'accueil</button>
+</div>
+</div>
+</div>
+
+<!-- s6 — Room pleine (2/2) -->
+<div style="display:flex;flex-direction:column;gap:16px;flex:none">
+<span style="font:600 12px 'Plus Jakarta Sans';color:var(--muted);letter-spacing:.04em">ROOM PLEINE (2/2) · limite</span>
+<div style="width:352px;height:748px;border-radius:48px;background:var(--paper);box-shadow:0 14px 30px -18px rgba(60,30,10,.45),0 0 0 1px rgba(0,0,0,.04);overflow:hidden;position:relative">
+<div style="height:100%;display:flex;flex-direction:column;padding:22px 24px 26px;text-align:center;align-items:center" class="stack">
+<div style="align-self:stretch;display:flex;justify-content:space-between;align-items:center;font:600 12px 'Plus Jakarta Sans';color:var(--muted)"><span>9:41</span><i style="width:16px;height:9px;border:1.5px solid var(--muted);border-radius:2px;display:inline-block"></i></div>
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px">
+<div style="display:flex;gap:8px">
+<span style="width:40px;height:52px;border-radius:10px;overflow:hidden;display:flex;gap:1.5px;background:#fff;box-shadow:0 0 0 1px var(--line)"><span style="flex:1;background:#ffb890"></span><span style="flex:1;background:#aab6f6"></span></span>
+<span style="width:40px;height:52px;border-radius:10px;background:var(--soft);display:flex;align-items:center;justify-content:center;font:800 20px 'Bricolage Grotesque';color:var(--coral)">2</span>
+</div>
+<h2 style="font-size:26px;font-weight:800">Cette room est complète</h2>
+<p style="font-size:14px;line-height:1.55;color:#6d645a;max-width:255px">SnapRoom, c'est à deux : il y a déjà 2 personnes dans cette room. Créez la vôtre pour votre propre séance.</p>
+</div>
+<button style="align-self:stretch;border:none;border-radius:16px;padding:15px;background:linear-gradient(135deg,var(--coral),var(--coral2));color:#fff;font:700 15px 'Bricolage Grotesque';cursor:pointer">Créer une nouvelle room</button>
+<button style="align-self:stretch;border:2px solid var(--ink);border-radius:16px;padding:13px;margin-top:10px;background:transparent;color:var(--ink);font:700 14px 'Bricolage Grotesque';cursor:pointer">Réessayer</button>
+</div>
+</div>
+</div>
+
+<!-- s7 — Composition (loading) -->
+<div style="display:flex;flex-direction:column;gap:16px;flex:none">
+<span style="font:600 12px 'Plus Jakarta Sans';color:var(--muted);letter-spacing:.04em">COMPOSITION DE LA BANDE · loading</span>
+<div style="width:352px;height:748px;border-radius:48px;background:var(--paper);box-shadow:0 14px 30px -18px rgba(60,30,10,.45),0 0 0 1px rgba(0,0,0,.04);overflow:hidden;position:relative">
+<div style="height:100%;display:flex;flex-direction:column;padding:22px 24px 26px;text-align:center;align-items:center" class="stack">
+<div style="align-self:stretch;display:flex;justify-content:space-between;align-items:center;font:600 12px 'Plus Jakarta Sans';color:var(--muted)"><span>9:41</span><i style="width:16px;height:9px;border:1.5px solid var(--muted);border-radius:2px;display:inline-block"></i></div>
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px">
+<div style="background:#fff;padding:11px 11px 26px;border-radius:5px;box-shadow:0 18px 38px -16px rgba(60,30,10,.35);display:flex;flex-direction:column;gap:8px;position:relative">
+<div style="width:150px;height:88px;border-radius:2px;overflow:hidden;display:flex;gap:2px;background:#fff"><span style="flex:1;background:#ffb890"></span><span style="flex:1;background:#aab6f6"></span></div>
+<div style="width:150px;height:88px;border-radius:2px;overflow:hidden;display:flex;gap:2px;background:#fff"><span style="flex:1;background:#ffb890"></span><span style="flex:1;background:#aab6f6"></span></div>
+<div style="width:150px;height:88px;border-radius:2px;border:1.5px dashed var(--line);background:#faf7f2"></div>
+<div style="width:150px;height:88px;border-radius:2px;border:1.5px dashed var(--line);background:#faf7f2"></div>
+<span style="position:absolute;bottom:9px;left:0;right:0;text-align:center;font:700 8px 'Bricolage Grotesque';color:#c9c1b6;letter-spacing:2px">COMPOSITION…</span>
+</div>
+<h2 style="font-size:24px;font-weight:800">On assemble votre bande</h2>
+<p style="font-size:13.5px;line-height:1.5;color:#6d645a;max-width:250px">On récupère la moitié pleine résolution de chacun et on les accole…</p>
+<div style="width:190px;height:6px;border-radius:3px;background:var(--soft);overflow:hidden"><span style="display:block;width:62%;height:100%;border-radius:3px;background:linear-gradient(90deg,var(--coral),var(--coral2))"></span></div>
+</div>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+</x-dc>
+</body>
+</html>

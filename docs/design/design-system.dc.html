@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1c1712;--paper:#fbf7f1;--muted:#8c8378;--soft:#efe8de;--line:#ece4d8;--coral:#fb5a46;--coral2:#ff7d54;--violet:#6a48f4;--dark:#161319}
+*{box-sizing:border-box}
+body{margin:0;background:#ebe3d8;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+a{color:var(--violet);text-decoration:none}a:hover{color:#5638d6}
+h1,h2,h3{font-family:'Bricolage Grotesque',system-ui;margin:0;letter-spacing:-.02em}
+@keyframes floatY{0%,100%{transform:translateY(0) rotate(var(--rot,0deg))}50%{transform:translateY(-9px) rotate(var(--rot,0deg))}}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes grainshift{0%{transform:translate(0,0)}100%{transform:translate(-6%,4%)}}
+@keyframes cpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+@keyframes glow{0%,100%{opacity:.55}50%{opacity:.9}}
+@keyframes livedot{0%,100%{opacity:1}50%{opacity:.3}}
+.stack>*{animation:rise .6s cubic-bezier(.2,.7,.2,1) both}
+.stack>*:nth-child(2){animation-delay:.06s}.stack>*:nth-child(3){animation-delay:.12s}.stack>*:nth-child(4){animation-delay:.18s}.stack>*:nth-child(5){animation-delay:.24s}.stack>*:nth-child(6){animation-delay:.3s}
+</style>
+</helmet>
+
+<div style="max-width:2500px;padding:44px 52px 64px;display:flex;flex-direction:column;gap:40px">
+<div style="display:flex;align-items:baseline;gap:16px"><h1 style="font-size:30px;font-weight:800">SnapRoom — brand &amp; system</h1><span style="font:600 13px/1 'Plus Jakarta Sans';color:var(--muted)">Logo directions · photo-strip frames · full design system</span></div>
+<div style="display:flex;align-items:baseline;gap:16px;margin-top:8px">
+<h2 style="font-size:24px;font-weight:800">Photo strip — theme packs</h2>
+<span style="font:600 13px/1 'Plus Jakarta Sans';color:var(--muted)">Playful, swappable frames — the part friends actually share. Pattern packs are CSS; illustrated packs drop in as art.</span>
+</div>
+
+<div style="display:flex;gap:30px 26px;align-items:flex-start;flex-wrap:wrap;max-width:2200px">
+
+<!-- gingham -->
+<div style="width:172px;background:#fff;border-radius:18px;box-shadow:0 8px 22px -12px rgba(60,30,10,.28);padding:18px 18px 14px;display:flex;flex-direction:column;align-items:center;gap:14px">
+<div style="width:116px;border-radius:8px;overflow:hidden;padding:11px 11px 22px;display:flex;flex-direction:column;gap:7px;position:relative;box-shadow:0 4px 12px -6px rgba(0,0,0,.25);background-color:#e9f0df;background-image:repeating-linear-gradient(0deg,rgba(122,160,102,.45) 0 11px,transparent 11px 22px),repeating-linear-gradient(90deg,rgba(122,160,102,.45) 0 11px,transparent 11px 22px)">
+<div style="height:56px;border-radius:4px;background:rgba(255,255,255,.66)"></div><div style="height:56px;border-radius:4px;background:rgba(255,255,255,.66)"></div><div style="height:56px;border-radius:4px;background:rgba(255,255,255,.66)"></div>
+<span style="position:absolute;bottom:9px;left:50%;transform:translateX(-50%);width:48px;height:6px;border-radius:3px;background:#6f9455"></span>
+</div>
+<span style="font:600 14px ui-monospace,monospace;color:#8a8378;letter-spacing:1px">gingham</span>
+</div>
+
+<!-- cherry -->
+<div style="width:172px;background:#fff;border-radius:18px;box-shadow:0 8px 22px -12px rgba(60,30,10,.28);padding:18px 18px 14px;display:flex;flex-direction:column;align-items:center;gap:14px">
+<div style="width:116px;border-radius:8px;overflow:hidden;padding:11px 11px 22px;display:flex;flex-direction:column;gap:7px;position:relative;box-shadow:0 4px 12px -6px rgba(0,0,0,.25);background:repeating-conic-gradient(#c6d6f2 0 25%,#f7fbff 0 50%) 0 0/24px 24px">
+<div style="height:56px;border-radius:4px;background:rgba(255,255,255,.72)"></div><div style="height:56px;border-radius:4px;background:rgba(255,255,255,.72)"></div><div style="height:56px;border-radius:4px;background:rgba(255,255,255,.72)"></div>
+<span style="position:absolute;bottom:9px;left:50%;transform:translateX(-50%);width:48px;height:6px;border-radius:3px;background:#d98b8b"></span>
+</div>
+<span style="font:600 14px ui-monospace,monospace;color:#8a8378;letter-spacing:1px">cherry</span>
+</div>
+
+<!-- hearts -->
+<div style="width:172px;background:#fff;border-radius:18px;box-shadow:0 8px 22px -12px rgba(60,30,10,.28);padding:18px 18px 14px;display:flex;flex-direction:column;align-items:center;gap:14px">
+<div style="width:116px;border-radius:8px;overflow:hidden;padding:11px 11px 22px;display:flex;flex-direction:column;gap:7px;position:relative;box-shadow:0 4px 12px -6px rgba(0,0,0,.25);background:#fbe6d2">
+<i style="position:absolute;top:16px;left:6px;width:10px;height:10px;background:#eaa2b2;transform:rotate(45deg)"></i>
+<i style="position:absolute;top:82px;right:6px;width:10px;height:10px;background:#e07f95;transform:rotate(45deg)"></i>
+<i style="position:absolute;bottom:44px;left:6px;width:9px;height:9px;background:#eaa2b2;transform:rotate(45deg)"></i>
+<div style="height:56px;border-radius:4px;background:rgba(255,255,255,.7)"></div><div style="height:56px;border-radius:4px;background:rgba(255,255,255,.7)"></div><div style="height:56px;border-radius:4px;background:rgba(255,255,255,.7)"></div>
+<span style="position:absolute;bottom:9px;left:50%;transform:translateX(-50%);width:48px;height:6px;border-radius:3px;background:#e07f95"></span>
+</div>
+<span style="font:600 14px ui-monospace,monospace;color:#8a8378;letter-spacing:1px">hearts</span>
+</div>
+
+<!-- lemonade -->
+<div style="width:172px;background:#fff;border-radius:18px;box-shadow:0 8px 22px -12px rgba(60,30,10,.28);padding:18px 18px 14px;display:flex;flex-direction:column;align-items:center;gap:14px">
+<div style="width:116px;border-radius:8px;overflow:hidden;padding:11px 11px 22px;display:flex;flex-direction:column;gap:7px;position:relative;box-shadow:0 4px 12px -6px rgba(0,0,0,.25);background:repeating-linear-gradient(90deg,#d7e7f5 0 8px,#f6fbfe 8px 16px)">
+<div style="height:56px;border-radius:4px;background:rgba(255,255,255,.7)"></div><div style="height:56px;border-radius:4px;background:rgba(255,255,255,.7)"></div><div style="height:56px;border-radius:4px;background:rgba(255,255,255,.7)"></div>
+<span style="position:absolute;bottom:9px;left:50%;transform:translateX(-50%);width:48px;height:6px;border-radius:3px;background:#8fb2d6"></span>
+</div>
+<span style="font:600 14px ui-monospace,monospace;color:#8a8378;letter-spacing:1px">lemonade</span>
+</div>
+
+<!-- checkers -->
+<div style="width:172px;background:#fff;border-radius:18px;box-shadow:0 8px 22px -12px rgba(60,30,10,.28);padding:18px 18px 14px;display:flex;flex-direction:column;align-items:center;gap:14px">
+<div style="width:116px;border-radius:8px;overflow:hidden;padding:11px 11px 22px;display:flex;flex-direction:column;gap:7px;position:relative;box-shadow:0 4px 12px -6px rgba(0,0,0,.25);background:repeating-conic-gradient(#bcd2f2 0 25%,#fdfdf5 0 50%) 0 0/34px 34px">
+<div style="height:56px;border-radius:4px;background:rgba(255,255,255,.74)"></div><div style="height:56px;border-radius:4px;background:rgba(255,255,255,.74)"></div><div style="height:56px;border-radius:4px;background:rgba(255,255,255,.74)"></div>
+<span style="position:absolute;bottom:9px;left:50%;transform:translateX(-50%);width:48px;height:6px;border-radius:3px;background:#9db8e0"></span>
+</div>
+<span style="font:600 14px ui-monospace,monospace;color:#8a8378;letter-spacing:1px">checkers</span>
+</div>
+
+<!-- denim -->
+<div style="width:172px;background:#fff;border-radius:18px;box-shadow:0 8px 22px -12px rgba(60,30,10,.28);padding:18px 18px 14px;display:flex;flex-direction:column;align-items:center;gap:14px">
+<div style="width:116px;border-radius:8px;overflow:hidden;padding:11px 11px 22px;display:flex;flex-direction:column;gap:7px;position:relative;box-shadow:0 4px 12px -6px rgba(0,0,0,.25);background-color:#42618f;background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.08) 0 1px,transparent 1px 5px),repeating-linear-gradient(-45deg,rgba(0,0,0,.1) 0 1px,transparent 1px 5px)">
+<div style="height:56px;border-radius:4px;background:rgba(255,255,255,.78)"></div><div style="height:56px;border-radius:4px;background:rgba(255,255,255,.78)"></div><div style="height:56px;border-radius:4px;background:rgba(255,255,255,.78)"></div>
+<span style="position:absolute;bottom:9px;left:50%;transform:translateX(-50%);width:48px;height:6px;border-radius:3px;background:#cdd8ea"></span>
+</div>
+<span style="font:600 14px ui-monospace,monospace;color:#8a8378;letter-spacing:1px">denim</span>
+</div>
+
+<!-- meadow -->
+<div style="width:172px;background:#fff;border-radius:18px;box-shadow:0 8px 22px -12px rgba(60,30,10,.28);padding:18px 18px 14px;display:flex;flex-direction:column;align-items:center;gap:14px">
+<div style="width:116px;border-radius:8px;overflow:hidden;padding:11px 11px 22px;display:flex;flex-direction:column;gap:7px;position:relative;box-shadow:0 4px 12px -6px rgba(0,0,0,.25);background:linear-gradient(#addcf5 0%,#cdeafc 42%,#c2e6a8 54%,#8fce6e 100%)">
+<div style="height:56px;border-radius:4px;background:rgba(255,255,255,.6)"></div><div style="height:56px;border-radius:4px;background:rgba(255,255,255,.6)"></div><div style="height:56px;border-radius:4px;background:rgba(255,255,255,.6)"></div>
+<span style="position:absolute;bottom:9px;left:50%;transform:translateX(-50%);width:48px;height:6px;border-radius:3px;background:#7fae5c"></span>
+</div>
+<span style="font:600 14px ui-monospace,monospace;color:#8a8378;letter-spacing:1px">meadow</span>
+</div>
+
+<!-- your pack -->
+<div style="width:172px;background:#fff;border-radius:18px;box-shadow:0 8px 22px -12px rgba(60,30,10,.28);padding:18px 18px 14px;display:flex;flex-direction:column;align-items:center;gap:14px">
+<div style="width:116px;border-radius:8px;overflow:hidden;padding:11px 11px 22px;display:flex;flex-direction:column;gap:7px;position:relative;border:1.5px dashed #cbc3b6;background:#faf7f2">
+<div style="height:56px;border-radius:4px;background-image:repeating-linear-gradient(45deg,#efe8de,#efe8de 7px,#e6ded2 7px,#e6ded2 14px)"></div><div style="height:56px;border-radius:4px;background-image:repeating-linear-gradient(45deg,#efe8de,#efe8de 7px,#e6ded2 7px,#e6ded2 14px)"></div><div style="height:56px;border-radius:4px;background-image:repeating-linear-gradient(45deg,#efe8de,#efe8de 7px,#e6ded2 7px,#e6ded2 14px)"></div>
+<span style="position:absolute;bottom:6px;left:0;right:0;text-align:center;font:600 8px ui-monospace,monospace;color:#a89f92">drop art pack</span>
+</div>
+<span style="font:600 14px ui-monospace,monospace;color:#8a8378;letter-spacing:1px">+ custom</span>
+</div>
+
+</div>
+
+<div style="display:flex;align-items:baseline;gap:16px;margin-top:8px">
+<h2 style="font-size:24px;font-weight:800">Photo strip — classic frames</h2>
+<span style="font:600 13px/1 'Plus Jakarta Sans';color:var(--muted)">The sober, retro-cabine looks. One component, swappable frame + layout.</span>
+</div>
+
+<div style="display:flex;gap:44px;align-items:flex-start;flex-wrap:wrap;max-width:2200px">
+
+<!-- Classic -->
+<div style="display:flex;flex-direction:column;align-items:center;gap:14px;flex:none">
+<div style="background:#fff;padding:11px 11px 34px;border-radius:5px;box-shadow:0 20px 42px -16px rgba(60,30,10,.4);display:flex;flex-direction:column;gap:8px;position:relative">
+<div style="width:150px;height:92px;border-radius:2px;background:#ffb890"></div>
+<div style="width:150px;height:92px;border-radius:2px;background:#aab6f6"></div>
+<div style="width:150px;height:92px;border-radius:2px;background:#ffa8c2"></div>
+<div style="width:150px;height:92px;border-radius:2px;background:#a6e4bf"></div>
+<span style="position:absolute;bottom:12px;left:0;right:0;text-align:center;font:700 8px 'Bricolage Grotesque';color:#c9c1b6;letter-spacing:2px">SNAPROOM · JUL 14</span>
+</div>
+<span style="font:700 13px 'Bricolage Grotesque'">Classic</span>
+</div>
+
+<!-- Noir -->
+<div style="display:flex;flex-direction:column;align-items:center;gap:14px;flex:none">
+<div style="background:#141216;padding:11px 11px 34px;border-radius:5px;box-shadow:0 20px 42px -16px rgba(0,0,0,.55);display:flex;flex-direction:column;gap:8px;position:relative">
+<div style="width:150px;height:92px;border-radius:2px;background:#ffb890"></div>
+<div style="width:150px;height:92px;border-radius:2px;background:#aab6f6"></div>
+<div style="width:150px;height:92px;border-radius:2px;background:#ffa8c2"></div>
+<div style="width:150px;height:92px;border-radius:2px;background:#a6e4bf"></div>
+<span style="position:absolute;bottom:12px;left:0;right:0;text-align:center;font:700 8px 'Bricolage Grotesque';color:#6f6a63;letter-spacing:2px">SNAPROOM · JUL 14</span>
+</div>
+<span style="font:700 13px 'Bricolage Grotesque'">Noir</span>
+</div>
+
+<!-- Film -->
+<div style="display:flex;flex-direction:column;align-items:center;gap:14px;flex:none">
+<div style="background:#1b1815;padding:11px 16px 30px;border-radius:5px;box-shadow:0 20px 42px -16px rgba(0,0,0,.55);display:flex;gap:10px;position:relative">
+<div style="display:flex;flex-direction:column;justify-content:space-between;padding:4px 0">
+<i style="width:8px;height:12px;background:#3a3630;border-radius:2px;display:block"></i><i style="width:8px;height:12px;background:#3a3630;border-radius:2px;display:block"></i><i style="width:8px;height:12px;background:#3a3630;border-radius:2px;display:block"></i><i style="width:8px;height:12px;background:#3a3630;border-radius:2px;display:block"></i><i style="width:8px;height:12px;background:#3a3630;border-radius:2px;display:block"></i>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<div style="width:132px;height:88px;border-radius:1px;background:#ffb890"></div>
+<div style="width:132px;height:88px;border-radius:1px;background:#aab6f6"></div>
+<div style="width:132px;height:88px;border-radius:1px;background:#ffa8c2"></div>
+<div style="width:132px;height:88px;border-radius:1px;background:#a6e4bf"></div>
+</div>
+<div style="display:flex;flex-direction:column;justify-content:space-between;padding:4px 0">
+<i style="width:8px;height:12px;background:#3a3630;border-radius:2px;display:block"></i><i style="width:8px;height:12px;background:#3a3630;border-radius:2px;display:block"></i><i style="width:8px;height:12px;background:#3a3630;border-radius:2px;display:block"></i><i style="width:8px;height:12px;background:#3a3630;border-radius:2px;display:block"></i><i style="width:8px;height:12px;background:#3a3630;border-radius:2px;display:block"></i>
+</div>
+<span style="position:absolute;bottom:10px;left:0;right:0;text-align:center;font:700 8px 'Bricolage Grotesque';color:#8a8177;letter-spacing:3px">SNAPROOM</span>
+</div>
+<span style="font:700 13px 'Bricolage Grotesque'">Film</span>
+</div>
+
+<!-- Pop / Confetti -->
+<div style="display:flex;flex-direction:column;align-items:center;gap:14px;flex:none">
+<div style="background:#fff;padding:22px 11px 34px;border-radius:5px;box-shadow:0 20px 42px -16px rgba(60,30,10,.4);display:flex;flex-direction:column;gap:8px;position:relative;overflow:hidden">
+<span style="position:absolute;top:0;left:0;right:0;height:8px;background:linear-gradient(90deg,var(--coral),var(--violet))"></span>
+<i style="position:absolute;top:13px;left:14px;width:7px;height:7px;border-radius:50%;background:var(--coral)"></i>
+<i style="position:absolute;top:11px;right:20px;width:6px;height:6px;border-radius:50%;background:var(--violet)"></i>
+<i style="position:absolute;top:14px;left:64px;width:5px;height:5px;border-radius:50%;background:#33c66a"></i>
+<i style="position:absolute;bottom:16px;right:16px;width:7px;height:7px;border-radius:50%;background:#ffcc5c"></i>
+<i style="position:absolute;bottom:14px;left:18px;width:6px;height:6px;border-radius:50%;background:var(--violet)"></i>
+<div style="width:150px;height:92px;border-radius:6px;background:#ffb890"></div>
+<div style="width:150px;height:92px;border-radius:6px;background:#aab6f6"></div>
+<div style="width:150px;height:92px;border-radius:6px;background:#ffa8c2"></div>
+<div style="width:150px;height:92px;border-radius:6px;background:#a6e4bf"></div>
+<span style="position:absolute;bottom:12px;left:0;right:0;text-align:center;font:700 8px 'Bricolage Grotesque';color:var(--coral);letter-spacing:2px">SNAPROOM · JUL 14</span>
+</div>
+<span style="font:700 13px 'Bricolage Grotesque'">Pop</span>
+</div>
+
+<!-- Kraft -->
+<div style="display:flex;flex-direction:column;align-items:center;gap:14px;flex:none">
+<div style="background:#e6d3b3;padding:13px 13px 36px;border-radius:5px;box-shadow:0 20px 42px -16px rgba(60,30,10,.4);display:flex;flex-direction:column;gap:9px;position:relative">
+<div style="width:148px;height:90px;border-radius:2px;background:#ffb890;border:3px solid #fff"></div>
+<div style="width:148px;height:90px;border-radius:2px;background:#aab6f6;border:3px solid #fff"></div>
+<div style="width:148px;height:90px;border-radius:2px;background:#ffa8c2;border:3px solid #fff"></div>
+<div style="width:148px;height:90px;border-radius:2px;background:#a6e4bf;border:3px solid #fff"></div>
+<span style="position:absolute;bottom:12px;left:0;right:0;text-align:center;font:700 9px 'Bricolage Grotesque';color:#9c8659;letter-spacing:2px">SNAPROOM · JUL 14</span>
+</div>
+<span style="font:700 13px 'Bricolage Grotesque'">Kraft</span>
+</div>
+
+<!-- Grid 2x2 -->
+<div style="display:flex;flex-direction:column;align-items:center;gap:14px;flex:none">
+<div style="background:#fff;padding:11px 11px 30px;border-radius:5px;box-shadow:0 20px 42px -16px rgba(60,30,10,.4);display:grid;grid-template-columns:1fr 1fr;gap:8px;position:relative">
+<div style="width:104px;height:78px;border-radius:2px;background:#ffb890"></div>
+<div style="width:104px;height:78px;border-radius:2px;background:#aab6f6"></div>
+<div style="width:104px;height:78px;border-radius:2px;background:#ffa8c2"></div>
+<div style="width:104px;height:78px;border-radius:2px;background:#a6e4bf"></div>
+<span style="position:absolute;bottom:10px;left:0;right:0;text-align:center;font:700 8px 'Bricolage Grotesque';color:#c9c1b6;letter-spacing:2px">SNAPROOM · JUL 14</span>
+</div>
+<span style="font:700 13px 'Bricolage Grotesque'">Grid 2×2</span>
+</div>
+
+</div>
+
+<div style="display:flex;align-items:baseline;gap:16px;margin-top:8px">
+<h2 style="font-size:24px;font-weight:800">Logo — directions</h2>
+<span style="font:600 13px/1 'Plus Jakarta Sans';color:var(--muted)">Simple, geometric, works tiny (favicon) and big. Pick one and I'll lock it in.</span>
+</div>
+
+<div style="display:flex;gap:34px;align-items:stretch;flex-wrap:wrap;max-width:2200px">
+
+<!-- Logo A: Lens tile -->
+<div style="width:300px;background:#fff;border-radius:20px;box-shadow:0 16px 40px -18px rgba(60,30,10,.35);overflow:hidden;display:flex;flex-direction:column">
+<div style="padding:34px;display:flex;flex-direction:column;gap:22px;flex:1">
+<div style="display:flex;align-items:center;gap:12px"><span style="width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--coral),var(--coral2));display:flex;align-items:center;justify-content:center"><span style="width:16px;height:16px;border-radius:50%;border:3px solid #fff"></span></span><span style="font-family:'Bricolage Grotesque';font-weight:800;font-size:26px;letter-spacing:-.02em">Snap<span style="color:var(--coral)">Room</span></span></div>
+<div style="display:flex;gap:10px"><span style="width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--coral),var(--coral2));display:flex;align-items:center;justify-content:center"><span style="width:10px;height:10px;border-radius:50%;border:2px solid #fff"></span></span><span style="width:22px;height:22px;border-radius:7px;background:linear-gradient(135deg,var(--coral),var(--coral2));display:flex;align-items:center;justify-content:center;align-self:center"><span style="width:7px;height:7px;border-radius:50%;border:1.5px solid #fff"></span></span></div>
+</div>
+<div style="background:var(--dark);padding:18px 34px;display:flex;align-items:center;gap:12px"><span style="width:34px;height:34px;border-radius:11px;background:linear-gradient(135deg,var(--coral),var(--coral2));display:flex;align-items:center;justify-content:center"><span style="width:12px;height:12px;border-radius:50%;border:2.5px solid #fff"></span></span><span style="font-family:'Bricolage Grotesque';font-weight:800;font-size:19px;color:#fff">Snap<span style="color:var(--coral2)">Room</span></span></div>
+<div style="padding:12px 34px 22px"><span style="font:700 11px 'Bricolage Grotesque';color:var(--muted);letter-spacing:.08em">A · LENS TILE</span><p style="font:500 12px/1.4 'Plus Jakarta Sans';color:#6d645a;margin:6px 0 0">The camera lens — friendly, instantly "photo".</p></div>
+</div>
+
+<!-- Logo B: Frame + shutter -->
+<div style="width:300px;background:#fff;border-radius:20px;box-shadow:0 16px 40px -18px rgba(60,30,10,.35);overflow:hidden;display:flex;flex-direction:column">
+<div style="padding:34px;display:flex;flex-direction:column;gap:22px;flex:1">
+<div style="display:flex;align-items:center;gap:12px"><span style="position:relative;width:44px;height:44px;border-radius:14px;border:3.5px solid var(--ink);display:flex;align-items:center;justify-content:center"><span style="width:14px;height:14px;border-radius:5px;background:var(--coral)"></span></span><span style="font-family:'Bricolage Grotesque';font-weight:800;font-size:26px;letter-spacing:-.02em">SnapRoom</span></div>
+<div style="display:flex;gap:10px"><span style="width:30px;height:30px;border-radius:10px;border:2.5px solid var(--ink);display:flex;align-items:center;justify-content:center"><span style="width:9px;height:9px;border-radius:3px;background:var(--coral)"></span></span></div>
+</div>
+<div style="background:var(--dark);padding:18px 34px;display:flex;align-items:center;gap:12px"><span style="width:34px;height:34px;border-radius:11px;border:3px solid #fff;display:flex;align-items:center;justify-content:center"><span style="width:11px;height:11px;border-radius:4px;background:var(--coral2)"></span></span><span style="font-family:'Bricolage Grotesque';font-weight:800;font-size:19px;color:#fff">SnapRoom</span></div>
+<div style="padding:12px 34px 22px"><span style="font:700 11px 'Bricolage Grotesque';color:var(--muted);letter-spacing:.08em">B · FRAME + SHUTTER</span><p style="font:500 12px/1.4 'Plus Jakarta Sans';color:#6d645a;margin:6px 0 0">A photo frame; the coral square is the shutter.</p></div>
+</div>
+
+<!-- Logo C: Strip -->
+<div style="width:300px;background:#fff;border-radius:20px;box-shadow:0 16px 40px -18px rgba(60,30,10,.35);overflow:hidden;display:flex;flex-direction:column">
+<div style="padding:34px;display:flex;flex-direction:column;gap:22px;flex:1">
+<div style="display:flex;align-items:center;gap:12px"><span style="display:flex;flex-direction:column;gap:3px;padding:5px;background:#fff;box-shadow:0 0 0 1px var(--line);border-radius:6px;transform:rotate(-6deg)"><i style="width:22px;height:9px;border-radius:2px;background:var(--coral);display:block"></i><i style="width:22px;height:9px;border-radius:2px;background:var(--violet);display:block"></i><i style="width:22px;height:9px;border-radius:2px;background:var(--coral2);display:block"></i></span><span style="font-family:'Bricolage Grotesque';font-weight:800;font-size:26px;letter-spacing:-.02em">SnapRoom</span></div>
+<div style="display:flex;gap:10px"><span style="display:flex;flex-direction:column;gap:2px;padding:4px;background:#fff;box-shadow:0 0 0 1px var(--line);border-radius:5px"><i style="width:16px;height:7px;border-radius:1px;background:var(--coral);display:block"></i><i style="width:16px;height:7px;border-radius:1px;background:var(--violet);display:block"></i><i style="width:16px;height:7px;border-radius:1px;background:var(--coral2);display:block"></i></span></div>
+</div>
+<div style="background:var(--dark);padding:18px 34px;display:flex;align-items:center;gap:12px"><span style="display:flex;flex-direction:column;gap:2px;padding:4px;background:#fff;border-radius:5px"><i style="width:16px;height:7px;border-radius:1px;background:var(--coral);display:block"></i><i style="width:16px;height:7px;border-radius:1px;background:var(--violet);display:block"></i><i style="width:16px;height:7px;border-radius:1px;background:var(--coral2);display:block"></i></span><span style="font-family:'Bricolage Grotesque';font-weight:800;font-size:19px;color:#fff">SnapRoom</span></div>
+<div style="padding:12px 34px 22px"><span style="font:700 11px 'Bricolage Grotesque';color:var(--muted);letter-spacing:.08em">C · THE STRIP</span><p style="font:500 12px/1.4 'Plus Jakarta Sans';color:#6d645a;margin:6px 0 0">The output itself — most ownable, a touch playful.</p></div>
+</div>
+
+<!-- Logo D: Monogram -->
+<div style="width:300px;background:#fff;border-radius:20px;box-shadow:0 16px 40px -18px rgba(60,30,10,.35);overflow:hidden;display:flex;flex-direction:column">
+<div style="padding:34px;display:flex;flex-direction:column;gap:22px;flex:1">
+<div style="display:flex;align-items:center;gap:12px"><span style="width:44px;height:44px;border-radius:14px;background:var(--ink);display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:22px;color:#fff">S<span style="color:var(--coral2)">R</span></span><span style="font-family:'Bricolage Grotesque';font-weight:800;font-size:26px;letter-spacing:-.02em">SnapRoom</span></div>
+<div style="display:flex;gap:10px"><span style="width:30px;height:30px;border-radius:10px;background:var(--ink);display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:15px;color:#fff">S<span style="color:var(--coral2)">R</span></span></div>
+</div>
+<div style="background:linear-gradient(135deg,var(--coral),var(--coral2));padding:18px 34px;display:flex;align-items:center;gap:12px"><span style="width:34px;height:34px;border-radius:11px;background:#fff;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:17px;color:var(--coral)">SR</span><span style="font-family:'Bricolage Grotesque';font-weight:800;font-size:19px;color:#fff">SnapRoom</span></div>
+<div style="padding:12px 34px 22px"><span style="font:700 11px 'Bricolage Grotesque';color:var(--muted);letter-spacing:.08em">D · MONOGRAM</span><p style="font:500 12px/1.4 'Plus Jakarta Sans';color:#6d645a;margin:6px 0 0">Compact "SR" — scales down cleanest for app icons.</p></div>
+</div>
+
+</div>
+</div>
+
+<div class="ds-turn" style="display:flex;flex-direction:column;gap:24px">
+<div style="display:flex;align-items:baseline;gap:16px;margin-top:8px">
+<h2 style="font-size:24px;font-weight:800">Design system</h2>
+<span style="font:600 13px/1 'Plus Jakarta Sans';color:var(--muted)">The core tokens & components behind every screen above.</span>
+</div>
+
+<div style="display:flex;gap:34px;align-items:flex-start;flex-wrap:wrap;max-width:2200px">
+
+<!-- COLORS -->
+<div style="width:520px;background:#fff;border-radius:20px;box-shadow:0 16px 40px -18px rgba(60,30,10,.3);padding:30px">
+<h3 style="font-size:16px;font-weight:800;margin:0 0 4px">Color</h3>
+<p style="font:500 12px/1.4 'Plus Jakarta Sans';color:var(--muted);margin:0 0 20px">Warm paper base · coral drives action · violet marks the join path · dark for the capture moment.</p>
+<div style="font:700 10px 'Bricolage Grotesque';color:var(--muted);letter-spacing:.1em;margin-bottom:10px">BRAND & ACCENT</div>
+<div style="display:flex;gap:12px;margin-bottom:20px">
+<div style="flex:1"><div style="height:70px;border-radius:12px;background:linear-gradient(135deg,var(--coral),var(--coral2))"></div><div style="font:700 12px 'Bricolage Grotesque';margin-top:8px">Coral</div><div style="font:500 11px ui-monospace,monospace;color:var(--muted)">#FB5A46</div></div>
+<div style="flex:1"><div style="height:70px;border-radius:12px;background:var(--coral2)"></div><div style="font:700 12px 'Bricolage Grotesque';margin-top:8px">Coral light</div><div style="font:500 11px ui-monospace,monospace;color:var(--muted)">#FF7D54</div></div>
+<div style="flex:1"><div style="height:70px;border-radius:12px;background:var(--violet)"></div><div style="font:700 12px 'Bricolage Grotesque';margin-top:8px">Violet</div><div style="font:500 11px ui-monospace,monospace;color:var(--muted)">#6A48F4</div></div>
+</div>
+<div style="font:700 10px 'Bricolage Grotesque';color:var(--muted);letter-spacing:.1em;margin-bottom:10px">NEUTRALS</div>
+<div style="display:flex;gap:12px;margin-bottom:20px">
+<div style="flex:1"><div style="height:56px;border-radius:12px;background:var(--ink)"></div><div style="font:700 11px 'Bricolage Grotesque';margin-top:8px">Ink</div><div style="font:500 10px ui-monospace,monospace;color:var(--muted)">#1C1712</div></div>
+<div style="flex:1"><div style="height:56px;border-radius:12px;background:var(--dark)"></div><div style="font:700 11px 'Bricolage Grotesque';margin-top:8px">Dark</div><div style="font:500 10px ui-monospace,monospace;color:var(--muted)">#161319</div></div>
+<div style="flex:1"><div style="height:56px;border-radius:12px;background:var(--soft)"></div><div style="font:700 11px 'Bricolage Grotesque';margin-top:8px">Soft</div><div style="font:500 10px ui-monospace,monospace;color:var(--muted)">#EFE8DE</div></div>
+<div style="flex:1"><div style="height:56px;border-radius:12px;background:var(--paper);box-shadow:inset 0 0 0 1px var(--line)"></div><div style="font:700 11px 'Bricolage Grotesque';margin-top:8px">Paper</div><div style="font:500 10px ui-monospace,monospace;color:var(--muted)">#FBF7F1</div></div>
+</div>
+<div style="font:700 10px 'Bricolage Grotesque';color:var(--muted);letter-spacing:.1em;margin-bottom:10px">STATUS</div>
+<div style="display:flex;gap:12px">
+<div style="flex:1"><div style="height:44px;border-radius:12px;background:#33c66a"></div><div style="font:700 11px 'Bricolage Grotesque';margin-top:8px">Ready</div></div>
+<div style="flex:1"><div style="height:44px;border-radius:12px;background:#e5a92e"></div><div style="font:700 11px 'Bricolage Grotesque';margin-top:8px">Waiting</div></div>
+<div style="flex:1"><div style="height:44px;border-radius:12px;background:var(--coral)"></div><div style="font:700 11px 'Bricolage Grotesque';margin-top:8px">Error / off</div></div>
+</div>
+</div>
+
+<!-- TYPE -->
+<div style="width:520px;background:#fff;border-radius:20px;box-shadow:0 16px 40px -18px rgba(60,30,10,.3);padding:30px">
+<h3 style="font-size:16px;font-weight:800;margin:0 0 20px">Typography</h3>
+<div style="border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:18px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font:700 12px 'Bricolage Grotesque';color:var(--coral)">Bricolage Grotesque</span><span style="font:500 11px ui-monospace,monospace;color:var(--muted)">Display · 700/800</span></div>
+<div style="font-family:'Bricolage Grotesque';font-weight:800;font-size:40px;line-height:1;letter-spacing:-.02em;margin-top:12px">Say cheese,<br>together.</div>
+</div>
+<div>
+<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font:700 12px 'Plus Jakarta Sans';color:var(--violet)">Plus Jakarta Sans</span><span style="font:500 11px ui-monospace,monospace;color:var(--muted)">Body · 400/500/600/700</span></div>
+<p style="font:400 15px/1.55 'Plus Jakarta Sans';color:#4a4038;margin:12px 0 0">Everyone joins a link, cameras on, and a synchronised 3·2·1 fires the shutter on every screen at once. Ultra-legible at small sizes on mobile.</p>
+</div>
+<div style="display:flex;gap:20px;margin-top:20px;padding-top:18px;border-top:1px solid var(--line)">
+<div><div style="font-family:'Bricolage Grotesque';font-weight:800;font-size:30px">Aa</div><div style="font:500 11px 'Plus Jakarta Sans';color:var(--muted);margin-top:2px">Display 30–64</div></div>
+<div><div style="font-family:'Plus Jakarta Sans';font-weight:700;font-size:20px">Aa</div><div style="font:500 11px 'Plus Jakarta Sans';color:var(--muted);margin-top:2px">Title 20–27</div></div>
+<div><div style="font-family:'Plus Jakarta Sans';font-weight:400;font-size:15px">Aa</div><div style="font:500 11px 'Plus Jakarta Sans';color:var(--muted);margin-top:2px">Body 13–17</div></div>
+</div>
+</div>
+
+<!-- BUTTONS + CONTROLS -->
+<div style="width:520px;background:#fff;border-radius:20px;box-shadow:0 16px 40px -18px rgba(60,30,10,.3);padding:30px">
+<h3 style="font-size:16px;font-weight:800;margin:0 0 4px">Buttons & controls</h3>
+<p style="font:500 12px/1.4 'Plus Jakarta Sans';color:var(--muted);margin:0 0 20px">Full, rounded (16–18px), one primary action per screen.</p>
+<div style="display:flex;flex-direction:column;gap:12px">
+<button style="border:none;border-radius:16px;padding:15px;background:linear-gradient(135deg,var(--coral),var(--coral2));color:#fff;font:700 15px 'Bricolage Grotesque';box-shadow:0 12px 24px -8px rgba(251,90,70,.5);cursor:pointer">Primary — Create a room</button>
+<div style="display:flex;gap:12px">
+<button style="flex:1;border:none;border-radius:16px;padding:14px;background:var(--violet);color:#fff;font:700 14px 'Bricolage Grotesque';cursor:pointer">Join (violet)</button>
+<button style="flex:1;border:2px solid var(--ink);border-radius:16px;padding:12px;background:transparent;color:var(--ink);font:700 14px 'Bricolage Grotesque';cursor:pointer">Secondary</button>
+</div>
+<button style="border:none;border-radius:16px;padding:14px;background:var(--soft);color:#a89f94;font:700 14px 'Bricolage Grotesque';cursor:not-allowed">Disabled — waiting for cameras</button>
+</div>
+<div style="font:700 10px 'Bricolage Grotesque';color:var(--muted);letter-spacing:.1em;margin:22px 0 12px">CHIPS & TOGGLES</div>
+<div style="display:flex;gap:9px;flex-wrap:wrap">
+<span style="padding:9px 16px;border-radius:20px;background:var(--ink);color:#fff;font:700 12px 'Bricolage Grotesque'">Selected</span>
+<span style="padding:9px 16px;border-radius:20px;border:1.5px solid var(--line);background:#fff;color:#8c8378;font:700 12px 'Bricolage Grotesque'">Default</span>
+<span style="padding:9px 16px;border-radius:20px;border:1.5px solid var(--line);background:#fff;color:#8c8378;font:700 12px 'Bricolage Grotesque'">4 poses</span>
+<span style="padding:9px 16px;border-radius:20px;border:1.5px solid rgba(106,72,244,.4);background:rgba(106,72,244,.08);color:var(--violet);font:700 12px 'Bricolage Grotesque'">Frame ›</span>
+</div>
+</div>
+
+<!-- CAMERA TILE + BADGES -->
+<div style="width:520px;background:var(--dark);border-radius:20px;box-shadow:0 16px 40px -18px rgba(20,10,5,.4);padding:30px;color:#f3efe9">
+<h3 style="font-size:16px;font-weight:800;margin:0 0 4px">Camera tile & status</h3>
+<p style="font:500 12px/1.4 'Plus Jakarta Sans';color:#9a9188;margin:0 0 20px">Rounded 18px, name pill bottom-left, status dot top-right.</p>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+<div style="position:relative;height:100px;border-radius:18px;overflow:hidden;border:1.5px solid rgba(255,255,255,.08)"><span style="position:absolute;inset:0;background:#ffb890"></span><span style="position:absolute;bottom:7px;left:7px;font:700 10px 'Bricolage Grotesque';color:#fff;background:rgba(0,0,0,.35);padding:2px 8px;border-radius:7px">You</span><span style="position:absolute;top:7px;right:7px;width:18px;height:18px;border-radius:50%;background:#33c66a;display:flex;align-items:center;justify-content:center;font:700 10px system-ui;color:#fff">✓</span></div>
+<div style="position:relative;height:100px;border-radius:18px;background:#26232c;border:1.5px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center"><span style="font:700 11px 'Bricolage Grotesque';color:#8f877d">enabling…</span><span style="position:absolute;bottom:7px;left:7px;font:700 10px 'Bricolage Grotesque';color:#fff;background:rgba(0,0,0,.35);padding:2px 8px;border-radius:7px">Ama</span><span style="position:absolute;top:7px;right:7px;width:18px;height:18px;border-radius:50%;background:#e5a92e;display:flex;align-items:center;justify-content:center;font:700 10px system-ui;color:#fff">…</span></div>
+<div style="position:relative;height:100px;border-radius:18px;background:#201d25;border:1.5px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center"><span style="font:700 10px 'Bricolage Grotesque';color:#6d6560">camera off</span><span style="position:absolute;bottom:7px;left:7px;font:700 10px 'Bricolage Grotesque';color:#fff;background:rgba(0,0,0,.35);padding:2px 8px;border-radius:7px">Zey</span><span style="position:absolute;top:7px;right:7px;width:18px;height:18px;border-radius:50%;background:var(--coral);display:flex;align-items:center;justify-content:center;font:700 9px system-ui;color:#fff">✕</span></div>
+</div>
+<div style="font:700 10px 'Bricolage Grotesque';color:#9a9188;letter-spacing:.1em;margin:22px 0 12px">RADIUS · SPACING · MOTION</div>
+<div style="display:flex;gap:20px;font:500 12px/1.5 'Plus Jakarta Sans';color:#cfc7bc">
+<span>Radius 12 / 16 / 18 / 48</span><span>Gap 8 / 12 / 20</span><span>150–300ms ease-out</span>
+</div>
+</div>
+
+</div>
+</div>
+</div>
+</x-dc>
+</body>
+</html>

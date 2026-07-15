@@ -1,0 +1,12 @@
+{
+  "name": "snaproom-spike",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Spike de faisabilite WebRTC : connexion P2P + capture synchronisee entre 2 navigateurs.",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

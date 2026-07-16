@@ -68,10 +68,23 @@ export function createPeerConnection(options: PeerConnectionOptions) {
     }
   }
 
+  // Remplace les pistes envoyées par une nouvelle caméra (ex. après un
+  // track.stop() suivi d'un nouveau getUserMedia) SANS renégocier ni rejoindre
+  // le signaling — la connexion (et le rôle hôte/invité déjà tiré) reste
+  // intacte. `replaceTrack` est fait pour exactement ce cas.
+  async function replaceLocalStream(newStream: MediaStream) {
+    const senders = pc.getSenders();
+    for (const track of newStream.getTracks()) {
+      const sender = senders.find((s) => s.track?.kind === track.kind);
+      if (sender) await sender.replaceTrack(track);
+    }
+  }
+
   return {
     pc,
     createOffer,
     handleSignal,
+    replaceLocalStream,
     getDataChannel: () => dataChannel,
   };
 }

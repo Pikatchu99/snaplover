@@ -53,6 +53,14 @@ export function RoomClient({ code, poses, frameId, style, name }: RoomClientProp
     }
   }, [stripUrl, localStream]);
 
+  // "Reprendre" doit redemander un flux caméra tout neuf : celui d'avant a
+  // été arrêté (track.stop(), ci-dessus) en arrivant sur le résultat, donc
+  // sans ça la caméra ne revient jamais en salle d'attente.
+  function handleRetry() {
+    retry();
+    retryCamera();
+  }
+
   if (stripUrl) {
     return (
       <PhotoStrip
@@ -61,7 +69,7 @@ export function RoomClient({ code, poses, frameId, style, name }: RoomClientProp
         frameId={effectiveFrameId}
         style={effectiveStyle}
         names={{ host: hostName, guest: guestName }}
-        onRetry={retry}
+        onRetry={handleRetry}
       />
     );
   }

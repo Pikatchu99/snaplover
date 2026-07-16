@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, type RefObject } from "react";
-import { CheckCircle2, Loader2, VideoOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fr } from "@/i18n/messages";
 
@@ -17,10 +16,12 @@ interface CameraTileProps {
   videoRef?: RefObject<HTMLVideoElement | null>;
 }
 
-const STATE_CONFIG = {
-  ready: { icon: CheckCircle2, className: "text-emerald-400", text: fr.cameraTile.ready },
-  connecting: { icon: Loader2, className: "text-amber-400 animate-spin", text: fr.cameraTile.connecting },
-  off: { icon: VideoOff, className: "text-red-400", text: fr.cameraTile.off },
+// Rond 18px, dot de statut en haut à droite, pill de nom en bas à gauche —
+// voir docs/design/design-system.dc.html ("Camera tile & status").
+const STATE_DOT_CLASS = {
+  ready: "bg-emerald-400",
+  connecting: "bg-amber-400",
+  off: "bg-[#fb5a46]",
 } as const;
 
 export function CameraTile({ stream, label, state, mirrored, muted, videoRef: externalRef }: CameraTileProps) {
@@ -36,10 +37,8 @@ export function CameraTile({ stream, label, state, mirrored, muted, videoRef: ex
     video.play().catch(() => {});
   }, [stream, videoRef]);
 
-  const { icon: Icon, className, text } = STATE_CONFIG[state];
-
   return (
-    <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-zinc-900">
+    <div className="relative aspect-[3/4] w-full overflow-hidden rounded-[18px] bg-zinc-900">
       <video
         ref={videoRef}
         autoPlay
@@ -47,13 +46,20 @@ export function CameraTile({ stream, label, state, mirrored, muted, videoRef: ex
         muted={muted}
         className={cn("h-full w-full object-cover", mirrored && "-scale-x-100")}
       />
-      <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-linear-to-t from-black/70 to-transparent p-3">
-        <span className="text-sm font-medium text-white">{label}</span>
-        <span className={cn("flex items-center gap-1 text-xs font-medium", className)}>
-          <Icon className="size-4" />
-          {text}
-        </span>
-      </div>
+      {state !== "ready" && (
+        <div className="absolute inset-0 flex items-center justify-center px-4 text-center text-sm text-white/60">
+          {state === "connecting" ? fr.cameraTile.connecting : fr.cameraTile.off}
+        </div>
+      )}
+      <span
+        className={cn(
+          "absolute right-3 top-3 size-3 rounded-full ring-2 ring-black/30",
+          STATE_DOT_CLASS[state],
+        )}
+      />
+      <span className="absolute bottom-3 left-3 rounded-full bg-black/55 px-3 py-1 text-xs font-medium text-white">
+        {label}
+      </span>
     </div>
   );
 }

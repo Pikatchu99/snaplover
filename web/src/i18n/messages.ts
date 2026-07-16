@@ -8,11 +8,13 @@
 export const messages = {
   fr: {
     landing: {
-      title: "Une seule photo. À deux, même à distance.",
+      titlePrefix: "Une seule photo. À deux, même à",
+      titleHighlight: "distance.",
       subtitle:
         "Rejoignez un lien, caméras allumées, 3·2·1 — clic. Vous repartez chacun avec la même bande photo, où que vous soyez.",
       createCta: "Créer une room",
       joinCta: "Rejoindre une room",
+      pasteLinkPlaceholder: "Coller le lien / code…",
       noAccount: "Aucun compte requis · directement dans le navigateur",
     },
     join: {
@@ -25,7 +27,8 @@ export const messages = {
       noAccount: "Aucun compte requis pour rejoindre.",
     },
     create: {
-      title: "Créer une room",
+      title: "Nouvelle room",
+      back: "Retour",
       posesLabel: "Poses par bande",
       posesOption: (n: number) => `${n} poses`,
       styleLabel: "Style de bande",

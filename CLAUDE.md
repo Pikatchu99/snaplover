@@ -181,13 +181,20 @@ simple "scrub avant de rendre public" :
   Typo : titres Bricolage Grotesque (700/800), corps Plus Jakarta Sans. Écran de capture en sombre.
 - Maquettes de référence (rendu exact) dans `docs/design/*.dc.html` : design-system, wireframes,
   snaproom-hifi, snaproom-session, snaproom-etats.
-- **Écart connu (à corriger)** : les écrans construits jusqu'ici (landing, join, create, lobby,
-  capture, résultat) ont été implémentés à partir de la **description textuelle** du §12 de la
-  spec, pas en ouvrant réellement les maquettes Pencil via les outils MCP `pencil`. Les couleurs/
-  mises en page/espacements actuels sont donc une interprétation, pas un rendu fidèle. **Une passe
-  dédiée de mise en conformité avec les maquettes réelles est prévue avant de considérer l'UI
-  finalisée** — ouvrir `docs/design/*.dc.html` avec les outils `pencil` (get_screenshot, batch_get)
-  et ajuster chaque écran en conséquence.
+- **Passe de fidélité design faite.** Note technique : `docs/design/*.dc.html` ne sont **pas** des
+  fichiers `.pen` (les outils MCP `pencil` ne s'y connectent pas — document vide à l'ouverture).
+  Ce sont des pages HTML autonomes ("créées avec Claude Design"/dc-runtime) : on les inspecte en
+  les servant en local (`python3 -m http.server` depuis `docs/design/`) et en les capturant via
+  Chrome headless + CDP (`Page.captureScreenshot`), pas via les tools `pencil`.
+- Écrans alignés sur `snaproom-hifi.dc.html` (landing/join/create) et `snaproom-session.dc.html`
+  (lobby/séance/résultat) : landing et résultat en fond **clair** (paper), lobby/séance en fond
+  **sombre** (dark) ; `CameraTile` = dot de statut en haut à droite + pill de nom en bas à gauche
+  (pas de badge icône+texte) ; bouton "Rejoindre" en **violet** (le violet marque le chemin
+  "rejoindre", le corail l'action primaire) ; boutons à coins arrondis 16-18px, jamais `rounded-full`
+  pilule sauf les chips/tags. Écran Créer une room : aperçu live de la bande (`RoomPreview`,
+  réagit à poses/style/cadre) ajouté sur demande explicite, avant même la construction du J5.
+- `StripPreview` (landing) accepte une prop `images` (paires par case, hôte/invité) pour de vraies
+  photos plus tard — tant qu'aucune image n'est fournie, retombe sur des aplats de couleur.
 
 ## i18n (architecture prête à évoluer)
 Une seule locale aujourd'hui (`fr`), mais l'architecture est pensée pour brancher une vraie lib

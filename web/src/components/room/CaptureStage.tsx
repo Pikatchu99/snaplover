@@ -27,19 +27,18 @@ export function CaptureStage({
   const poseNumber = Math.min(currentPose + 1, poses);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-[#161319] px-4 py-12">
-      <div className="flex items-center gap-3">
-        <span className="rounded-full bg-red-500/20 px-3 py-1 text-xs font-semibold text-red-400">
-          ● {fr.captureStage.live}
-        </span>
-        <span className="rounded-full border border-white/20 px-3 py-1 text-xs font-medium text-white">
+    <div className="flex min-h-screen flex-col gap-6 bg-[#161319] px-5 py-6">
+      <div className="mx-auto flex w-full max-w-2xl items-center justify-between">
+        <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white">
           {fr.captureStage.pose(poseNumber, poses)}
+        </span>
+        <span className="flex items-center gap-1.5 text-xs font-semibold text-[#fb5a46]">
+          <span className="size-1.5 rounded-full bg-[#fb5a46]" />
+          {fr.captureStage.instruction}
         </span>
       </div>
 
-      <p className="text-sm text-white/60">{fr.captureStage.instruction}</p>
-
-      <div className="relative grid w-full max-w-2xl grid-cols-2 gap-4">
+      <div className="relative mx-auto grid w-full max-w-2xl flex-1 grid-cols-2 gap-4">
         <CameraTile stream={localStream} label={fr.lobby.you} state="ready" mirrored muted videoRef={localVideoRef} />
         <CameraTile stream={remoteStream} label={fr.lobby.partner} state={remoteStream ? "ready" : "off"} />
         {status === "countdown" && <Countdown remainingMs={countdownMs} />}

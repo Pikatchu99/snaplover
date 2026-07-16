@@ -17,10 +17,8 @@ interface PhotoStripProps {
   onRetry: () => void;
 }
 
-const ACTION_BUTTON_CLASS =
-  "inline-flex items-center gap-2 rounded-full border border-white/20 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-white/10";
-
 // Résultat (E6) : bande composée, filtres, téléchargement, partage, reprendre.
+// Fond clair (comme landing/create) — seuls lobby/séance sont en sombre.
 // Cadres/thèmes (§13) : voir lib/frames/frame-registry.ts — packs illustrés
 // pas encore disponibles (assets manquants).
 export function PhotoStrip({ cells, initialStripUrl, frameId, style, onRetry }: PhotoStripProps) {
@@ -58,14 +56,36 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, onRetry }: 
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-[#161319] px-4 py-12">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-[#fbf7f1] px-4 py-12">
       <div className="flex flex-col items-center gap-1 text-center">
-        <p className="text-sm text-white/60">{fr.photoStrip.eyebrow}</p>
-        <h1 className="font-heading text-2xl font-bold text-white">{fr.photoStrip.title}</h1>
+        <p className="text-xs font-semibold tracking-[0.15em] text-[#fb5a46] uppercase">{fr.photoStrip.eyebrow}</p>
+        <h1 className="font-heading text-2xl font-bold text-[#1c1712]">{fr.photoStrip.title}</h1>
       </div>
 
       {/* eslint-disable-next-line @next/next/no-img-element -- data URL générée côté client, next/image ne s'applique pas */}
-      <img src={stripUrl} alt="Bande photo composée" className="max-h-[55vh] rounded-lg border border-white/10" />
+      <img
+        src={stripUrl}
+        alt="Bande photo composée"
+        className="max-h-[50vh] rounded-lg border border-[#ece4d8] shadow-sm"
+      />
+
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        <a
+          href={stripUrl}
+          download="snaproom.png"
+          className="inline-flex items-center gap-2 rounded-2xl bg-linear-to-r from-[#fb5a46] to-[#ff7d54] px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
+        >
+          <Download className="size-4" />
+          {fr.photoStrip.download}
+        </a>
+        <button
+          onClick={handleShare}
+          className="inline-flex items-center gap-2 rounded-2xl border border-[#ece4d8] px-5 py-2.5 text-sm font-medium text-[#1c1712] transition hover:bg-[#ece4d8]/40"
+        >
+          <Share2 className="size-4" />
+          {fr.photoStrip.share}
+        </button>
+      </div>
 
       <div className="flex gap-2">
         {FILTER_IDS.map((id) => (
@@ -75,8 +95,8 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, onRetry }: 
             className={cn(
               "rounded-full border px-4 py-1.5 text-sm font-medium transition",
               filter === id
-                ? "border-white bg-white text-[#161319]"
-                : "border-white/20 text-white hover:bg-white/10",
+                ? "border-[#1c1712] bg-[#1c1712] text-white"
+                : "border-[#ece4d8] text-[#8c8378] hover:border-[#8c8378]",
             )}
           >
             {fr.photoStrip.filters[id]}
@@ -84,22 +104,15 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, onRetry }: 
         ))}
       </div>
 
-      <div className="flex flex-wrap items-center justify-center gap-3">
-        <a href={stripUrl} download="snaproom.png" className={ACTION_BUTTON_CLASS}>
-          <Download className="size-4" />
-          {fr.photoStrip.download}
-        </a>
-        <button onClick={handleShare} className={ACTION_BUTTON_CLASS}>
-          <Share2 className="size-4" />
-          {fr.photoStrip.share}
-        </button>
-        <button onClick={onRetry} className={ACTION_BUTTON_CLASS}>
-          <RotateCcw className="size-4" />
-          {fr.photoStrip.retry}
-        </button>
-      </div>
+      <button
+        onClick={onRetry}
+        className="inline-flex items-center gap-2 rounded-full border border-[#ece4d8] px-4 py-1.5 text-sm font-medium text-[#8c8378] transition hover:border-[#8c8378]"
+      >
+        <RotateCcw className="size-4" />
+        {fr.photoStrip.retry}
+      </button>
 
-      <p className="max-w-md text-center text-xs text-white/50">{fr.photoStrip.note}</p>
+      <p className="max-w-md text-center text-xs text-[#8c8378]">{fr.photoStrip.note}</p>
     </div>
   );
 }

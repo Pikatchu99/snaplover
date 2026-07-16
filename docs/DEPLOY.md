@@ -98,11 +98,11 @@ sudo systemctl enable --now cloudflared
 sudo systemctl status cloudflared   # doit être "active (running)"
 ```
 
-## Étape 7 — GitHub : secrets et variables du repo
+## Étape 7 — GitHub : secrets du repo
 
-Settings → Secrets and variables → Actions.
-
-**Secrets** (sensibles, jamais affichés après création) :
+Settings → Secrets and variables → Actions → Secrets (tout en Secrets ici — `NEXT_PUBLIC_*`
+pourrait techniquement aller en Variables puisque non sensible par nature, mais Secrets fonctionne
+tout aussi bien et évite d'avoir deux emplacements différents à gérer) :
 
 | Secret | Valeur |
 |---|---|
@@ -110,12 +110,6 @@ Settings → Secrets and variables → Actions.
 | `VPS_DEPLOY_USER` | `deploy` |
 | `VPS_DEPLOY_SSH_KEY` | contenu de `~/.ssh/snaplover_deploy` (la clé **privée** de l'étape 3) |
 | `VPS_SSH_PORT` | optionnel, `22` par défaut |
-
-**Variables** (non sensibles — valeurs publiques par construction, `NEXT_PUBLIC_*` finit de toute
-façon dans le bundle client) :
-
-| Variable | Valeur |
-|---|---|
 | `NEXT_PUBLIC_SITE_URL` | `https://snaplover.hbdwall.xyz` |
 | `NEXT_PUBLIC_SIGNALING_URL` | `wss://signaling.snaplover.hbdwall.xyz` |
 | `NEXT_PUBLIC_UMAMI_SCRIPT_URL` | optionnel, si analytics activé |

@@ -43,11 +43,12 @@ jobs:
       - uses: docker/setup-buildx-action@v3
 
       # NEXT_PUBLIC_* : figées dans le bundle client au build (voir
-      # web/Dockerfile) — donc en repo Variables (non sensibles, valeurs
-      # publiques par construction), pas en Secrets. À définir dans Settings
-      # → Secrets and variables → Actions → Variables. Les vraies valeurs
-      # server-only (STUN_URLS, TURN_*) ne sont PAS ici : runtime-only, elles
-      # vivent uniquement dans ~/snaplover/web.env sur le VPS.
+      # web/Dockerfile). Non sensibles par nature (elles finissent de toute
+      # façon dans le bundle client), mais stockées ici en Secrets plutôt
+      # qu'en Variables — les deux fonctionnent, Secrets fait doublon avec
+      # rien d'autre dans ce repo. Les vraies valeurs server-only
+      # (STUN_URLS, TURN_*) ne sont PAS ici : runtime-only, elles vivent
+      # uniquement dans ~/snaplover/web.env sur le VPS.
       - name: Build & push
         uses: docker/build-push-action@v6
         with:
@@ -55,10 +56,10 @@ jobs:
           file: web/Dockerfile
           push: true
           build-args: |
-            NEXT_PUBLIC_SITE_URL=${{ vars.NEXT_PUBLIC_SITE_URL }}
-            NEXT_PUBLIC_SIGNALING_URL=${{ vars.NEXT_PUBLIC_SIGNALING_URL }}
-            NEXT_PUBLIC_UMAMI_SCRIPT_URL=${{ vars.NEXT_PUBLIC_UMAMI_SCRIPT_URL }}
-            NEXT_PUBLIC_UMAMI_WEBSITE_ID=${{ vars.NEXT_PUBLIC_UMAMI_WEBSITE_ID }}
+            NEXT_PUBLIC_SITE_URL=${{ secrets.NEXT_PUBLIC_SITE_URL }}
+            NEXT_PUBLIC_SIGNALING_URL=${{ secrets.NEXT_PUBLIC_SIGNALING_URL }}
+            NEXT_PUBLIC_UMAMI_SCRIPT_URL=${{ secrets.NEXT_PUBLIC_UMAMI_SCRIPT_URL }}
+            NEXT_PUBLIC_UMAMI_WEBSITE_ID=${{ secrets.NEXT_PUBLIC_UMAMI_WEBSITE_ID }}
           tags: |
             ${{ env.IMAGE }}:${{ steps.meta.outputs.tag }}
             ${{ env.IMAGE }}:latest

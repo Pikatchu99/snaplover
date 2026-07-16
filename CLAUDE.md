@@ -248,10 +248,10 @@ un seul VPS** (l'auteur a pointé le domaine dessus dès le départ, pas de Verc
   pour les deux services).
 - **Piège build-arg vs runtime** : les variables `NEXT_PUBLIC_*` (URL site/signaling/Umami) sont
   figées dans le bundle client par Next.js **au build**, pas à l'exécution — elles passent donc en
-  `--build-arg` dans le workflow (repo Variables GitHub, pas Secrets : non sensibles par
-  construction), jamais en variable d'env runtime seule. Les variables serveur (`STUN_URLS`,
-  `TURN_*`, `ALLOWED_ORIGIN`) restent runtime-only (`deploy/web.env`/`deploy/signaling.env` sur le
-  VPS, jamais dans l'image).
+  `--build-arg` dans le workflow (secrets GitHub — non sensibles par construction, mais stockées là
+  pour tout centraliser au même endroit), jamais en variable d'env runtime seule. Les variables
+  serveur (`STUN_URLS`, `TURN_*`, `ALLOWED_ORIGIN`) restent runtime-only (`deploy/web.env`/
+  `deploy/signaling.env` sur le VPS, jamais dans l'image).
 - Le bootstrap initial (Docker/cloudflared, utilisateur de déploiement dédié, clé SSH, tunnel
   Cloudflare, secrets/variables GitHub) est manuel et unique — voir `docs/DEPLOY.md` pour les 9
   étapes exactes dans l'ordre — après quoi chaque push sur `main` redéploie le service concerné

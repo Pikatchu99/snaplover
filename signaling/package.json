@@ -2,7 +2,7 @@
   "name": "signaling",
   "version": "0.1.0",
   "private": true,
-  "description": "Service de signaling WebSocket SnapRoom : met en relation 2 pairs d'une room et relaie offer/answer/ICE. Ne transporte aucun media.",
+  "description": "Service de signaling WebSocket SnapLover : met en relation 2 pairs d'une room et relaie offer/answer/ICE. Ne transporte aucun media.",
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",

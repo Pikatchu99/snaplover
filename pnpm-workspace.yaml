@@ -1,6 +1,7 @@
 packages:
   - "web"
   - "signaling"
+  - "e2e"
 
 allowBuilds:
   esbuild: true

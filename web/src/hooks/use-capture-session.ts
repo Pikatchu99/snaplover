@@ -99,8 +99,16 @@ export function useCaptureSession({
       if (message.t === "ping") respondToPing(channel, message.c);
       else if (message.t === "hello") {
         // L'invité vient de prouver que son listener est attaché : on peut
-        // lui envoyer la config sans risque de course.
-        if (isInitiator) channel.send({ t: "config", poses, frameId, style });
+        // lui envoyer la config sans risque de course. C'est aussi le seul
+        // moment sûr pour relancer une pose en attente (countdown suspendu /
+        // reconnexion) — se fier à l'ouverture du data channel de l'hôte
+        // seule (channel.onOpen) ne garantit pas que le listener du
+        // partenaire (potentiellement une instance toute neuve après une
+        // coupure) est déjà attaché côté React à ce moment précis.
+        if (isInitiator) {
+          channel.send({ t: "config", poses, frameId, style });
+          if (pendingPoseRef.current != null) triggerCapture(pendingPoseRef.current);
+        }
       } else if (message.t === "config") {
         applyConfig(message.poses, message.frameId, message.style);
       } else if (message.t === "capture") scheduleCapture(message.pose, message.fireAtHost);
@@ -115,12 +123,10 @@ export function useCaptureSession({
         stopClockSync = startClockSync(channel, (sample) => {
           offsetRef.current = sample.offset;
         });
-      } else if (pendingPoseRef.current != null) {
-        // Le partenaire vient de (re)rejoindre pendant qu'une pose était en
-        // attente (countdown suspendu / reconnexion en cours de séance) : on
-        // relance immédiatement, la séance reprend là où elle s'était arrêtée.
-        triggerCapture(pendingPoseRef.current);
       }
+      // Côté hôte : rien à faire ici — la reprise d'une pose en attente se
+      // fait dans le handler "hello" ci-dessus, pas sur l'ouverture du canal
+      // (voir commentaire associé).
     });
 
     return () => {

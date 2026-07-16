@@ -66,6 +66,9 @@ snaproom/
 ├─ signaling/                   # service Node WebSocket
 │  ├─ src/server.ts
 │  └─ src/types.ts
+├─ e2e/                         # tests de régression bout en bout (Playwright)
+│  ├─ playwright.config.ts      # lance web+signaling sur des ports dédiés (3100/8090)
+│  └─ tests/                    # happy-path, room-full, invalid-room, reconnect
 ├─ snaproom-spike/               # spike de faisabilité (référence, ne pas déployer)
 ├─ docs/
 │  ├─ SNAPROOM-SPEC.md          # spec produit/technique de référence
@@ -89,7 +92,44 @@ cd signaling && pnpm build
 
 # Ajouter un composant shadcn
 cd web && pnpm dlx shadcn@latest add <component>
+
+# Tests de régression bout en bout (voir "Tests" ci-dessous)
+cd e2e && pnpm test
 ```
+
+## Tests
+Suite Playwright dans `e2e/` — régression bout en bout, pas des tests unitaires. `playwright.config.ts`
+démarre lui-même `web` (port 3100) et `signaling` (port 8090) — **ports dédiés, différents du dev
+quotidien (3000/8080)** pour ne jamais entrer en collision avec un `pnpm dev` déjà lancé à côté.
+Navigateurs headless avec caméra/micro factices (`--use-fake-device-for-media-stream`), `workers: 1`
+(les tests partagent les mêmes serveurs et font de la vraie synchro WebRTC temps réel — plusieurs
+navigateurs concurrents rendaient les délais flaky, priorité à la fiabilité sur la vitesse).
+- `tests/happy-path.spec.ts` : connexion 2 pairs → séance complète → composition → changement de
+  filtre → Reprendre.
+- `tests/room-full.spec.ts` / `tests/invalid-room.spec.ts` : états "room pleine" / "lien invalide"
+  (§12) avec leurs CTA.
+- `tests/reconnect.spec.ts` : coupure brutale d'un pair en pleine séance (ferme son `BrowserContext`,
+  pas juste sa page) → overlay "on attend Partenaire" → reconnexion (nouveau contexte, même code de
+  room) → reprise complète et bande composée des deux côtés.
+- **Piège Turbopack** : `webServer` utilisait d'abord un simple check TCP (`port:`), qui considère le
+  serveur prêt dès que Next écoute — mais Turbopack compile chaque route à la demande, donc la toute
+  première navigation vers `/r/[code]` tombait parfois sur un vrai 404 le temps que la route finisse
+  de compiler. Fix : `url: http://localhost:3100/r/WARMUP` à la place de `port:`, qui force Playwright
+  à attendre une vraie réponse HTTP sur cette route précise avant de démarrer les tests.
+- **Un vrai bug de course trouvé en écrivant `reconnect.spec.ts`** : la reprise d'une pose suspendue
+  se déclenchait sur `channel.onOpen` côté hôte (dès que **son propre** data channel s'ouvre), sans
+  garantie que le listener du partenaire (une instance React toute neuve après la coupure) soit déjà
+  attaché à ce moment précis — recréait exactement la course que le handshake `hello`/`config`
+  existant avait été conçu pour éviter au tout premier lancement de séance. Fix dans
+  `use-capture-session.ts` : la reprise se déclenche maintenant dans le handler du message `hello`
+  (preuve que le partenaire écoute) au lieu de `channel.onOpen`.
+- Installation du navigateur Chromium de Playwright : si `pnpm exec playwright install` semble ne
+  rien faire, vérifier que la commande n'est pas interceptée par un hook shell (ex. `rtk`) qui avale
+  sa sortie — lancer depuis `e2e/` (pas `web/`, la résolution du binaire diffère selon le package) et
+  laisser tourner, ou télécharger le zip via navigateur (souvent bien plus rapide qu'en CLI) et
+  l'extraire à la main dans `~/Library/Caches/ms-playwright/` — dans ce cas, ne pas oublier
+  `xattr -rd com.apple.quarantine` sur le binaire extrait (macOS Gatekeeper bloque sinon
+  silencieusement son exécution, contrairement à l'installeur officiel qui gère ça lui-même).
 
 ## Conventions
 - **TypeScript strict**, types dans `src/types/`, jamais éparpillés/inline.

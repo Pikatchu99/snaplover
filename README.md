@@ -41,12 +41,25 @@ cp .env.example .env
 pnpm dev
 ```
 
+## Tests
+
+Suite de régression bout en bout (Playwright, 2+ navigateurs headless avec caméra factice) :
+
+```bash
+cd e2e
+pnpm test
+```
+
+Démarre automatiquement `web` et `signaling` sur des ports dédiés (3100/8090) — aucun conflit avec
+les serveurs de dev lancés en parallèle.
+
 ## Structure
 
 ```
 snaproom/
 ├─ web/              # Next.js
 ├─ signaling/         # service WebSocket
+├─ e2e/               # tests de régression bout en bout (Playwright)
 ├─ snaproom-spike/    # spike de faisabilité (référence, ne pas déployer)
 └─ docs/
    ├─ SNAPROOM-SPEC.md   # spécification de référence

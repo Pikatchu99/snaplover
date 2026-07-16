@@ -1,5 +1,5 @@
 import type { FilterId, FrameDefinition, StripStyle } from "@/types/frame";
-import { FILTER_CSS } from "@/lib/capture/filters";
+import { FILTER_PIXEL_OPS } from "@/lib/capture/filters";
 import { config } from "@/lib/config";
 import { fr } from "@/i18n/messages";
 
@@ -50,6 +50,38 @@ function drawCover(ctx: CanvasRenderingContext2D, img: HTMLImageElement, x: numb
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
 }
 
+// Recadre l'image ("cover") sur un canvas hors-écran de la taille cible, puis
+// applique le filtre pixel par pixel dessus avant de le reporter sur le
+// canvas final — voir lib/capture/filters.ts pour pourquoi pas ctx.filter.
+function drawCoverFiltered(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  filter: FilterId,
+) {
+  const op = FILTER_PIXEL_OPS[filter];
+  if (!op) {
+    drawCover(ctx, img, x, y, w, h);
+    return;
+  }
+
+  const offscreen = document.createElement("canvas");
+  offscreen.width = w;
+  offscreen.height = h;
+  const offCtx = offscreen.getContext("2d");
+  if (!offCtx) throw new Error("2D canvas context unavailable");
+
+  drawCover(offCtx, img, 0, 0, w, h);
+  const imageData = offCtx.getImageData(0, 0, w, h);
+  op(imageData.data);
+  offCtx.putImageData(imageData, 0, 0);
+
+  ctx.drawImage(offscreen, x, y);
+}
+
 function formatFooterDate(date: Date): string {
   return date.toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase();
 }
@@ -81,16 +113,14 @@ export async function composeStrip(cells: StripCell[], options: ComposeOptions):
 
   frame.paint(ctx, canvas.width, canvas.height, margin);
 
-  ctx.filter = FILTER_CSS[filter];
   loadedCells.forEach(({ left, right }, index) => {
     const col = index % columns;
     const row = Math.floor(index / columns);
     const x = margin + col * (poseWidth + gap);
     const y = margin + row * (cellHeight + gap);
-    drawCover(ctx, left, x, y, cellWidth, cellHeight);
-    drawCover(ctx, right, x + cellWidth + gap, y, cellWidth, cellHeight);
+    drawCoverFiltered(ctx, left, x, y, cellWidth, cellHeight, filter);
+    drawCoverFiltered(ctx, right, x + cellWidth + gap, y, cellWidth, cellHeight, filter);
   });
-  ctx.filter = "none";
 
   ctx.fillStyle = frame.footerTextColor;
   ctx.textAlign = "center";

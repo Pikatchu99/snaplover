@@ -1,5 +1,4 @@
-const MAX_WIDTH = 900;
-const JPEG_QUALITY = 0.82;
+import { config } from "@/lib/config";
 
 interface CaptureFrameOptions {
   /** Dé-miroir la capture si l'aperçu vidéo est affiché en scaleX(-1). */
@@ -15,7 +14,7 @@ export function captureFrame(video: HTMLVideoElement, options: CaptureFrameOptio
   if (w === 0 || h === 0) {
     throw new Error("Vidéo pas encore prête (videoWidth/videoHeight = 0) — capture impossible.");
   }
-  const scale = Math.min(1, MAX_WIDTH / w);
+  const scale = Math.min(1, config.capture.maxWidth / w);
 
   const canvas = document.createElement("canvas");
   canvas.width = Math.round(w * scale);
@@ -30,5 +29,5 @@ export function captureFrame(video: HTMLVideoElement, options: CaptureFrameOptio
   }
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-  return canvas.toDataURL("image/jpeg", JPEG_QUALITY);
+  return canvas.toDataURL("image/jpeg", config.capture.jpegQuality);
 }

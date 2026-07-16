@@ -1,13 +1,13 @@
 import type { RealtimeChannel } from "@/lib/realtime/channel";
 import type { RealtimeMessage } from "@/types/realtime";
-
-const CHUNK_SIZE = 12_000;
+import { config } from "@/lib/config";
 
 // Envoie une moitié capturée par chunks (~12 Ko) — voir SNAPROOM-SPEC.md §9.
 export function sendImage(channel: RealtimeChannel, pose: number, dataUrl: string, hostTime: number) {
   channel.send({ t: "img-meta", pose });
-  for (let i = 0; i < dataUrl.length; i += CHUNK_SIZE) {
-    channel.send({ t: "img", part: dataUrl.slice(i, i + CHUNK_SIZE) });
+  const chunkSize = config.imageTransfer.chunkSize;
+  for (let i = 0; i < dataUrl.length; i += chunkSize) {
+    channel.send({ t: "img", part: dataUrl.slice(i, i + chunkSize) });
   }
   channel.send({ t: "img-end", pose, hostTime });
 }

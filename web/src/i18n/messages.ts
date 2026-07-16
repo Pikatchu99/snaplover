@@ -1,0 +1,94 @@
+// Tous les textes visibles par l'utilisateur, centralisés ici — jamais de
+// chaîne en dur dans les composants. Une seule locale (fr) pour l'instant,
+// mais la structure (un objet par locale, une clé par écran/feature) est
+// pensée pour brancher une vraie lib i18n (next-intl ou équivalent) plus
+// tard sans réécrire les appelants : il suffira de remplacer l'import
+// `fr` par un `useTranslations()` qui lit dans le même arbre de clés.
+
+export const messages = {
+  fr: {
+    landing: {
+      title: "Une seule photo. À deux, même à distance.",
+      subtitle:
+        "Rejoignez un lien, caméras allumées, 3·2·1 — clic. Vous repartez chacun avec la même bande photo, où que vous soyez.",
+      createCta: "Créer une room",
+      joinCta: "Rejoindre une room",
+      noAccount: "Aucun compte requis · directement dans le navigateur",
+    },
+    join: {
+      eyebrow: "Quelqu'un vous a invité ?",
+      title: "Rejoindre sa room",
+      codeInputLabel: (index: number) => `Caractère ${index} du code`,
+      invalidCode: "Code invalide.",
+      submit: "Rejoindre",
+      createInstead: "Créer ma propre room",
+      noAccount: "Aucun compte requis pour rejoindre.",
+    },
+    create: {
+      title: "Créer une room",
+      posesLabel: "Poses par bande",
+      posesOption: (n: number) => `${n} poses`,
+      styleLabel: "Style de bande",
+      styleVertical: "Strip vertical",
+      styleGrid: "Grille 2×2",
+      frameLabel: "Cadre",
+      submit: "Créer et copier le lien",
+    },
+    lobby: {
+      title: "Salle d'attente",
+      you: "Vous",
+      partner: "Partenaire",
+      launch: "Lancer la séance",
+      cameraDeniedMessage:
+        "Caméra bloquée. Autorisez l'accès à votre caméra dans les réglages de votre navigateur, puis rechargez la page.",
+      roomFullMessage: "SnapRoom, c'est à deux — cette room est déjà complète.",
+      invalidRoomMessage: "Cette room a expiré ou le code est incorrect.",
+      status: {
+        requestingCamera: "Activation de votre caméra…",
+        cameraDenied: "Caméra bloquée",
+        waitingForPeer: "En attente de votre partenaire…",
+        connecting: "Connexion en cours…",
+        connected: "2 connectés · caméras prêtes",
+        roomFull: "Cette room est déjà à deux",
+        invalidRoom: "Code de room invalide",
+      },
+    },
+    cameraTile: {
+      ready: "Prête",
+      connecting: "En cours",
+      off: "Off",
+    },
+    captureStage: {
+      live: "live",
+      pose: (current: number, total: number) => `Pose ${current} / ${total}`,
+      instruction: "Regardez l'objectif…",
+    },
+    countdown: {
+      ready: "PRÊT·E ?",
+    },
+    photoStrip: {
+      eyebrow: "C'est dans la boîte",
+      title: "Votre bande est prête",
+      download: "Télécharger PNG",
+      share: "Partager",
+      retry: "Reprendre",
+      note: "Vous avez chacun votre copie. La bande pleine résolution est enregistrée sur chaque appareil.",
+      filters: {
+        classic: "Classic",
+        bw: "N&B",
+        warm: "Chaud",
+      },
+    },
+    frames: {
+      classic: "Classic",
+      noir: "Noir",
+      film: "Film",
+    },
+    strip: {
+      /** Footer imprimé sur la bande composée (canvas), pas du JSX. */
+      footer: (date: string) => `SNAPROOM · ${date} · À DEUX`,
+    },
+  },
+} as const;
+
+export const fr = messages.fr;

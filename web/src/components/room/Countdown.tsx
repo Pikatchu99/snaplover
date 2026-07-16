@@ -1,3 +1,5 @@
+import { fr } from "@/i18n/messages";
+
 interface CountdownProps {
   remainingMs: number;
 }
@@ -11,7 +13,7 @@ export function Countdown({ remainingMs }: CountdownProps) {
       <span className="font-heading text-8xl font-extrabold text-white [text-shadow:0_4px_20px_rgba(251,90,70,0.6)]">
         {seconds}
       </span>
-      <span className="mt-2 text-xs tracking-[0.2em] text-white">PRÊT·E ?</span>
+      <span className="mt-2 text-xs tracking-[0.2em] text-white">{fr.countdown.ready}</span>
     </div>
   );
 }

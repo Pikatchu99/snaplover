@@ -3,6 +3,7 @@
 import { useEffect, useRef, type RefObject } from "react";
 import { CheckCircle2, Loader2, VideoOff } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { fr } from "@/i18n/messages";
 
 export type CameraTileState = "ready" | "connecting" | "off";
 
@@ -17,9 +18,9 @@ interface CameraTileProps {
 }
 
 const STATE_CONFIG = {
-  ready: { icon: CheckCircle2, className: "text-emerald-400", text: "Prête" },
-  connecting: { icon: Loader2, className: "text-amber-400 animate-spin", text: "En cours" },
-  off: { icon: VideoOff, className: "text-red-400", text: "Off" },
+  ready: { icon: CheckCircle2, className: "text-emerald-400", text: fr.cameraTile.ready },
+  connecting: { icon: Loader2, className: "text-amber-400 animate-spin", text: fr.cameraTile.connecting },
+  off: { icon: VideoOff, className: "text-red-400", text: fr.cameraTile.off },
 } as const;
 
 export function CameraTile({ stream, label, state, mirrored, muted, videoRef: externalRef }: CameraTileProps) {

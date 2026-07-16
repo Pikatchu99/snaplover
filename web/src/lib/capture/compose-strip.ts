@@ -1,5 +1,7 @@
-import type { FilterId, FrameDefinition } from "@/types/frame";
+import type { FilterId, FrameDefinition, StripStyle } from "@/types/frame";
 import { FILTER_CSS } from "@/lib/capture/filters";
+import { config } from "@/lib/config";
+import { fr } from "@/i18n/messages";
 
 export interface StripCell {
   /** Moitié gauche = hôte (initiator). */
@@ -11,15 +13,11 @@ export interface StripCell {
 export interface ComposeOptions {
   frame: FrameDefinition;
   filter: FilterId;
+  /** Strip vertical (1 case par ligne) ou grille (2 cases par ligne). Défaut : vertical. */
+  style?: StripStyle;
   /** Date affichée dans le footer (par défaut : maintenant). */
   date?: Date;
 }
-
-const CELL_WIDTH = 450;
-const CELL_HEIGHT = 600;
-const GAP = 12;
-const MARGIN = 30;
-const FOOTER_HEIGHT = 54;
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -55,11 +53,12 @@ function formatFooterDate(date: Date): string {
 }
 
 // Compose la bande complète, look rétro-cabine : chaque case = une pose,
-// hôte à gauche / invité à droite, cases empilées verticalement, marges et
-// footer "SNAPROOM · DATE · À DEUX" habillés par le cadre choisi.
-// Voir SNAPROOM-SPEC.md §10, §13.
+// hôte à gauche / invité à droite, marges et footer "SNAPROOM · DATE · À DEUX"
+// habillés par le cadre choisi. Voir SNAPROOM-SPEC.md §10, §13.
 export async function composeStrip(cells: StripCell[], options: ComposeOptions): Promise<string> {
-  const { frame, filter, date = new Date() } = options;
+  const { frame, filter, style = "vertical", date = new Date() } = options;
+  const { cellWidth, cellHeight, columns } = config.strip.layout[style];
+  const { gap, margin, footerHeight } = config.strip;
 
   const loadedCells = await Promise.all(
     cells.map(async (cell) => ({
@@ -68,9 +67,12 @@ export async function composeStrip(cells: StripCell[], options: ComposeOptions):
     })),
   );
 
+  const rows = Math.ceil(loadedCells.length / columns);
+  const poseWidth = cellWidth * 2 + gap;
+
   const canvas = document.createElement("canvas");
-  canvas.width = CELL_WIDTH * 2 + GAP + MARGIN * 2;
-  canvas.height = MARGIN + (CELL_HEIGHT + GAP) * loadedCells.length - GAP + FOOTER_HEIGHT + MARGIN;
+  canvas.width = margin * 2 + poseWidth * columns + gap * (columns - 1);
+  canvas.height = margin + (cellHeight + gap) * rows - gap + footerHeight + margin;
 
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("2D canvas context unavailable");
@@ -80,9 +82,12 @@ export async function composeStrip(cells: StripCell[], options: ComposeOptions):
 
   ctx.filter = FILTER_CSS[filter];
   loadedCells.forEach(({ left, right }, index) => {
-    const y = MARGIN + index * (CELL_HEIGHT + GAP);
-    drawCover(ctx, left, MARGIN, y, CELL_WIDTH, CELL_HEIGHT);
-    drawCover(ctx, right, MARGIN + CELL_WIDTH + GAP, y, CELL_WIDTH, CELL_HEIGHT);
+    const col = index % columns;
+    const row = Math.floor(index / columns);
+    const x = margin + col * (poseWidth + gap);
+    const y = margin + row * (cellHeight + gap);
+    drawCover(ctx, left, x, y, cellWidth, cellHeight);
+    drawCover(ctx, right, x + cellWidth + gap, y, cellWidth, cellHeight);
   });
   ctx.filter = "none";
 
@@ -90,8 +95,8 @@ export async function composeStrip(cells: StripCell[], options: ComposeOptions):
   ctx.font = "600 20px system-ui, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  const footerY = canvas.height - MARGIN - FOOTER_HEIGHT / 2;
-  ctx.fillText(`SNAPROOM · ${formatFooterDate(date)} · À DEUX`, canvas.width / 2, footerY);
+  const footerY = canvas.height - margin - footerHeight / 2;
+  ctx.fillText(fr.strip.footer(formatFooterDate(date)), canvas.width / 2, footerY);
 
   return canvas.toDataURL("image/png");
 }

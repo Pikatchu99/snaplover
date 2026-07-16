@@ -1,6 +1,13 @@
 import { RoomClient } from "@/components/room/RoomClient";
+import { parseRoomConfig } from "@/lib/room-config";
 
-export default async function RoomPage({ params }: { params: Promise<{ code: string }> }) {
+interface RoomPageProps {
+  params: Promise<{ code: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+export default async function RoomPage({ params, searchParams }: RoomPageProps) {
   const { code } = await params;
-  return <RoomClient code={code.toUpperCase()} />;
+  const config = parseRoomConfig(await searchParams);
+  return <RoomClient code={code.toUpperCase()} poses={config.poses} frameId={config.frameId} style={config.style} />;
 }

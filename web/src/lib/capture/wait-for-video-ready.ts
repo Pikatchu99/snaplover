@@ -1,4 +1,4 @@
-const READY_TIMEOUT_MS = 2000;
+import { config } from "@/lib/config";
 
 // Attend qu'une frame décodée soit disponible avant de capturer — certains
 // navigateurs/environnements n'assurent pas la lecture immédiate d'un
@@ -20,6 +20,6 @@ export function waitForVideoReady(video: HTMLVideoElement): Promise<void> {
 
     video.addEventListener("loadeddata", finish, { once: true });
     video.addEventListener("playing", finish, { once: true });
-    setTimeout(finish, READY_TIMEOUT_MS);
+    setTimeout(finish, config.capture.videoReadyTimeoutMs);
   });
 }

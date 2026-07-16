@@ -4,13 +4,16 @@ import { useEffect, useState } from "react";
 import { Download, RotateCcw, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { composeStrip, type StripCell } from "@/lib/capture/compose-strip";
-import { FILTERS } from "@/lib/capture/filters";
-import { FRAMES, DEFAULT_FRAME_ID } from "@/lib/frames/frame-registry";
-import type { FilterId } from "@/types/frame";
+import { FILTER_IDS } from "@/lib/capture/filters";
+import { FRAMES } from "@/lib/frames/frame-registry";
+import { fr } from "@/i18n/messages";
+import type { FilterId, FrameId, StripStyle } from "@/types/frame";
 
 interface PhotoStripProps {
   cells: StripCell[];
   initialStripUrl: string;
+  frameId: FrameId;
+  style: StripStyle;
   onRetry: () => void;
 }
 
@@ -19,14 +22,14 @@ const ACTION_BUTTON_CLASS =
 
 // Résultat (E6) : bande composée, filtres, téléchargement, partage, reprendre.
 // Cadres/thèmes (§13) : voir lib/frames/frame-registry.ts — packs illustrés
-// pas encore disponibles (assets manquants), sélecteur de cadre à E3.
-export function PhotoStrip({ cells, initialStripUrl, onRetry }: PhotoStripProps) {
+// pas encore disponibles (assets manquants).
+export function PhotoStrip({ cells, initialStripUrl, frameId, style, onRetry }: PhotoStripProps) {
   const [filter, setFilter] = useState<FilterId>("classic");
   const [stripUrl, setStripUrl] = useState(initialStripUrl);
 
   useEffect(() => {
     let cancelled = false;
-    composeStrip(cells, { frame: FRAMES[DEFAULT_FRAME_ID], filter }).then((url) => {
+    composeStrip(cells, { frame: FRAMES[frameId], filter, style }).then((url) => {
       if (!cancelled) setStripUrl(url);
     });
     return () => {
@@ -57,26 +60,26 @@ export function PhotoStrip({ cells, initialStripUrl, onRetry }: PhotoStripProps)
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-[#161319] px-4 py-12">
       <div className="flex flex-col items-center gap-1 text-center">
-        <p className="text-sm text-white/60">C&apos;est dans la boîte</p>
-        <h1 className="font-heading text-2xl font-bold text-white">Votre bande est prête</h1>
+        <p className="text-sm text-white/60">{fr.photoStrip.eyebrow}</p>
+        <h1 className="font-heading text-2xl font-bold text-white">{fr.photoStrip.title}</h1>
       </div>
 
       {/* eslint-disable-next-line @next/next/no-img-element -- data URL générée côté client, next/image ne s'applique pas */}
       <img src={stripUrl} alt="Bande photo composée" className="max-h-[55vh] rounded-lg border border-white/10" />
 
       <div className="flex gap-2">
-        {FILTERS.map((f) => (
+        {FILTER_IDS.map((id) => (
           <button
-            key={f.id}
-            onClick={() => setFilter(f.id)}
+            key={id}
+            onClick={() => setFilter(id)}
             className={cn(
               "rounded-full border px-4 py-1.5 text-sm font-medium transition",
-              filter === f.id
+              filter === id
                 ? "border-white bg-white text-[#161319]"
                 : "border-white/20 text-white hover:bg-white/10",
             )}
           >
-            {f.label}
+            {fr.photoStrip.filters[id]}
           </button>
         ))}
       </div>
@@ -84,22 +87,19 @@ export function PhotoStrip({ cells, initialStripUrl, onRetry }: PhotoStripProps)
       <div className="flex flex-wrap items-center justify-center gap-3">
         <a href={stripUrl} download="snaproom.png" className={ACTION_BUTTON_CLASS}>
           <Download className="size-4" />
-          Télécharger PNG
+          {fr.photoStrip.download}
         </a>
         <button onClick={handleShare} className={ACTION_BUTTON_CLASS}>
           <Share2 className="size-4" />
-          Partager
+          {fr.photoStrip.share}
         </button>
         <button onClick={onRetry} className={ACTION_BUTTON_CLASS}>
           <RotateCcw className="size-4" />
-          Reprendre
+          {fr.photoStrip.retry}
         </button>
       </div>
 
-      <p className="max-w-md text-center text-xs text-white/50">
-        Vous avez chacun votre copie. La bande pleine résolution est enregistrée sur chaque
-        appareil.
-      </p>
+      <p className="max-w-md text-center text-xs text-white/50">{fr.photoStrip.note}</p>
     </div>
   );
 }

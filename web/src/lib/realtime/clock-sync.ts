@@ -1,12 +1,10 @@
 import type { RealtimeChannel } from "@/lib/realtime/channel";
+import { config } from "@/lib/config";
 
 export interface ClockSyncSample {
   offset: number;
   rtt: number;
 }
-
-const SYNC_SAMPLES = 8;
-const SYNC_INTERVAL_MS = 400;
 
 // Estime le décalage d'horloge invité → hôte (l'hôte reste la référence,
 // offset = 0). Garde l'échantillon au RTT le plus petit (le plus fiable).
@@ -26,12 +24,12 @@ export function startClockSync(channel: RealtimeChannel, onUpdate: (sample: Cloc
   });
 
   const interval = setInterval(() => {
-    if (sent++ >= SYNC_SAMPLES) {
+    if (sent++ >= config.clockSync.samples) {
       clearInterval(interval);
       return;
     }
     channel.send({ t: "ping", c: Date.now() });
-  }, SYNC_INTERVAL_MS);
+  }, config.clockSync.intervalMs);
 
   return () => {
     clearInterval(interval);

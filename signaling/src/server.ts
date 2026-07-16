@@ -8,7 +8,11 @@ import { createServer } from "node:http";
 import { WebSocketServer, WebSocket, type RawData } from "ws";
 import type { ClientMessage, ServerMessage } from "./types.js";
 
-const PORT = Number(process.env.PORT) || 8080;
+// Le process doit bind un port pour démarrer : fallback conservé, mais on
+// avertit toujours plutôt que de laisser passer silencieusement (voir
+// CLAUDE.md "Aucune valeur d'infra en dur").
+if (!process.env.PORT) console.warn("PORT not set — defaulting to 8080.");
+const PORT = process.env.PORT ? Number(process.env.PORT) : 8080;
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN;
 const MAX_ROOMS = Number(process.env.MAX_ROOMS) || 5000;
 const HEARTBEAT_INTERVAL_MS = 30_000;

@@ -3,28 +3,37 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { RealtimeChannel } from "@/lib/realtime/channel";
 import { respondToPing, startClockSync } from "@/lib/realtime/clock-sync";
-import { CAPTURE_LEAD_MS, computeCaptureDelay } from "@/lib/realtime/schedule-capture";
+import { computeCaptureDelay } from "@/lib/realtime/schedule-capture";
 import { captureFrame } from "@/lib/capture/capture-frame";
 import { waitForVideoReady } from "@/lib/capture/wait-for-video-ready";
 import { createImageReceiver, sendImage } from "@/lib/capture/image-transfer";
 import { composeStrip, type StripCell } from "@/lib/capture/compose-strip";
-import { FRAMES, DEFAULT_FRAME_ID } from "@/lib/frames/frame-registry";
+import { FRAMES } from "@/lib/frames/frame-registry";
+import { config } from "@/lib/config";
+import type { FrameId, StripStyle } from "@/types/frame";
 
 export type CaptureSessionStatus = "idle" | "countdown" | "capturing" | "done";
-
-const AUTO_ADVANCE_DELAY_MS = 1200;
 
 interface UseCaptureSessionOptions {
   dataChannel: RTCDataChannel | null;
   isInitiator: boolean;
   poses: number;
+  frameId: FrameId;
+  style: StripStyle;
   localVideoRef: RefObject<HTMLVideoElement | null>;
 }
 
 // Orchestration d'une séance : clock-sync, déclenchement synchronisé
 // multi-poses, capture locale, échange et composition de la bande.
 // Voir SNAPROOM-SPEC.md §9-§10.
-export function useCaptureSession({ dataChannel, isInitiator, poses, localVideoRef }: UseCaptureSessionOptions) {
+export function useCaptureSession({
+  dataChannel,
+  isInitiator,
+  poses,
+  frameId,
+  style,
+  localVideoRef,
+}: UseCaptureSessionOptions) {
   const [status, setStatus] = useState<CaptureSessionStatus>("idle");
   const [hasStarted, setHasStarted] = useState(false);
   const [currentPose, setCurrentPose] = useState(0);
@@ -32,6 +41,31 @@ export function useCaptureSession({ dataChannel, isInitiator, poses, localVideoR
   const [stripUrl, setStripUrl] = useState<string | null>(null);
   const [cells, setCells] = useState<StripCell[]>([]);
   const [captureDeltasMs, setCaptureDeltasMs] = useState<number[]>([]);
+
+  // L'invité peut arriver via un code saisi (sans les query params de
+  // l'hôte) — l'hôte diffuse sa config à la connexion et fait autorité.
+  // Refs (pas seulement du state) : le dispatcher de messages du data
+  // channel est câblé une seule fois (l'effet ne dépend que de
+  // [dataChannel, isInitiator]) — s'il ne lisait que des variables de state
+  // fermées par closure, il resterait bloqué sur leur valeur au moment du
+  // montage. Les refs garantissent que tryComposeCell lit toujours la
+  // dernière config reçue, quelle que soit l'ancienneté de la closure qui
+  // l'appelle.
+  const [effectivePoses, setEffectivePosesState] = useState(poses);
+  const [effectiveFrameId, setEffectiveFrameIdState] = useState(frameId);
+  const [effectiveStyle, setEffectiveStyleState] = useState(style);
+  const effectivePosesRef = useRef(poses);
+  const effectiveFrameIdRef = useRef(frameId);
+  const effectiveStyleRef = useRef(style);
+
+  function applyConfig(nextPoses: number, nextFrameId: FrameId, nextStyle: StripStyle) {
+    effectivePosesRef.current = nextPoses;
+    effectiveFrameIdRef.current = nextFrameId;
+    effectiveStyleRef.current = nextStyle;
+    setEffectivePosesState(nextPoses);
+    setEffectiveFrameIdState(nextFrameId);
+    setEffectiveStyleState(nextStyle);
+  }
 
   const channelRef = useRef<RealtimeChannel | null>(null);
   const offsetRef = useRef(0);
@@ -55,7 +89,13 @@ export function useCaptureSession({ dataChannel, isInitiator, poses, localVideoR
 
     const unsubscribeMessages = channel.onMessage((message) => {
       if (message.t === "ping") respondToPing(channel, message.c);
-      else if (message.t === "capture") scheduleCapture(message.pose, message.fireAtHost);
+      else if (message.t === "hello") {
+        // L'invité vient de prouver que son listener est attaché : on peut
+        // lui envoyer la config sans risque de course.
+        if (isInitiator) channel.send({ t: "config", poses, frameId, style });
+      } else if (message.t === "config") {
+        applyConfig(message.poses, message.frameId, message.style);
+      } else if (message.t === "capture") scheduleCapture(message.pose, message.fireAtHost);
       else if (message.t === "reset") resetState();
       else receiveImage(message);
     });
@@ -63,6 +103,7 @@ export function useCaptureSession({ dataChannel, isInitiator, poses, localVideoR
     let stopClockSync: (() => void) | undefined;
     channel.onOpen(() => {
       if (!isInitiator) {
+        channel.send({ t: "hello" });
         stopClockSync = startClockSync(channel, (sample) => {
           offsetRef.current = sample.offset;
         });
@@ -143,23 +184,27 @@ export function useCaptureSession({ dataChannel, isInitiator, poses, localVideoR
     const nextPose = pose + 1;
     setCurrentPose(nextPose);
 
-    if (nextPose >= poses) {
+    if (nextPose >= effectivePosesRef.current) {
       setStatus("done");
       const finalCells = [...cellsRef.current];
       setCells(finalCells);
-      composeStrip(finalCells, { frame: FRAMES[DEFAULT_FRAME_ID], filter: "classic" })
+      composeStrip(finalCells, {
+        frame: FRAMES[effectiveFrameIdRef.current],
+        filter: "classic",
+        style: effectiveStyleRef.current,
+      })
         .then(setStripUrl)
         .catch((error) => console.error("[capture] échec de composition de la bande:", error));
       return;
     }
 
     setStatus("idle");
-    if (isInitiator) setTimeout(() => triggerCapture(nextPose), AUTO_ADVANCE_DELAY_MS);
+    if (isInitiator) setTimeout(() => triggerCapture(nextPose), config.capture.autoAdvanceDelayMs);
   }
 
   function triggerCapture(pose: number) {
     if (!isInitiator || !channelRef.current) return;
-    const fireAtHost = Date.now() + CAPTURE_LEAD_MS;
+    const fireAtHost = Date.now() + config.capture.leadMs;
     channelRef.current.send({ t: "capture", pose, fireAtHost });
     scheduleCapture(pose, fireAtHost);
   }
@@ -183,7 +228,9 @@ export function useCaptureSession({ dataChannel, isInitiator, poses, localVideoR
     status,
     hasStarted,
     currentPose,
-    poses,
+    poses: effectivePoses,
+    frameId: effectiveFrameId,
+    style: effectiveStyle,
     countdownMs,
     stripUrl,
     cells,

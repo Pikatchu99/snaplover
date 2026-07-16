@@ -6,10 +6,19 @@ import { useCaptureSession } from "@/hooks/use-capture-session";
 import { Lobby } from "@/components/room/Lobby";
 import { CaptureStage } from "@/components/room/CaptureStage";
 import { PhotoStrip } from "@/components/strip/PhotoStrip";
+import type { FrameId, StripStyle } from "@/types/frame";
 
-const POSES = 3;
+interface RoomClientProps {
+  code: string;
+  // Config initiale lue dans l'URL — l'hôte fait autorité et la rediffuse au
+  // data channel (voir hooks/use-capture-session.ts), l'invité peut l'ajuster
+  // s'il est arrivé via un code saisi sans ces query params.
+  poses: number;
+  frameId: FrameId;
+  style: StripStyle;
+}
 
-export function RoomClient({ code }: { code: string }) {
+export function RoomClient({ code, poses, frameId, style }: RoomClientProps) {
   const { localStream, remoteStream, status, dataChannel, isInitiator } = useRoomConnection(code);
   const localVideoRef = useRef<HTMLVideoElement>(null);
 
@@ -17,15 +26,26 @@ export function RoomClient({ code }: { code: string }) {
     status: captureStatus,
     hasStarted,
     currentPose,
+    poses: effectivePoses,
+    frameId: effectiveFrameId,
+    style: effectiveStyle,
     countdownMs,
     stripUrl,
     cells,
     startSession,
     retry,
-  } = useCaptureSession({ dataChannel, isInitiator, poses: POSES, localVideoRef });
+  } = useCaptureSession({ dataChannel, isInitiator, poses, frameId, style, localVideoRef });
 
   if (stripUrl) {
-    return <PhotoStrip cells={cells} initialStripUrl={stripUrl} onRetry={retry} />;
+    return (
+      <PhotoStrip
+        cells={cells}
+        initialStripUrl={stripUrl}
+        frameId={effectiveFrameId}
+        style={effectiveStyle}
+        onRetry={retry}
+      />
+    );
   }
 
   if (hasStarted) {
@@ -36,7 +56,7 @@ export function RoomClient({ code }: { code: string }) {
         localVideoRef={localVideoRef}
         status={captureStatus}
         currentPose={currentPose}
-        poses={POSES}
+        poses={effectivePoses}
         countdownMs={countdownMs}
       />
     );

@@ -4,6 +4,7 @@ import { useState, type RefObject } from "react";
 import { Check, Copy } from "lucide-react";
 import { CameraTile, type CameraTileState } from "@/components/room/CameraTile";
 import type { RoomConnectionStatus } from "@/hooks/use-room-connection";
+import { fr } from "@/i18n/messages";
 
 interface LobbyProps {
   roomCode: string;
@@ -16,13 +17,13 @@ interface LobbyProps {
 }
 
 const STATUS_LABEL: Record<RoomConnectionStatus, string> = {
-  "requesting-camera": "Activation de votre caméra…",
-  "camera-denied": "Caméra bloquée",
-  "waiting-for-peer": "En attente de votre partenaire…",
-  connecting: "Connexion en cours…",
-  connected: "2 connectés · caméras prêtes",
-  "room-full": "Cette room est déjà à deux",
-  "invalid-room": "Code de room invalide",
+  "requesting-camera": fr.lobby.status.requestingCamera,
+  "camera-denied": fr.lobby.status.cameraDenied,
+  "waiting-for-peer": fr.lobby.status.waitingForPeer,
+  connecting: fr.lobby.status.connecting,
+  connected: fr.lobby.status.connected,
+  "room-full": fr.lobby.status.roomFull,
+  "invalid-room": fr.lobby.status.invalidRoom,
 };
 
 function localTileState(status: RoomConnectionStatus): CameraTileState {
@@ -65,10 +66,7 @@ export function Lobby({
   if (status === "camera-denied") {
     return (
       <RoomShell>
-        <p className="max-w-sm text-center text-white">
-          Caméra bloquée. Autorisez l&apos;accès à votre caméra dans les réglages de votre
-          navigateur, puis rechargez la page.
-        </p>
+        <p className="max-w-sm text-center text-white">{fr.lobby.cameraDeniedMessage}</p>
       </RoomShell>
     );
   }
@@ -76,9 +74,7 @@ export function Lobby({
   if (status === "room-full") {
     return (
       <RoomShell>
-        <p className="max-w-sm text-center text-white">
-          SnapRoom, c&apos;est à deux — cette room est déjà complète.
-        </p>
+        <p className="max-w-sm text-center text-white">{fr.lobby.roomFullMessage}</p>
       </RoomShell>
     );
   }
@@ -86,9 +82,7 @@ export function Lobby({
   if (status === "invalid-room") {
     return (
       <RoomShell>
-        <p className="max-w-sm text-center text-white">
-          Cette room a expiré ou le code est incorrect.
-        </p>
+        <p className="max-w-sm text-center text-white">{fr.lobby.invalidRoomMessage}</p>
       </RoomShell>
     );
   }
@@ -96,7 +90,7 @@ export function Lobby({
   return (
     <RoomShell>
       <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="font-heading text-2xl font-bold text-white">Salle d&apos;attente</h1>
+        <h1 className="font-heading text-2xl font-bold text-white">{fr.lobby.title}</h1>
         <button
           onClick={copyCode}
           className="flex items-center gap-2 rounded-full border border-white/20 px-4 py-1.5 font-mono text-sm text-white/90 transition hover:bg-white/10"
@@ -110,7 +104,7 @@ export function Lobby({
       <div className="grid w-full max-w-2xl grid-cols-2 gap-4">
         <CameraTile
           stream={localStream}
-          label="Vous"
+          label={fr.lobby.you}
           state={localTileState(status)}
           mirrored
           muted
@@ -118,7 +112,7 @@ export function Lobby({
         />
         <CameraTile
           stream={remoteStream}
-          label="Partenaire"
+          label={fr.lobby.partner}
           state={remoteTileState(status, Boolean(remoteStream))}
         />
       </div>
@@ -128,7 +122,7 @@ export function Lobby({
           onClick={onLaunch}
           className="rounded-full bg-linear-to-r from-[#fb5a46] to-[#ff7d54] px-6 py-3 font-medium text-white transition hover:opacity-90"
         >
-          Lancer la séance
+          {fr.lobby.launch}
         </button>
       )}
     </RoomShell>

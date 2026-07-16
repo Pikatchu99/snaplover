@@ -43,13 +43,18 @@ snaproom/
 │  │  ├─ room/                  # RoomClient, Lobby, CameraTile, Countdown, CaptureStage
 │  │  ├─ strip/                 # PhotoStrip, Frame, composer
 │  │  └─ landing/
-│  ├─ src/hooks/                # use-user-media, use-room-connection
+│  ├─ src/hooks/                # use-user-media, use-room-connection, use-capture-session
+│  ├─ src/i18n/
+│  │  └─ messages.ts            # tous les textes UI (fr) — voir "i18n" ci-dessous
 │  ├─ src/lib/
+│  │  ├─ config.ts               # constantes tunables centralisées (jamais éparpillées)
 │  │  ├─ webrtc/                # peer-connection, use-ice-servers, turn-credentials
 │  │  ├─ signaling/             # client WS
 │  │  ├─ realtime/              # clock-sync, capture scheduling
-│  │  ├─ capture/               # getFrame, compose, export PNG
-│  │  └─ frames/                # définitions des cadres
+│  │  ├─ capture/               # capture-frame, compose-strip, filters, image-transfer
+│  │  ├─ frames/                # registre des cadres (config pure, pas de labels)
+│  │  ├─ room-code.ts           # génération/validation du code de room
+│  │  └─ room-config.ts         # parse la config room (poses/cadre/style) depuis l'URL
 │  └─ src/types/                # types partagés (jamais inline)
 ├─ signaling/                   # service Node WebSocket
 │  ├─ src/server.ts
@@ -90,6 +95,32 @@ cd web && pnpm dlx shadcn@latest add <component>
 - Sécurité : validation zod des entrées API, aucun secret dans le client/repo (creds TURN via
   `/api/turn-credentials` uniquement — voir docs/SNAPROOM-SPEC.md §11), permissions vérifiées.
 - Traiter **tous** les états UI : loading / empty / error / success (voir docs/SNAPROOM-SPEC.md §12).
+
+### Aucune valeur d'infra en dur — toujours via env
+**Règle absolue, à ne jamais transgresser** : toute valeur qui peut varier selon l'environnement
+ou le déploiement (URL de serveur — STUN, TURN, signaling —, hostname, port, origine autorisée,
+credentials, clé/API key) **doit** venir d'une variable d'env, jamais écrite en dur dans un
+fichier source. Ça inclut les valeurs "publiques"/non-secrètes comme les URLs STUN Google : ce
+n'est pas une question de confidentialité mais de configurabilité par déploiement.
+- Si une valeur d'env est absente, **avertir** (`console.warn`) plutôt que de retomber
+  silencieusement sur une valeur codée en dur (voir `signaling/src/server.ts` pour
+  `ALLOWED_ORIGIN`, `web/src/lib/webrtc/turn-credentials.ts` pour `STUN_URLS`/`TURN_URLS`).
+- Toute nouvelle variable d'env doit être documentée dans le `.env.example` correspondant
+  (`web/.env.example` ou `signaling/.env.example`), avec un commentaire expliquant son rôle.
+- **Ce qui N'EST PAS concerné** (pas besoin d'env, c'est le comportement attendu) : tokens de
+  design (couleurs, polices — §13), constantes d'algorithme/produit qui ne varient jamais selon
+  l'environnement (délai de déclenchement, tailles de cellule de la bande, nombre de poses
+  proposées — toutes centralisées dans `web/src/lib/config.ts`, jamais éparpillées fichier par
+  fichier). La distinction : "est-ce que ça peut légitimement changer entre deux déploiements/
+  environnements de ce projet ?" — si oui, env ; si non, constante dans `config.ts`.
+- **Seule exception tolérée** : une valeur que le process **doit** avoir pour démarrer (ex : le
+  port d'écoute d'un serveur — `signaling/src/server.ts` `PORT`) peut garder un fallback en dur,
+  mais doit toujours `console.warn` quand elle bascule dessus (jamais un fallback silencieux).
+- **Vérification systématique** : à la fin de chaque passe de code (avant de commit), relancer un
+  passage dédié (agent ou revue manuelle) qui grep les fichiers modifiés pour des URLs/hostnames/
+  ports en dur (`http://`, `https://`, `ws://`, `wss://`, `stun:`, `turn:`, IPs, noms de domaine)
+  hors fichiers `.env.example`/documentation, et confirme qu'ils sont bien lus depuis `process.env`.
+  Ne pas se fier à un seul run manuel : ça doit être un réflexe systématique, pas ponctuel.
 - Le code prouvé du spike (clock-sync, scheduling de capture, composition) doit être **réutilisé
   et durci**, pas réinventé (docs/SNAPROOM-SPEC.md §9, §10, §19).
 
@@ -150,6 +181,27 @@ simple "scrub avant de rendre public" :
   Typo : titres Bricolage Grotesque (700/800), corps Plus Jakarta Sans. Écran de capture en sombre.
 - Maquettes de référence (rendu exact) dans `docs/design/*.dc.html` : design-system, wireframes,
   snaproom-hifi, snaproom-session, snaproom-etats.
+- **Écart connu (à corriger)** : les écrans construits jusqu'ici (landing, join, create, lobby,
+  capture, résultat) ont été implémentés à partir de la **description textuelle** du §12 de la
+  spec, pas en ouvrant réellement les maquettes Pencil via les outils MCP `pencil`. Les couleurs/
+  mises en page/espacements actuels sont donc une interprétation, pas un rendu fidèle. **Une passe
+  dédiée de mise en conformité avec les maquettes réelles est prévue avant de considérer l'UI
+  finalisée** — ouvrir `docs/design/*.dc.html` avec les outils `pencil` (get_screenshot, batch_get)
+  et ajuster chaque écran en conséquence.
+
+## i18n (architecture prête à évoluer)
+Une seule locale aujourd'hui (`fr`), mais l'architecture est pensée pour brancher une vraie lib
+i18n (next-intl ou équivalent) plus tard sans réécrire les appelants :
+- **Tous** les textes visibles par l'utilisateur vivent dans `web/src/i18n/messages.ts`, jamais en
+  dur dans un composant/hook/page. Structure : un objet par locale (`messages.fr`), une clé par
+  écran/feature, exporté aussi directement comme `fr` pour un usage simple aujourd'hui.
+  Import : `import { fr } from "@/i18n/messages"`, puis `fr.lobby.title`, etc. Fonctions avec
+  paramètres pour les messages interpolés (ex. `fr.captureStage.pose(current, total)`).
+- Les registres de config (frames, filtres) ne contiennent **jamais** de label affiché — juste des
+  IDs et de la config visuelle pure (couleurs, CSS). Le mapping ID → label affiché vit dans
+  `messages.ts` (`fr.frames`, `fr.photoStrip.filters`), résolu au niveau du composant.
+- Quand une vraie lib i18n sera branchée : remplacer l'import direct de `fr` par un hook
+  `useTranslations()`/équivalent qui lit dans le même arbre de clés — pas de refonte de structure.
 
 ## Séquencement du build
 Voir docs/SNAPROOM-SPEC.md §17 pour les jalons J1–J6.
@@ -176,6 +228,16 @@ Voir docs/SNAPROOM-SPEC.md §17 pour les jalons J1–J6.
   téléchargement, Reprendre), message realtime `reset` pour resynchroniser les deux pairs sur
   "Reprendre". Vérifié bout en bout : bande composée des deux côtés, changement de filtre
   effectif sans erreur, Reprendre renvoie les deux pairs en salle d'attente en synchro.
+- **Hors jalons, ajouté sur demande explicite** : pages E1 (landing, `app/page.tsx`), E2 (rejoindre,
+  `app/join/page.tsx`), E3 (créer une room, `app/create/page.tsx`, poses/style/cadre encodés dans
+  l'URL de la room — voir `lib/room-config.ts`). Config room diffusée par l'hôte à la connexion
+  (protocole `hello`/`config` sur le data channel, voir `use-capture-session.ts`) : l'hôte fait
+  autorité même si l'invité arrive via un code saisi sans les query params. Corrections faites en
+  route : STUN/signaling URL en dur retirés (voir règle "Aucune valeur d'infra en dur" ci-dessus),
+  et un vrai bug de closure React corrigé — le dispatcher du data channel est câblé une seule fois
+  (l'effet ne dépend que de `[dataChannel, isInitiator]`), donc toute valeur qui change après coup
+  (la config reçue de l'hôte) doit être lue via une **ref**, pas une variable de state fermée par
+  la closure du dispatcher, sous peine de rester bloqué sur sa valeur initiale indéfiniment.
 - Prochaine étape : **J5 — États & robustesse** (tous les états de §12 : réseau faible, countdown
   suspendu, partenaire déconnecté, lien invalide déjà géré partiellement, reconnexion, purge des
   rooms) — voir docs/SNAPROOM-SPEC.md §12, §17.

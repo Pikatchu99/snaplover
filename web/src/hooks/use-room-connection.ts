@@ -7,7 +7,8 @@ import { useIceServers } from "@/lib/webrtc/use-ice-servers";
 import { useUserMedia } from "@/hooks/use-user-media";
 import type { ServerMessage } from "@/types/signaling";
 
-const SIGNALING_URL = process.env.NEXT_PUBLIC_SIGNALING_URL ?? "ws://localhost:8080";
+// Aucune valeur d'infra en dur (voir CLAUDE.md) : pas de fallback localhost.
+const SIGNALING_URL = process.env.NEXT_PUBLIC_SIGNALING_URL;
 
 export type RoomConnectionStatus =
   | "requesting-camera"
@@ -32,6 +33,11 @@ export function useRoomConnection(roomCode: string) {
 
   useEffect(() => {
     if (!localStream || !iceServersQuery.data) return;
+
+    if (!SIGNALING_URL) {
+      console.warn("NEXT_PUBLIC_SIGNALING_URL not set — cannot connect to the signaling server.");
+      return;
+    }
 
     const signaling = new SignalingClient();
     // Micro-tâche : reflète le démarrage de la connexion signaling sans

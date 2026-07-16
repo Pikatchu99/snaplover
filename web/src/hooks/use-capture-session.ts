@@ -237,6 +237,9 @@ export function useCaptureSession({
       left: isInitiator ? myHalfRef.current : peerHalfRef.current,
       right: isInitiator ? peerHalfRef.current : myHalfRef.current,
     };
+    // Reflété en state à chaque pose (pas seulement à la toute fin) — permet
+    // d'afficher un aperçu live des poses déjà prises pendant la séance.
+    setCells([...cellsRef.current]);
 
     myHalfRef.current = null;
     myCaptureHostTimeRef.current = null;
@@ -249,7 +252,6 @@ export function useCaptureSession({
     if (nextPose >= effectivePosesRef.current) {
       setStatus("composing");
       const finalCells = [...cellsRef.current];
-      setCells(finalCells);
       composeStrip(finalCells, {
         frame: FRAMES[effectiveFrameIdRef.current],
         filter: "classic",

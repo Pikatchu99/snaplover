@@ -42,7 +42,7 @@ export default function LandingPage() {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
-        <div className="flex flex-1 flex-col items-center justify-center gap-8 px-6 py-16 text-center md:items-start md:justify-center md:px-16 md:py-0 md:text-left">
+        <div className="flex flex-1 flex-col items-center justify-center gap-8 px-6 pt-16 pb-24 text-center md:items-start md:justify-center md:px-16 md:py-0 md:text-left">
           <Logo />
 
           <div className="flex max-w-xl flex-col items-center gap-5 md:items-start lg:max-w-2xl">

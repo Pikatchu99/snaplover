@@ -35,7 +35,7 @@ function JoinForm() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-8 bg-[#fbf7f1] px-6 py-16 text-center">
+    <main className="flex min-h-screen flex-col items-center justify-center gap-8 bg-[#fbf7f1] px-6 pt-16 pb-24 text-center">
       <Logo />
 
       <div className="flex flex-col items-center gap-2">

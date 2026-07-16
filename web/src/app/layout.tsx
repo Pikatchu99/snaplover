@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import { Bricolage_Grotesque, Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import { QueryProvider } from "@/components/providers/query-provider";
+import { SiteCredit } from "@/components/layout/SiteCredit";
 import { fr } from "@/i18n/messages";
 import { metadataBase, SITE_URL } from "@/lib/site";
 import "./globals.css";
@@ -65,6 +66,7 @@ export default function RootLayout({
           <Script src={UMAMI_SCRIPT_URL} data-website-id={UMAMI_WEBSITE_ID} strategy="afterInteractive" />
         )}
         <QueryProvider>{children}</QueryProvider>
+        <SiteCredit />
       </body>
     </html>
   );

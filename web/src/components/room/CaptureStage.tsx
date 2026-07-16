@@ -3,6 +3,7 @@ import { Check, Link2 } from "lucide-react";
 import { CameraTile } from "@/components/room/CameraTile";
 import { Countdown } from "@/components/room/Countdown";
 import type { CaptureSessionStatus } from "@/hooks/use-capture-session";
+import type { StripCell } from "@/lib/capture/compose-strip";
 import { fr } from "@/i18n/messages";
 
 interface CaptureStageProps {
@@ -17,6 +18,42 @@ interface CaptureStageProps {
   // (ou plus) joignable — countdown suspendu si aucune pose n'est encore
   // faite, "partenaire déconnecté" sinon (voir SNAPROOM-SPEC.md §12, états 3/4).
   awaitingPeer: boolean;
+  // Poses déjà composées (mises à jour au fil de la séance, pas seulement à
+  // la fin) — alimente l'aperçu live en bas d'écran.
+  cells: StripCell[];
+}
+
+// Rangée de vignettes montrant où on en est dans la séance (quelle pose
+// est déjà faite, laquelle reste) — un slot par pose prévue.
+function PoseProgress({ cells, poses }: { cells: StripCell[]; poses: number }) {
+  return (
+    <div className="mx-auto flex w-full max-w-2xl items-center justify-center gap-2">
+      {Array.from({ length: poses }, (_, index) => {
+        const cell = cells[index];
+        return (
+          <div
+            key={index}
+            className={`flex h-10 flex-1 gap-0.5 overflow-hidden rounded-lg border ${
+              cell ? "border-[#fb5a46]" : "border-white/15 bg-white/5"
+            }`}
+          >
+            {cell ? (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element -- data URL, décoratif */}
+                <img src={cell.left} alt="" className="h-full flex-1 object-cover" />
+                {/* eslint-disable-next-line @next/next/no-img-element -- data URL, décoratif */}
+                <img src={cell.right} alt="" className="h-full flex-1 object-cover" />
+              </>
+            ) : (
+              <span className="flex flex-1 items-center justify-center text-[10px] font-semibold text-white/30">
+                {index + 1}
+              </span>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 function AwaitingPeerOverlay({ currentPose }: { currentPose: number }) {
@@ -69,11 +106,12 @@ export function CaptureStage({
   poses,
   countdownMs,
   awaitingPeer,
+  cells,
 }: CaptureStageProps) {
   const poseNumber = Math.min(currentPose + 1, poses);
 
   return (
-    <div className="flex min-h-screen flex-col gap-6 bg-[#161319] px-5 py-6">
+    <div className="flex min-h-screen flex-col gap-6 bg-[#161319] px-5 pt-6 pb-16">
       <div className="mx-auto flex w-full max-w-2xl items-center justify-between">
         <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white">
           {fr.captureStage.pose(poseNumber, poses)}
@@ -87,10 +125,12 @@ export function CaptureStage({
       <div className="relative mx-auto grid w-full max-w-2xl flex-1 grid-cols-2 gap-4">
         <CameraTile stream={localStream} label={fr.lobby.you} state="ready" mirrored muted videoRef={localVideoRef} />
         <CameraTile stream={remoteStream} label={fr.lobby.partner} state={remoteStream ? "ready" : "off"} />
-        {status === "countdown" && <Countdown remainingMs={countdownMs} />}
+        {status === "countdown" && <Countdown remainingMs={countdownMs} poseNumber={poseNumber} poses={poses} />}
         {status === "composing" && <ComposingOverlay />}
         {awaitingPeer && <AwaitingPeerOverlay currentPose={currentPose} />}
       </div>
+
+      <PoseProgress cells={cells} poses={poses} />
     </div>
   );
 }

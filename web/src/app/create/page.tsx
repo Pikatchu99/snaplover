@@ -69,7 +69,7 @@ export default function CreateRoomPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col bg-[#fbf7f1] px-6 py-8">
+    <main className="flex min-h-screen flex-col bg-[#fbf7f1] px-6 pt-8 pb-20">
       <div className="mx-auto flex w-full max-w-md items-center gap-3 md:max-w-4xl">
         <button
           onClick={() => router.back()}

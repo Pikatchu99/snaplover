@@ -51,7 +51,7 @@ const CTA_LINK_CLASS =
   "inline-flex items-center justify-center rounded-2xl border border-white/20 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-white/10";
 
 function RoomShell({ children }: { children: React.ReactNode }) {
-  return <div className="flex min-h-screen flex-col bg-[#161319] px-5 py-6">{children}</div>;
+  return <div className="flex min-h-screen flex-col bg-[#161319] px-5 pt-6 pb-16">{children}</div>;
 }
 
 export function Lobby({

@@ -57,7 +57,7 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, names, onRe
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-[#fbf7f1] px-4 py-12">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-[#fbf7f1] px-4 pt-12 pb-20">
       <div className="flex flex-col items-center gap-1 text-center">
         <p className="text-xs font-semibold tracking-[0.15em] text-[#fb5a46] uppercase">{fr.photoStrip.eyebrow}</p>
         <h1 className="font-heading text-2xl font-bold text-[#1c1712]">{fr.photoStrip.title}</h1>

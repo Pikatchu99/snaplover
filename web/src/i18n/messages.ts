@@ -175,6 +175,7 @@ export const messages = {
     },
     countdown: {
       ready: "PRÊT·E ?",
+      prepareFor: (current: number, total: number) => `Préparez-vous · Photo ${current} / ${total}`,
     },
     photoStrip: {
       eyebrow: "C'est dans la boîte",
@@ -209,6 +210,12 @@ export const messages = {
       /** Prénoms par défaut si absents (ex. lien partagé collé directement, sans passer par /join). */
       defaultHost: "Hôte",
       defaultGuest: "Invité",
+    },
+    siteCredit: {
+      credit: "Un projet open source de Yemalin",
+      contribute: "Envie de contribuer ou d'en discuter ? Le code est public.",
+      likeExperience: "J'aime l'expérience",
+      likeApp: "J'aime l'app",
     },
   },
 } as const;

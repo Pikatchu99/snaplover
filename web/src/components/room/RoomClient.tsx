@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useRoomConnection } from "@/hooks/use-room-connection";
 import { useCaptureSession } from "@/hooks/use-capture-session";
 import { Lobby } from "@/components/room/Lobby";
@@ -44,6 +44,15 @@ export function RoomClient({ code, poses, frameId, style, name }: RoomClientProp
     retry,
   } = useCaptureSession({ dataChannel, isInitiator, poses, frameId, style, myName: name, localVideoRef });
 
+  useEffect(() => {
+    // Vie privée : une fois la bande composée, plus besoin de la caméra —
+    // on coupe le flux (stop, pas juste enabled=false) pour éteindre
+    // vraiment le voyant caméra, pas seulement masquer l'aperçu.
+    if (stripUrl && localStream) {
+      for (const track of localStream.getTracks()) track.stop();
+    }
+  }, [stripUrl, localStream]);
+
   if (stripUrl) {
     return (
       <PhotoStrip
@@ -68,6 +77,7 @@ export function RoomClient({ code, poses, frameId, style, name }: RoomClientProp
         poses={effectivePoses}
         countdownMs={countdownMs}
         awaitingPeer={awaitingPeer}
+        cells={cells}
       />
     );
   }

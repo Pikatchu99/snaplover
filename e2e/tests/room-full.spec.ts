@@ -17,8 +17,8 @@ test("un 3e arrivant voit l'état room pleine avec sa CTA", async ({ browser }) 
 
   await gotoRoom(c, room);
 
-  await expect(c.getByText("c'est à deux")).toBeVisible({ timeout: 15_000 });
-  await expect(c.getByRole("link", { name: "Créer une nouvelle room" })).toBeVisible();
+  await expect(c.getByText("déjà complète")).toBeVisible({ timeout: 15_000 });
+  await expect(c.getByRole("link", { name: "Créer une nouvelle séance" })).toBeVisible();
 
   await contextA.close();
   await contextB.close();

@@ -11,9 +11,9 @@ export const messages = {
       siteName: "SnapLover",
       /** Gabarit de titre (App Router `metadata.title.template`). */
       titleTemplate: "%s · SnapLover",
-      defaultTitle: "SnapLover — Photobooth en ligne à deux, à distance",
+      defaultTitle: "SnapLover — Cabine photo en ligne à deux, même à distance",
       defaultDescription:
-        "Une seule photo. À deux, même à distance. Rejoignez un lien, activez vos caméras, et prenez une bande photo synchronisée en 3·2·1 — sans compte, gratuit et open source.",
+        "Créez une bande photo à deux, même à distance. SnapLover synchronise vos caméras dans le navigateur pour composer un souvenir partagé, sans compte.",
       keywords: [
         "photobooth en ligne",
         "photo à distance",
@@ -25,40 +25,98 @@ export const messages = {
         "prendre une photo à deux à distance",
       ],
       create: {
-        title: "Créer une room",
+        title: "Créer une séance photo à deux",
         description:
-          "Créez votre room SnapLover : choisissez le nombre de poses, le style de bande et le cadre, puis partagez le lien pour prendre votre photo à deux, où que vous soyez.",
+          "Préparez une bande photo en ligne, choisissez le style, puis partagez un lien avec la personne invitée.",
       },
       join: {
-        title: "Rejoindre une room",
+        title: "Rejoindre une séance photo",
         description:
-          "Rejoignez la room SnapLover d'un proche avec le code reçu, activez votre caméra, et prenez votre bande photo ensemble en quelques secondes — sans compte.",
+          "Entrez votre code d'invitation pour prendre une bande photo en ligne à deux, sans compte.",
       },
     },
     landing: {
-      titlePrefix: "Une seule photo. À deux, même à",
-      titleHighlight: "distance.",
+      titlePrefix: "La cabine photo en ligne pour prendre",
+      titleHighlight: "une bande à deux",
       subtitle:
-        "Rejoignez un lien, caméras allumées, 3·2·1 — clic. Vous repartez chacun avec la même bande photo, où que vous soyez.",
-      createCta: "Créer une room",
-      joinCta: "Rejoindre une room",
+        "Créez une séance photo à deux, partagez un lien, activez vos caméras et repartez chacun avec la même bande photo souvenir.",
+      createCta: "Créer une séance photo",
+      joinCta: "Rejoindre une séance",
       pasteLinkPlaceholder: "Coller le lien / code…",
-      noAccount: "Aucun compte requis · directement dans le navigateur",
+      noAccount: "Sans compte · Directement dans le navigateur · Téléchargement PNG",
+      howItWorks: {
+        title: "Comment ça marche",
+        steps: [
+          {
+            title: "Créez votre séance",
+            description: "Choisissez le nombre de poses, le style de bande et le cadre.",
+          },
+          {
+            title: "Invitez l'autre personne",
+            description: "Envoyez le lien. Chacun rejoint depuis son téléphone ou son ordinateur.",
+          },
+          {
+            title: "Lancez le 3·2·1",
+            description: "SnapLover synchronise les deux caméras et assemble votre bande photo.",
+          },
+        ],
+      },
+      why: {
+        title: "Pourquoi c'est utile",
+        description:
+          "Les captures d'écran de visio ratent souvent le moment : un sourire trop tôt, une image floue, un cadrage coupé. SnapLover déclenche les deux captures au même instant et compose une vraie bande souvenir.",
+      },
+      forWhom: {
+        title: "Pensé pour les duos à distance",
+        description:
+          "Pensé pour les couples à distance, les amis séparés entre deux villes, les proches dans la diaspora, et tous ceux qui veulent garder une photo commune sans être dans la même pièce.",
+      },
+      faq: {
+        title: "Questions fréquentes",
+        items: [
+          {
+            question: "Est-ce qu'il faut créer un compte ?",
+            answer: "Non, SnapLover fonctionne sans compte : créez un lien, partagez-le, et lancez la séance.",
+          },
+          {
+            question: "Est-ce que ça marche sur téléphone ?",
+            answer: "Oui, SnapLover fonctionne directement dans le navigateur, sur mobile comme sur ordinateur.",
+          },
+          {
+            question: "Est-ce que la photo est stockée sur un serveur ?",
+            answer:
+              "Non, la bande est composée et téléchargée sur vos appareils ; aucune photo n'est conservée sur nos serveurs.",
+          },
+          {
+            question: "Est-ce que je peux télécharger la bande ?",
+            answer: "Oui, en PNG, directement depuis l'écran de résultat.",
+          },
+          {
+            question: "Est-ce que SnapLover est gratuit ?",
+            answer: "Oui, SnapLover est gratuit et open source.",
+          },
+          {
+            question: "Pourquoi autoriser la caméra ?",
+            answer:
+              "L'accès caméra sert uniquement à capturer vos poses ; le flux vidéo se connecte directement à l'autre personne (WebRTC), sans passer par un serveur central.",
+          },
+        ],
+      },
     },
     join: {
       eyebrow: "Quelqu'un vous a invité ?",
-      title: "Rejoindre sa room",
+      title: "Rejoindre une séance",
       codeInputLabel: (index: number) => `Caractère ${index} du code`,
       nameLabel: "Votre prénom",
       namePlaceholder: "Ex. Camille",
       invalidCode: "Code invalide.",
       missingName: "Entrez votre prénom.",
       submit: "Rejoindre",
-      createInstead: "Créer ma propre room",
+      createInstead: "Créer ma propre séance",
       noAccount: "Aucun compte requis pour rejoindre.",
     },
     create: {
-      title: "Nouvelle room",
+      title: "Préparer votre séance",
       back: "Retour",
       nameLabel: "Votre prénom",
       namePlaceholder: "Ex. Camille",
@@ -81,10 +139,10 @@ export const messages = {
       cameraDeniedHelp:
         "Cliquez sur l'icône de caméra dans la barre d'adresse de votre navigateur, autorisez l'accès, puis réessayez.",
       retry: "Réessayer",
-      roomFullMessage: "SnapLover, c'est à deux — cette room est déjà complète.",
-      roomFullCta: "Créer une nouvelle room",
-      invalidRoomMessage: "Cette room a expiré ou le code est incorrect.",
-      invalidRoomCreateCta: "Créer une room",
+      roomFullMessage: "Cette séance est déjà complète : SnapLover fonctionne à deux.",
+      roomFullCta: "Créer une nouvelle séance",
+      invalidRoomMessage: "Ce lien a expiré ou le code d'invitation est incorrect.",
+      invalidRoomCreateCta: "Créer une séance",
       invalidRoomJoinCta: "Saisir un code",
       status: {
         requestingCamera: "Activation de votre caméra…",
@@ -93,8 +151,8 @@ export const messages = {
         connecting: "Connexion en cours…",
         connected: "2 connectés · caméras prêtes",
         reconnecting: "Signal faible — reconnexion…",
-        roomFull: "Cette room est déjà à deux",
-        invalidRoom: "Code de room invalide",
+        roomFull: "Cette séance est déjà complète",
+        invalidRoom: "Code d'invitation invalide",
       },
     },
     cameraTile: {

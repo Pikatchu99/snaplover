@@ -5,7 +5,7 @@ import { test, expect } from "@playwright/test";
 test("un code de room malformé affiche l'état invalide avec ses CTA", async ({ page }) => {
   await page.goto("/r/x");
 
-  await expect(page.getByText("expiré ou le code est incorrect")).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByRole("link", { name: "Créer une room" })).toBeVisible();
+  await expect(page.getByText("expiré ou le code d'invitation est incorrect")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole("link", { name: "Créer une séance" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Saisir un code" })).toBeVisible();
 });

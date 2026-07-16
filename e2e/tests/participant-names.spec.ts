@@ -27,7 +27,7 @@ test("prénoms saisis sur create/join → footer de la bande composée", async (
   const code = new URL(a.url()).pathname.split("/").pop();
 
   await b.goto("/join");
-  await b.getByLabel("Rejoindre sa room").fill(code!);
+  await b.getByLabel("Rejoindre une séance").fill(code!);
   await b.getByLabel("Votre prénom").fill("Bob");
   await b.getByRole("button", { name: "Rejoindre" }).click();
   await b.waitForURL(/\/r\//);

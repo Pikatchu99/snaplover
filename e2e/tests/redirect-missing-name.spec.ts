@@ -9,5 +9,5 @@ test("lien sans prénom → redirection vers /join avec le code pré-rempli", as
   await page.goto(`/r/${code}?poses=3&style=vertical&frame=classic`);
 
   await expect(page).toHaveURL(new RegExp(`/join\\?code=${code}$`));
-  await expect(page.getByRole("textbox", { name: "Rejoindre sa room" })).toHaveValue(code);
+  await expect(page.getByRole("textbox", { name: "Rejoindre une séance" })).toHaveValue(code);
 });

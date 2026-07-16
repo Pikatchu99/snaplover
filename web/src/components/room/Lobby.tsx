@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type RefObject } from "react";
 import { Check, Copy } from "lucide-react";
 import { CameraTile, type CameraTileState } from "@/components/room/CameraTile";
 import type { RoomConnectionStatus } from "@/hooks/use-room-connection";
@@ -10,6 +10,9 @@ interface LobbyProps {
   localStream: MediaStream | null;
   remoteStream: MediaStream | null;
   status: RoomConnectionStatus;
+  localVideoRef: RefObject<HTMLVideoElement | null>;
+  isInitiator: boolean;
+  onLaunch: () => void;
 }
 
 const STATUS_LABEL: Record<RoomConnectionStatus, string> = {
@@ -42,7 +45,15 @@ function RoomShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function Lobby({ roomCode, localStream, remoteStream, status }: LobbyProps) {
+export function Lobby({
+  roomCode,
+  localStream,
+  remoteStream,
+  status,
+  localVideoRef,
+  isInitiator,
+  onLaunch,
+}: LobbyProps) {
   const [copied, setCopied] = useState(false);
 
   async function copyCode() {
@@ -97,13 +108,29 @@ export function Lobby({ roomCode, localStream, remoteStream, status }: LobbyProp
       </div>
 
       <div className="grid w-full max-w-2xl grid-cols-2 gap-4">
-        <CameraTile stream={localStream} label="Vous" state={localTileState(status)} mirrored muted />
+        <CameraTile
+          stream={localStream}
+          label="Vous"
+          state={localTileState(status)}
+          mirrored
+          muted
+          videoRef={localVideoRef}
+        />
         <CameraTile
           stream={remoteStream}
           label="Partenaire"
           state={remoteTileState(status, Boolean(remoteStream))}
         />
       </div>
+
+      {isInitiator && status === "connected" && (
+        <button
+          onClick={onLaunch}
+          className="rounded-full bg-linear-to-r from-[#fb5a46] to-[#ff7d54] px-6 py-3 font-medium text-white transition hover:opacity-90"
+        >
+          Lancer la séance
+        </button>
+      )}
     </RoomShell>
   );
 }

@@ -160,5 +160,12 @@ Voir docs/SNAPROOM-SPEC.md §17 pour les jalons J1–J6.
   `r/[code]` avec lobby (caméra locale + distante, états ready/connecting/off, room-full,
   invalid-room, camera-denied). Vérifié bout en bout : 2 onglets Chrome headless (caméra fake),
   connexion `connected` des deux côtés, flux vidéo réciproques confirmés.
-- Prochaine étape : **J3 — La séance** (clock-sync + déclenchement synchronisé multi-poses,
-  capture locale + échange + composition de la bande — voir docs/SNAPROOM-SPEC.md §9-§10).
+- **J3 (la séance)** fait : clock-sync ping/pong (`lib/realtime/clock-sync.ts`), déclenchement
+  synchronisé multi-poses (`lib/realtime/schedule-capture.ts`), capture locale
+  (`lib/capture/capture-frame.ts` + `wait-for-video-ready.ts`), échange chunké
+  (`lib/capture/image-transfer.ts`), composition de la bande (`lib/capture/compose-strip.ts`),
+  orchestration dans `hooks/use-capture-session.ts`, UI `CaptureStage`/`Countdown`/`PhotoStrip`.
+  Vérifié bout en bout : 2 onglets Chrome headless, bande complète 3 poses composée des deux
+  côtés, écarts de synchro observés 11-30ms (seuil spec : <150ms).
+- Prochaine étape : **J4 — Le livrable** (écran résultat avec cadres/thèmes, filtres, partage —
+  voir docs/SNAPROOM-SPEC.md §12 E6, §13).

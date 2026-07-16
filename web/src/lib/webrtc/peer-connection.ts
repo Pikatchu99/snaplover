@@ -10,13 +10,15 @@ interface PeerConnectionOptions {
   localStream: MediaStream;
   onRemoteStream: (stream: MediaStream) => void;
   onConnectionStateChange: (state: RTCPeerConnectionState) => void;
+  onDataChannel: (channel: RTCDataChannel) => void;
   sendSignal: (data: SignalPayload) => void;
 }
 
 // Établissement WebRTC (P2P vidéo + data channel) — voir SNAPROOM-SPEC.md §9.
 // L'hôte (initiator) crée le data channel "ctrl" et l'offer ; l'invité répond.
 export function createPeerConnection(options: PeerConnectionOptions) {
-  const { iceServers, initiator, localStream, onRemoteStream, onConnectionStateChange, sendSignal } = options;
+  const { iceServers, initiator, localStream, onRemoteStream, onConnectionStateChange, onDataChannel, sendSignal } =
+    options;
 
   const pc = new RTCPeerConnection({ iceServers });
 
@@ -36,10 +38,14 @@ export function createPeerConnection(options: PeerConnectionOptions) {
 
   pc.onconnectionstatechange = () => onConnectionStateChange(pc.connectionState);
 
-  let dataChannel: RTCDataChannel | null = initiator ? pc.createDataChannel("ctrl") : null;
-  if (!initiator) {
+  let dataChannel: RTCDataChannel | null = null;
+  if (initiator) {
+    dataChannel = pc.createDataChannel("ctrl");
+    onDataChannel(dataChannel);
+  } else {
     pc.ondatachannel = (event) => {
       dataChannel = event.channel;
+      onDataChannel(dataChannel);
     };
   }
 

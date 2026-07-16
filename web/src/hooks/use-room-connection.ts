@@ -25,22 +25,23 @@ export function useRoomConnection(roomCode: string) {
   const iceServersQuery = useIceServers();
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [status, setStatus] = useState<RoomConnectionStatus>("requesting-camera");
+  const [dataChannel, setDataChannel] = useState<RTCDataChannel | null>(null);
+  const [isInitiator, setIsInitiator] = useState(false);
 
   const peerRef = useRef<ReturnType<typeof createPeerConnection> | null>(null);
-
-  useEffect(() => {
-    if (mediaStatus === "denied") setStatus("camera-denied");
-  }, [mediaStatus]);
 
   useEffect(() => {
     if (!localStream || !iceServersQuery.data) return;
 
     const signaling = new SignalingClient();
-    setStatus("waiting-for-peer");
+    // Micro-tâche : reflète le démarrage de la connexion signaling sans
+    // déclencher de setState synchrone dans le corps de l'effet.
+    queueMicrotask(() => setStatus("waiting-for-peer"));
 
     function ensurePeerConnection(initiator: boolean) {
       if (peerRef.current || !localStream || !iceServersQuery.data) return;
       setStatus("connecting");
+      setIsInitiator(initiator);
 
       const peer = createPeerConnection({
         iceServers: iceServersQuery.data.iceServers,
@@ -53,6 +54,7 @@ export function useRoomConnection(roomCode: string) {
             setStatus("waiting-for-peer");
           }
         },
+        onDataChannel: setDataChannel,
         sendSignal: (data) => signaling.send({ type: "signal", data }),
       });
 
@@ -75,6 +77,7 @@ export function useRoomConnection(roomCode: string) {
           peerRef.current?.pc.close();
           peerRef.current = null;
           setRemoteStream(null);
+          setDataChannel(null);
           setStatus("waiting-for-peer");
           break;
         case "full":
@@ -96,5 +99,7 @@ export function useRoomConnection(roomCode: string) {
     };
   }, [localStream, iceServersQuery.data, roomCode]);
 
-  return { localStream, remoteStream, status };
+  const effectiveStatus: RoomConnectionStatus = mediaStatus === "denied" ? "camera-denied" : status;
+
+  return { localStream, remoteStream, status: effectiveStatus, dataChannel, isInitiator };
 }

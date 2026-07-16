@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { fr } from "@/i18n/messages";
+import { playCountdownTick } from "@/lib/audio/sound-effects";
 
 interface CountdownProps {
   remainingMs: number;
@@ -9,6 +11,12 @@ interface CountdownProps {
 // Overlay 3·2·1 — voir SNAPROOM-SPEC.md §12 (E5).
 export function Countdown({ remainingMs, poseNumber, poses }: CountdownProps) {
   const seconds = Math.max(1, Math.ceil(remainingMs / 1000));
+
+  // Un bip à chaque chiffre affiché (3, 2, 1) — `seconds` ne change qu'une
+  // fois par seconde affichée, contrairement à `remainingMs` mis à jour en continu.
+  useEffect(() => {
+    playCountdownTick();
+  }, [seconds]);
 
   return (
     <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 rounded-2xl bg-black/40">

@@ -8,6 +8,7 @@ import { captureFrame } from "@/lib/capture/capture-frame";
 import { waitForVideoReady } from "@/lib/capture/wait-for-video-ready";
 import { createImageReceiver, sendImage } from "@/lib/capture/image-transfer";
 import { composeStrip, type StripCell } from "@/lib/capture/compose-strip";
+import { playShutter } from "@/lib/audio/sound-effects";
 import { FRAMES } from "@/lib/frames/frame-registry";
 import { config } from "@/lib/config";
 import { fr } from "@/i18n/messages";
@@ -203,6 +204,7 @@ export function useCaptureSession({
       console.error(`[capture] pose ${pose} échec de capture:`, error);
       return;
     }
+    playShutter();
 
     const hostTime = Date.now() + offsetRef.current;
     myHalfRef.current = dataUrl;

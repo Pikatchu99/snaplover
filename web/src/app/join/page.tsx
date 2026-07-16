@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Logo } from "@/components/landing/Logo";
 import { isValidRoomCode } from "@/lib/room-code";
@@ -12,18 +12,26 @@ const CODE_LENGTH = config.roomCode.length;
 
 // Rejoindre (E2) — SNAPROOM-SPEC.md §12. Champ unique (pas de cases
 // séparées) — voir docs/design/snaproom-hifi.dc.html.
-export default function JoinPage() {
+function JoinForm() {
   const router = useRouter();
-  const [code, setCode] = useState("");
+  // Pré-rempli si on arrive via /r/[code] redirigé faute de prénom (lien
+  // collé directement, sans passer par cette page) — voir app/r/[code]/page.tsx.
+  const prefilledCode = useSearchParams().get("code") ?? "";
+  const [code, setCode] = useState(prefilledCode.slice(0, CODE_LENGTH));
+  const [name, setName] = useState("");
   const [error, setError] = useState(false);
+  const [nameError, setNameError] = useState(false);
 
-  function handleSubmit(event: React.FormEvent) {
+  function handleSubmit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!isValidRoomCode(code)) {
-      setError(true);
-      return;
-    }
-    router.push(`/r/${code.toUpperCase()}`);
+    const codeValid = isValidRoomCode(code);
+    const nameValid = Boolean(name.trim());
+    setError(!codeValid);
+    setNameError(!nameValid);
+    if (!codeValid || !nameValid) return;
+
+    const params = new URLSearchParams({ name: name.trim() });
+    router.push(`/r/${code.toUpperCase()}?${params.toString()}`);
   }
 
   return (
@@ -44,12 +52,27 @@ export default function JoinPage() {
           }}
           maxLength={CODE_LENGTH}
           inputMode="text"
-          autoFocus
+          autoFocus={!prefilledCode}
           aria-label={fr.join.title}
           className="rounded-2xl border border-[#1c1712] bg-white px-4 py-4 text-center font-mono text-2xl font-bold tracking-[0.4em] text-[#1c1712] uppercase placeholder:tracking-normal placeholder:text-base placeholder:font-normal placeholder:text-[#8c8378] focus:outline-none"
         />
 
         {error && <p className="text-sm text-red-600">{fr.join.invalidCode}</p>}
+
+        <input
+          value={name}
+          onChange={(event) => {
+            setName(event.target.value.slice(0, config.participant.nameMaxLength));
+            setNameError(false);
+          }}
+          placeholder={fr.join.namePlaceholder}
+          maxLength={config.participant.nameMaxLength}
+          aria-label={fr.join.nameLabel}
+          autoFocus={Boolean(prefilledCode)}
+          className="rounded-2xl border border-[#ece4d8] bg-white px-4 py-3 text-center text-sm text-[#1c1712] placeholder:text-[#8c8378] focus:border-[#1c1712] focus:outline-none"
+        />
+
+        {nameError && <p className="text-sm text-red-600">{fr.join.missingName}</p>}
 
         <button
           type="submit"
@@ -74,5 +97,13 @@ export default function JoinPage() {
 
       <p className="text-xs text-[#8c8378]">{fr.join.noAccount}</p>
     </main>
+  );
+}
+
+export default function JoinPage() {
+  return (
+    <Suspense>
+      <JoinForm />
+    </Suspense>
   );
 }

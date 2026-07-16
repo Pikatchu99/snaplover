@@ -14,7 +14,12 @@ export function useUserMedia() {
     let cancelled = false;
 
     navigator.mediaDevices
-      .getUserMedia({ video: true, audio: true })
+      // facingMode "user" (frontale) en préférence souple (`ideal`, pas
+      // `exact`) : c'est l'usage prévu (selfie à deux, voir CameraTile qui
+      // mirrore déjà l'aperçu local en ce sens), mais `exact` ferait échouer
+      // getUserMedia sur les appareils n'ayant qu'une seule caméra (laptop,
+      // desktop) qui ne se déclare pas explicitement "user".
+      .getUserMedia({ video: { facingMode: { ideal: "user" } }, audio: true })
       .then((mediaStream) => {
         if (cancelled) {
           for (const track of mediaStream.getTracks()) track.stop();

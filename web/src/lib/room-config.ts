@@ -6,6 +6,8 @@ export interface RoomConfig {
   poses: number;
   frameId: FrameId;
   style: StripStyle;
+  /** Prénom local à CE navigateur (jamais dans le lien partagé) — voir app/create, app/join. */
+  name?: string;
 }
 
 type SearchParams = Record<string, string | string[] | undefined>;
@@ -27,5 +29,7 @@ export function parseRoomConfig(searchParams: SearchParams): RoomConfig {
 
   const style: StripStyle = firstValue(searchParams.style) === "grid" ? "grid" : "vertical";
 
-  return { poses, frameId, style };
+  const name = firstValue(searchParams.name)?.slice(0, config.participant.nameMaxLength) || undefined;
+
+  return { poses, frameId, style, name };
 }

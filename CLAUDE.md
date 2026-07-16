@@ -111,6 +111,8 @@ navigateurs concurrents rendaient les délais flaky, priorité à la fiabilité 
 - `tests/reconnect.spec.ts` : coupure brutale d'un pair en pleine séance (ferme son `BrowserContext`,
   pas juste sa page) → overlay "on attend Partenaire" → reconnexion (nouveau contexte, même code de
   room) → reprise complète et bande composée des deux côtés.
+- `tests/participant-names.spec.ts` : prénoms saisis sur `/create`/`/join` → vérifie que le lien
+  copié ne contient jamais le prénom de l'hôte → séance complète des deux côtés.
 - **Piège Turbopack** : `webServer` utilisait d'abord un simple check TCP (`port:`), qui considère le
   serveur prêt dès que Next écoute — mais Turbopack compile chaque route à la demande, donc la toute
   première navigation vers `/r/[code]` tombait parfois sur un vrai 404 le temps que la route finisse
@@ -325,9 +327,11 @@ Voir docs/SNAPROOM-SPEC.md §17 pour les jalons J1–J6.
      `triggerCapture` ne trouve pas de data channel prêt, ou dès que `dataChannel` redevient `null`
      en cours de séance (effet dédié). Toute moitié de pose déjà capturée mais dont la moitié du
      partenaire n'est jamais arrivée est **invalidée** à la détection de la coupure (sinon on reste
-     bloqué à vie à attendre une donnée qui ne viendra jamais) ; à la reconnexion, `channel.onOpen`
-     relance automatiquement `triggerCapture(pendingPoseRef.current)` côté hôte — la pose reprend
-     entièrement à zéro pour les deux pairs. `CaptureStage.tsx` affiche le bon message ("on attend
+     bloqué à vie à attendre une donnée qui ne viendra jamais) ; à la reconnexion, le message
+     `hello` (preuve que le partenaire écoute — voir plus bas, pas `channel.onOpen` qui ne garantit
+     rien côté partenaire) relance automatiquement `triggerCapture(pendingPoseRef.current)` côté
+     hôte — la pose reprend entièrement à zéro pour les deux pairs. `CaptureStage.tsx` affiche le
+     bon message ("on attend
      Partenaire" tant qu'aucune pose n'est faite, "Partenaire déconnecté·e" + bouton "Renvoyer le
      lien" sinon) selon `currentPose > 0`.
   5. **Lien introuvable/expiré** : en plus du cas déjà géré (code hors regex, `MAX_ROOMS`), le
@@ -346,5 +350,31 @@ Voir docs/SNAPROOM-SPEC.md §17 pour les jalons J1–J6.
   coupure ne relançait jamais rien, `pendingPoseRef` restant à `null` — fix ci-dessus) → reconnexion
   du même pair sur le même code de room → séance reprise automatiquement et bande complète
   composée des deux côtés.
+- **Hors jalons, ajouté sur demande explicite** :
+  - **Analytics** : Umami auto-hébergé, entièrement optionnel (`NEXT_PUBLIC_UMAMI_SCRIPT_URL` /
+    `NEXT_PUBLIC_UMAMI_WEBSITE_ID` — absentes en dev, aucune télémétrie envoyée). Injecté dans
+    `app/layout.tsx` via `next/script` (`strategy="afterInteractive"`), pas de tracking d'événements
+    custom pour l'instant (room créée/rejointe/etc.) — seulement les pageviews de base d'Umami.
+  - **Prénoms hôte/invité** : saisis sur `/create` et `/join`, échangés via une extension du
+    handshake `hello`/`config` du data channel (`hello` porte désormais le prénom de l'invité,
+    `config` celui de l'hôte — voir `types/realtime.ts`, `use-capture-session.ts`) et affichés dans
+    le footer de la bande composée (`SNAPLOVER · DATE · {hôte} & {invité}`, voir
+    `lib/capture/compose-strip.ts`). **Jamais dans le lien partagé** (poses/style/cadre uniquement,
+    voir `create/page.tsx`) — chaque pair l'ajoute en query param `name` sur sa propre navigation
+    locale (`?name=...`). Le prénom est **obligatoire**, pas de secours silencieux : si absent
+    (lien collé directement sans passer par `/join`), `app/r/[code]/page.tsx` redirige vers
+    `/join?code=CODE` (code pré-rempli) plutôt que de retomber sur un prénom générique — `fr.participant.defaultHost`/`defaultGuest` ne servent que de filet de sécurité interne le temps
+    que le prénom du partenaire arrive par le data channel, jamais affichés comme substitut d'un
+    prénom jamais saisi. Le footer ayant une largeur fixe et les prénoms étant un texte utilisateur
+    de longueur variable (jusqu'à
+    `config.participant.nameMaxLength` = 24 caractères chacun), la police du footer se réduit
+    automatiquement si le texte déborderait (`ctx.measureText` en boucle dans `compose-strip.ts`) —
+    vérifié avec deux prénoms de 24 caractères, aucun débordement.
+  - **Fix** : le bouton copier de la salle d'attente (`Lobby.tsx`) ne copiait que le code brut de la
+    room, pas un lien partageable complet (poses/style/cadre) — corrigé.
+  - **Fix caméra mobile** : `getUserMedia` ne précisait pas `facingMode`, donc la caméra déclenchée
+    sur téléphone dépendait du navigateur/appareil (pas fiable, parfois la caméra arrière). Fix :
+    `facingMode: { ideal: "user" }` (frontale préférée, souple — pas `exact`, qui ferait échouer
+    `getUserMedia` sur un laptop/desktop à caméra unique) dans `use-user-media.ts`.
 - Prochaine étape : **J6** — voir docs/SNAPROOM-SPEC.md §17 (purge complète des rooms orphelines
   déjà en place côté signaling depuis J1 ; reste à confirmer le périmètre exact de J6 avec l'auteur).

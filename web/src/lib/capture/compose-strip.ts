@@ -17,6 +17,8 @@ export interface ComposeOptions {
   style?: StripStyle;
   /** Date affichée dans le footer (par défaut : maintenant). */
   date?: Date;
+  /** Prénoms hôte/invité affichés dans le footer — omis : "À DEUX" générique. */
+  names?: { host: string; guest: string };
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -56,7 +58,7 @@ function formatFooterDate(date: Date): string {
 // hôte à gauche / invité à droite, marges et footer "SNAPROOM · DATE · À DEUX"
 // habillés par le cadre choisi. Voir SNAPROOM-SPEC.md §10, §13.
 export async function composeStrip(cells: StripCell[], options: ComposeOptions): Promise<string> {
-  const { frame, filter, style = "vertical", date = new Date() } = options;
+  const { frame, filter, style = "vertical", date = new Date(), names } = options;
   const { cellWidth, cellHeight, columns } = config.strip.layout[style];
   const { gap, margin, footerHeight } = config.strip;
 
@@ -91,11 +93,23 @@ export async function composeStrip(cells: StripCell[], options: ComposeOptions):
   ctx.filter = "none";
 
   ctx.fillStyle = frame.footerTextColor;
-  ctx.font = "600 20px system-ui, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   const footerY = canvas.height - margin - footerHeight / 2;
-  ctx.fillText(fr.strip.footer(formatFooterDate(date)), canvas.width / 2, footerY);
+  const footerText = fr.strip.footer(formatFooterDate(date), names);
+  const footerMaxWidth = canvas.width - margin * 2;
+
+  // Taille fixe par défaut, mais le footer peut contenir deux prénoms
+  // saisis par l'utilisateur (jusqu'à 24 caractères chacun, voir
+  // config.participant.nameMaxLength) — on réduit la police au besoin pour
+  // ne jamais déborder du cadre, plutôt que de couper ou chevaucher le texte.
+  let fontSize = 20;
+  do {
+    ctx.font = `600 ${fontSize}px system-ui, sans-serif`;
+    fontSize -= 1;
+  } while (ctx.measureText(footerText).width > footerMaxWidth && fontSize >= 11);
+
+  ctx.fillText(footerText, canvas.width / 2, footerY);
 
   return canvas.toDataURL("image/png");
 }

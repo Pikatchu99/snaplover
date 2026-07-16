@@ -14,6 +14,7 @@ interface PhotoStripProps {
   initialStripUrl: string;
   frameId: FrameId;
   style: StripStyle;
+  names: { host: string; guest: string };
   onRetry: () => void;
 }
 
@@ -21,13 +22,13 @@ interface PhotoStripProps {
 // Fond clair (comme landing/create) — seuls lobby/séance sont en sombre.
 // Cadres/thèmes (§13) : voir lib/frames/frame-registry.ts — packs illustrés
 // pas encore disponibles (assets manquants).
-export function PhotoStrip({ cells, initialStripUrl, frameId, style, onRetry }: PhotoStripProps) {
+export function PhotoStrip({ cells, initialStripUrl, frameId, style, names, onRetry }: PhotoStripProps) {
   const [filter, setFilter] = useState<FilterId>("classic");
   const [stripUrl, setStripUrl] = useState(initialStripUrl);
 
   useEffect(() => {
     let cancelled = false;
-    composeStrip(cells, { frame: FRAMES[frameId], filter, style }).then((url) => {
+    composeStrip(cells, { frame: FRAMES[frameId], filter, style, names }).then((url) => {
       if (!cancelled) setStripUrl(url);
     });
     return () => {

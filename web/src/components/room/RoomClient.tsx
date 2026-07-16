@@ -16,9 +16,14 @@ interface RoomClientProps {
   poses: number;
   frameId: FrameId;
   style: StripStyle;
+  // Prénom local à CE navigateur, saisi sur /create ou /join — jamais dans le
+  // lien partagé. Toujours renseigné : app/r/[code]/page.tsx redirige vers
+  // /join si absent (lien collé directement) plutôt que de retomber sur un
+  // prénom générique silencieux.
+  name: string;
 }
 
-export function RoomClient({ code, poses, frameId, style }: RoomClientProps) {
+export function RoomClient({ code, poses, frameId, style, name }: RoomClientProps) {
   const { localStream, remoteStream, status, dataChannel, isInitiator, retryCamera } = useRoomConnection(code);
   const localVideoRef = useRef<HTMLVideoElement>(null);
 
@@ -33,9 +38,11 @@ export function RoomClient({ code, poses, frameId, style }: RoomClientProps) {
     stripUrl,
     cells,
     awaitingPeer,
+    hostName,
+    guestName,
     startSession,
     retry,
-  } = useCaptureSession({ dataChannel, isInitiator, poses, frameId, style, localVideoRef });
+  } = useCaptureSession({ dataChannel, isInitiator, poses, frameId, style, myName: name, localVideoRef });
 
   if (stripUrl) {
     return (
@@ -44,6 +51,7 @@ export function RoomClient({ code, poses, frameId, style }: RoomClientProps) {
         initialStripUrl={stripUrl}
         frameId={effectiveFrameId}
         style={effectiveStyle}
+        names={{ host: hostName, guest: guestName }}
         onRetry={retry}
       />
     );
@@ -67,6 +75,9 @@ export function RoomClient({ code, poses, frameId, style }: RoomClientProps) {
   return (
     <Lobby
       roomCode={code}
+      poses={effectivePoses}
+      frameId={effectiveFrameId}
+      style={effectiveStyle}
       localStream={localStream}
       remoteStream={remoteStream}
       status={status}

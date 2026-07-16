@@ -8,12 +8,13 @@ export type RealtimeMessage =
   | { t: "pong"; c: number; s: number }
   // L'invité signale que son listener de messages est attaché (évite une
   // course : l'hôte ne doit envoyer sa config qu'une fois sûr que l'invité
-  // peut la recevoir, pas dès l'ouverture de SON propre canal).
-  | { t: "hello" }
-  // L'hôte diffuse sa config (poses/cadre/style) en réponse à "hello" :
-  // l'invité peut arriver via un code saisi (sans les query params de
-  // l'hôte), donc c'est l'hôte qui fait autorité — voir SNAPROOM-SPEC.md §7.
-  | { t: "config"; poses: number; frameId: FrameId; style: StripStyle }
+  // peut la recevoir, pas dès l'ouverture de SON propre canal) et transmet
+  // son prénom au passage.
+  | { t: "hello"; name: string }
+  // L'hôte diffuse sa config (poses/cadre/style) et son prénom en réponse à
+  // "hello" : l'invité peut arriver via un code saisi (sans les query params
+  // de l'hôte), donc c'est l'hôte qui fait autorité — voir SNAPROOM-SPEC.md §7.
+  | { t: "config"; poses: number; frameId: FrameId; style: StripStyle; hostName: string }
   | { t: "capture"; pose: number; fireAtHost: number }
   | { t: "img-meta"; pose: number }
   | { t: "img"; part: string }

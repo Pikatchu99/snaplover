@@ -21,7 +21,10 @@ export const messages = {
       eyebrow: "Quelqu'un vous a invité ?",
       title: "Rejoindre sa room",
       codeInputLabel: (index: number) => `Caractère ${index} du code`,
+      nameLabel: "Votre prénom",
+      namePlaceholder: "Ex. Camille",
       invalidCode: "Code invalide.",
+      missingName: "Entrez votre prénom.",
       submit: "Rejoindre",
       createInstead: "Créer ma propre room",
       noAccount: "Aucun compte requis pour rejoindre.",
@@ -29,6 +32,9 @@ export const messages = {
     create: {
       title: "Nouvelle room",
       back: "Retour",
+      nameLabel: "Votre prénom",
+      namePlaceholder: "Ex. Camille",
+      missingName: "Entrez votre prénom.",
       posesLabel: "Poses par bande",
       posesOption: (n: number) => `${n} poses`,
       styleLabel: "Style de bande",
@@ -110,7 +116,13 @@ export const messages = {
     },
     strip: {
       /** Footer imprimé sur la bande composée (canvas), pas du JSX. */
-      footer: (date: string) => `SNAPLOVER · ${date} · À DEUX`,
+      footer: (date: string, names?: { host: string; guest: string }) =>
+        names ? `SNAPLOVER · ${date} · ${names.host} & ${names.guest}` : `SNAPLOVER · ${date} · À DEUX`,
+    },
+    participant: {
+      /** Prénoms par défaut si absents (ex. lien partagé collé directement, sans passer par /join). */
+      defaultHost: "Hôte",
+      defaultGuest: "Invité",
     },
   },
 } as const;

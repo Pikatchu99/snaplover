@@ -6,9 +6,15 @@ import { Check, Copy } from "lucide-react";
 import { CameraTile, type CameraTileState } from "@/components/room/CameraTile";
 import type { RoomConnectionStatus } from "@/hooks/use-room-connection";
 import { fr } from "@/i18n/messages";
+import type { FrameId, StripStyle } from "@/types/frame";
 
 interface LobbyProps {
   roomCode: string;
+  // Config de room courante — nécessaire pour reconstruire un lien de
+  // partage complet (voir copyLink ci-dessous), pas seulement le code.
+  poses: number;
+  frameId: FrameId;
+  style: StripStyle;
   localStream: MediaStream | null;
   remoteStream: MediaStream | null;
   status: RoomConnectionStatus;
@@ -50,6 +56,9 @@ function RoomShell({ children }: { children: React.ReactNode }) {
 
 export function Lobby({
   roomCode,
+  poses,
+  frameId,
+  style,
   localStream,
   remoteStream,
   status,
@@ -60,8 +69,11 @@ export function Lobby({
 }: LobbyProps) {
   const [copied, setCopied] = useState(false);
 
-  async function copyCode() {
-    await navigator.clipboard.writeText(roomCode);
+  async function copyLink() {
+    // Le lien copié ici doit être directement partageable — jamais juste le
+    // code brut, qui seul ne permet pas de rejoindre avec la bonne config.
+    const params = new URLSearchParams({ poses: String(poses), style, frame: frameId });
+    await navigator.clipboard.writeText(`${window.location.origin}/r/${roomCode}?${params.toString()}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
@@ -123,7 +135,7 @@ export function Lobby({
         <div className="flex items-center justify-between">
           <h1 className="font-heading text-2xl font-bold text-white">{fr.lobby.title}</h1>
           <button
-            onClick={copyCode}
+            onClick={copyLink}
             className="flex items-center gap-2 rounded-full border border-white/20 px-3 py-1.5 font-mono text-sm text-white/90 transition hover:bg-white/10"
           >
             {roomCode}

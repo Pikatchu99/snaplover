@@ -43,19 +43,29 @@ export default function CreateRoomPage() {
   const [poses, setPoses] = useState<number>(config.roomConfig.defaultPoses);
   const [style, setStyle] = useState<StripStyle>("vertical");
   const [frameId, setFrameId] = useState<FrameId>("classic");
+  const [name, setName] = useState("");
+  const [nameError, setNameError] = useState(false);
 
   async function handleCreate() {
+    if (!name.trim()) {
+      setNameError(true);
+      return;
+    }
+
     const code = generateRoomCode();
-    const params = new URLSearchParams({ poses: String(poses), style, frame: frameId });
-    const path = `/r/${code}?${params.toString()}`;
+    // Le lien partagé ne contient QUE la config de room (poses/style/cadre) —
+    // jamais le prénom de l'hôte, qui reste local à ce navigateur.
+    const shareParams = new URLSearchParams({ poses: String(poses), style, frame: frameId });
+    const sharePath = `/r/${code}?${shareParams.toString()}`;
 
     try {
-      await navigator.clipboard.writeText(`${window.location.origin}${path}`);
+      await navigator.clipboard.writeText(`${window.location.origin}${sharePath}`);
     } catch {
       // clipboard indisponible : on continue quand même vers la room
     }
 
-    router.push(path);
+    const ownParams = new URLSearchParams({ poses: String(poses), style, frame: frameId, name: name.trim() });
+    router.push(`/r/${code}?${ownParams.toString()}`);
   }
 
   return (
@@ -77,6 +87,24 @@ export default function CreateRoomPage() {
         </div>
 
         <div className="flex flex-col gap-8">
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-1 text-xs font-semibold tracking-widest text-[#8c8378] uppercase">
+              {fr.create.nameLabel}
+            </legend>
+            <input
+              value={name}
+              onChange={(event) => {
+                setName(event.target.value.slice(0, config.participant.nameMaxLength));
+                setNameError(false);
+              }}
+              placeholder={fr.create.namePlaceholder}
+              maxLength={config.participant.nameMaxLength}
+              aria-label={fr.create.nameLabel}
+              className="rounded-2xl border border-[#ece4d8] bg-white px-4 py-3 text-sm text-[#1c1712] placeholder:text-[#8c8378] focus:border-[#1c1712] focus:outline-none"
+            />
+            {nameError && <p className="text-sm text-red-600">{fr.create.missingName}</p>}
+          </fieldset>
+
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-1 text-xs font-semibold tracking-widest text-[#8c8378] uppercase">
               {fr.create.posesLabel}

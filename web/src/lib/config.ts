@@ -45,4 +45,7 @@ export const config = {
     defaultPoses: 3,
     validPoses: [3, 4] as const,
   },
+  participant: {
+    nameMaxLength: 24,
+  },
 } as const;

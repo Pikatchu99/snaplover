@@ -10,6 +10,7 @@ import { createImageReceiver, sendImage } from "@/lib/capture/image-transfer";
 import { composeStrip, type StripCell } from "@/lib/capture/compose-strip";
 import { FRAMES } from "@/lib/frames/frame-registry";
 import { config } from "@/lib/config";
+import { fr } from "@/i18n/messages";
 import type { FrameId, StripStyle } from "@/types/frame";
 
 export type CaptureSessionStatus = "idle" | "countdown" | "capturing" | "composing" | "done";
@@ -20,6 +21,8 @@ interface UseCaptureSessionOptions {
   poses: number;
   frameId: FrameId;
   style: StripStyle;
+  /** Prénom local (résolu avec fallback avant d'arriver ici — voir RoomClient). */
+  myName: string;
   localVideoRef: RefObject<HTMLVideoElement | null>;
 }
 
@@ -32,6 +35,7 @@ export function useCaptureSession({
   poses,
   frameId,
   style,
+  myName,
   localVideoRef,
 }: UseCaptureSessionOptions) {
   const [status, setStatus] = useState<CaptureSessionStatus>("idle");
@@ -82,6 +86,10 @@ export function useCaptureSession({
   const myCaptureHostTimeRef = useRef<number | null>(null);
   const peerHalfRef = useRef<string | null>(null);
   const peerCaptureHostTimeRef = useRef<number | null>(null);
+  // Prénom du partenaire, reçu via "hello" (côté hôte) ou "config" (côté
+  // invité) — voir protocole ci-dessous. Ref (pas state) : seul lu au moment
+  // de composer la bande finale, pas besoin de re-render.
+  const peerNameRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!dataChannel) return;
@@ -105,12 +113,14 @@ export function useCaptureSession({
         // seule (channel.onOpen) ne garantit pas que le listener du
         // partenaire (potentiellement une instance toute neuve après une
         // coupure) est déjà attaché côté React à ce moment précis.
+        peerNameRef.current = message.name;
         if (isInitiator) {
-          channel.send({ t: "config", poses, frameId, style });
+          channel.send({ t: "config", poses, frameId, style, hostName: myName });
           if (pendingPoseRef.current != null) triggerCapture(pendingPoseRef.current);
         }
       } else if (message.t === "config") {
         applyConfig(message.poses, message.frameId, message.style);
+        peerNameRef.current = message.hostName;
       } else if (message.t === "capture") scheduleCapture(message.pose, message.fireAtHost);
       else if (message.t === "reset") resetState();
       else receiveImage(message);
@@ -119,7 +129,7 @@ export function useCaptureSession({
     let stopClockSync: (() => void) | undefined;
     channel.onOpen(() => {
       if (!isInitiator) {
-        channel.send({ t: "hello" });
+        channel.send({ t: "hello", name: myName });
         stopClockSync = startClockSync(channel, (sample) => {
           offsetRef.current = sample.offset;
         });
@@ -206,6 +216,14 @@ export function useCaptureSession({
     tryComposeCell(pose);
   }
 
+  function resolveNames() {
+    const peerName = peerNameRef.current;
+    return {
+      host: isInitiator ? myName : (peerName ?? fr.participant.defaultHost),
+      guest: isInitiator ? (peerName ?? fr.participant.defaultGuest) : myName,
+    };
+  }
+
   function tryComposeCell(pose: number) {
     if (!myHalfRef.current || !peerHalfRef.current) return;
 
@@ -236,6 +254,7 @@ export function useCaptureSession({
         frame: FRAMES[effectiveFrameIdRef.current],
         filter: "classic",
         style: effectiveStyleRef.current,
+        names: resolveNames(),
       })
         .then((url) => {
           setStripUrl(url);
@@ -282,6 +301,8 @@ export function useCaptureSession({
     peerCaptureHostTimeRef.current = null;
   }
 
+  const { host: hostName, guest: guestName } = resolveNames();
+
   return {
     status,
     hasStarted,
@@ -294,6 +315,8 @@ export function useCaptureSession({
     cells,
     captureDeltasMs,
     awaitingPeer,
+    hostName,
+    guestName,
     startSession: () => triggerCapture(0),
     retry: () => {
       channelRef.current?.send({ t: "reset" });

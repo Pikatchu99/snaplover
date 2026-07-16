@@ -8,6 +8,7 @@ import { captureFrame } from "@/lib/capture/capture-frame";
 import { waitForVideoReady } from "@/lib/capture/wait-for-video-ready";
 import { createImageReceiver, sendImage } from "@/lib/capture/image-transfer";
 import { composeStrip, type StripCell } from "@/lib/capture/compose-strip";
+import { FRAMES, DEFAULT_FRAME_ID } from "@/lib/frames/frame-registry";
 
 export type CaptureSessionStatus = "idle" | "countdown" | "capturing" | "done";
 
@@ -29,6 +30,7 @@ export function useCaptureSession({ dataChannel, isInitiator, poses, localVideoR
   const [currentPose, setCurrentPose] = useState(0);
   const [countdownMs, setCountdownMs] = useState(0);
   const [stripUrl, setStripUrl] = useState<string | null>(null);
+  const [cells, setCells] = useState<StripCell[]>([]);
   const [captureDeltasMs, setCaptureDeltasMs] = useState<number[]>([]);
 
   const channelRef = useRef<RealtimeChannel | null>(null);
@@ -54,6 +56,7 @@ export function useCaptureSession({ dataChannel, isInitiator, poses, localVideoR
     const unsubscribeMessages = channel.onMessage((message) => {
       if (message.t === "ping") respondToPing(channel, message.c);
       else if (message.t === "capture") scheduleCapture(message.pose, message.fireAtHost);
+      else if (message.t === "reset") resetState();
       else receiveImage(message);
     });
 
@@ -142,7 +145,9 @@ export function useCaptureSession({ dataChannel, isInitiator, poses, localVideoR
 
     if (nextPose >= poses) {
       setStatus("done");
-      composeStrip(cellsRef.current)
+      const finalCells = [...cellsRef.current];
+      setCells(finalCells);
+      composeStrip(finalCells, { frame: FRAMES[DEFAULT_FRAME_ID], filter: "classic" })
         .then(setStripUrl)
         .catch((error) => console.error("[capture] échec de composition de la bande:", error));
       return;
@@ -159,6 +164,21 @@ export function useCaptureSession({ dataChannel, isInitiator, poses, localVideoR
     scheduleCapture(pose, fireAtHost);
   }
 
+  function resetState() {
+    setStatus("idle");
+    setHasStarted(false);
+    setCurrentPose(0);
+    setCountdownMs(0);
+    setStripUrl(null);
+    setCells([]);
+    setCaptureDeltasMs([]);
+    cellsRef.current = [];
+    myHalfRef.current = null;
+    myCaptureHostTimeRef.current = null;
+    peerHalfRef.current = null;
+    peerCaptureHostTimeRef.current = null;
+  }
+
   return {
     status,
     hasStarted,
@@ -166,7 +186,12 @@ export function useCaptureSession({ dataChannel, isInitiator, poses, localVideoR
     poses,
     countdownMs,
     stripUrl,
+    cells,
     captureDeltasMs,
     startSession: () => triggerCapture(0),
+    retry: () => {
+      channelRef.current?.send({ t: "reset" });
+      resetState();
+    },
   };
 }

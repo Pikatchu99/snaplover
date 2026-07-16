@@ -19,11 +19,13 @@ export function RoomClient({ code }: { code: string }) {
     currentPose,
     countdownMs,
     stripUrl,
+    cells,
     startSession,
+    retry,
   } = useCaptureSession({ dataChannel, isInitiator, poses: POSES, localVideoRef });
 
   if (stripUrl) {
-    return <PhotoStrip stripUrl={stripUrl} />;
+    return <PhotoStrip cells={cells} initialStripUrl={stripUrl} onRetry={retry} />;
   }
 
   if (hasStarted) {

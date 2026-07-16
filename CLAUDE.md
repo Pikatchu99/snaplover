@@ -167,5 +167,15 @@ Voir docs/SNAPROOM-SPEC.md §17 pour les jalons J1–J6.
   orchestration dans `hooks/use-capture-session.ts`, UI `CaptureStage`/`Countdown`/`PhotoStrip`.
   Vérifié bout en bout : 2 onglets Chrome headless, bande complète 3 poses composée des deux
   côtés, écarts de synchro observés 11-30ms (seuil spec : <150ms).
-- Prochaine étape : **J4 — Le livrable** (écran résultat avec cadres/thèmes, filtres, partage —
-  voir docs/SNAPROOM-SPEC.md §12 E6, §13).
+- **J4 (le livrable)** fait : registre de cadres (`lib/frames/frame-registry.ts` — Classic/Noir/
+  Film ; packs illustrés hearts/cherry/gingham/tulips/denim/meadow **pas encore implémentés**,
+  faute d'assets réels dans le repo — structure prête à les accueillir), filtres Classic/N&B/Chaud
+  (`lib/capture/filters.ts`, appliqués via `ctx.filter` à la composition pour un rendu identique
+  aperçu/export), `compose-strip.ts` étendu (marges, footer "SNAPROOM · DATE · À DEUX"), écran
+  résultat (`PhotoStrip.tsx` : filtres, Télécharger PNG, Partager via Web Share API avec fallback
+  téléchargement, Reprendre), message realtime `reset` pour resynchroniser les deux pairs sur
+  "Reprendre". Vérifié bout en bout : bande composée des deux côtés, changement de filtre
+  effectif sans erreur, Reprendre renvoie les deux pairs en salle d'attente en synchro.
+- Prochaine étape : **J5 — États & robustesse** (tous les états de §12 : réseau faible, countdown
+  suspendu, partenaire déconnecté, lien invalide déjà géré partiellement, reconnexion, purge des
+  rooms) — voir docs/SNAPROOM-SPEC.md §12, §17.

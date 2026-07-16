@@ -7,4 +7,5 @@ export type RealtimeMessage =
   | { t: "capture"; pose: number; fireAtHost: number }
   | { t: "img-meta"; pose: number }
   | { t: "img"; part: string }
-  | { t: "img-end"; pose: number; hostTime: number };
+  | { t: "img-end"; pose: number; hostTime: number }
+  | { t: "reset" };

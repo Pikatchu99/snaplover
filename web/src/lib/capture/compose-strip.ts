@@ -1,3 +1,6 @@
+import type { FilterId, FrameDefinition } from "@/types/frame";
+import { FILTER_CSS } from "@/lib/capture/filters";
+
 export interface StripCell {
   /** Moitié gauche = hôte (initiator). */
   left: string;
@@ -5,9 +8,18 @@ export interface StripCell {
   right: string;
 }
 
+export interface ComposeOptions {
+  frame: FrameDefinition;
+  filter: FilterId;
+  /** Date affichée dans le footer (par défaut : maintenant). */
+  date?: Date;
+}
+
 const CELL_WIDTH = 450;
 const CELL_HEIGHT = 600;
 const GAP = 12;
+const MARGIN = 30;
+const FOOTER_HEIGHT = 54;
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -38,9 +50,17 @@ function drawCover(ctx: CanvasRenderingContext2D, img: HTMLImageElement, x: numb
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
 }
 
-// Compose la bande complète : chaque case = une pose, hôte à gauche / invité
-// à droite, cases empilées verticalement. Voir SNAPROOM-SPEC.md §10.
-export async function composeStrip(cells: StripCell[]): Promise<string> {
+function formatFooterDate(date: Date): string {
+  return date.toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase();
+}
+
+// Compose la bande complète, look rétro-cabine : chaque case = une pose,
+// hôte à gauche / invité à droite, cases empilées verticalement, marges et
+// footer "SNAPROOM · DATE · À DEUX" habillés par le cadre choisi.
+// Voir SNAPROOM-SPEC.md §10, §13.
+export async function composeStrip(cells: StripCell[], options: ComposeOptions): Promise<string> {
+  const { frame, filter, date = new Date() } = options;
+
   const loadedCells = await Promise.all(
     cells.map(async (cell) => ({
       left: await loadImage(cell.left),
@@ -49,20 +69,29 @@ export async function composeStrip(cells: StripCell[]): Promise<string> {
   );
 
   const canvas = document.createElement("canvas");
-  canvas.width = CELL_WIDTH * 2 + GAP;
-  canvas.height = (CELL_HEIGHT + GAP) * loadedCells.length - GAP;
+  canvas.width = CELL_WIDTH * 2 + GAP + MARGIN * 2;
+  canvas.height = MARGIN + (CELL_HEIGHT + GAP) * loadedCells.length - GAP + FOOTER_HEIGHT + MARGIN;
 
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("2D canvas context unavailable");
 
-  ctx.fillStyle = "#fff";
+  ctx.fillStyle = frame.background;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+  ctx.filter = FILTER_CSS[filter];
   loadedCells.forEach(({ left, right }, index) => {
-    const y = index * (CELL_HEIGHT + GAP);
-    drawCover(ctx, left, 0, y, CELL_WIDTH, CELL_HEIGHT);
-    drawCover(ctx, right, CELL_WIDTH + GAP, y, CELL_WIDTH, CELL_HEIGHT);
+    const y = MARGIN + index * (CELL_HEIGHT + GAP);
+    drawCover(ctx, left, MARGIN, y, CELL_WIDTH, CELL_HEIGHT);
+    drawCover(ctx, right, MARGIN + CELL_WIDTH + GAP, y, CELL_WIDTH, CELL_HEIGHT);
   });
+  ctx.filter = "none";
+
+  ctx.fillStyle = frame.footerTextColor;
+  ctx.font = "600 20px system-ui, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  const footerY = canvas.height - MARGIN - FOOTER_HEIGHT / 2;
+  ctx.fillText(`SNAPROOM · ${formatFooterDate(date)} · À DEUX`, canvas.width / 2, footerY);
 
   return canvas.toDataURL("image/png");
 }

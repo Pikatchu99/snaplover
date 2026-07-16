@@ -7,6 +7,34 @@
 
 export const messages = {
   fr: {
+    seo: {
+      siteName: "SnapLover",
+      /** Gabarit de titre (App Router `metadata.title.template`). */
+      titleTemplate: "%s · SnapLover",
+      defaultTitle: "SnapLover — Photobooth en ligne à deux, à distance",
+      defaultDescription:
+        "Une seule photo. À deux, même à distance. Rejoignez un lien, activez vos caméras, et prenez une bande photo synchronisée en 3·2·1 — sans compte, gratuit et open source.",
+      keywords: [
+        "photobooth en ligne",
+        "photo à distance",
+        "cabine photo virtuelle",
+        "photo couple à distance",
+        "webcam synchronisée",
+        "bande photo en ligne",
+        "photomaton virtuel",
+        "prendre une photo à deux à distance",
+      ],
+      create: {
+        title: "Créer une room",
+        description:
+          "Créez votre room SnapLover : choisissez le nombre de poses, le style de bande et le cadre, puis partagez le lien pour prendre votre photo à deux, où que vous soyez.",
+      },
+      join: {
+        title: "Rejoindre une room",
+        description:
+          "Rejoignez la room SnapLover d'un proche avec le code reçu, activez votre caméra, et prenez votre bande photo ensemble en quelques secondes — sans compte.",
+      },
+    },
     landing: {
       titlePrefix: "Une seule photo. À deux, même à",
       titleHighlight: "distance.",

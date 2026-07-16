@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { RoomClient } from "@/components/room/RoomClient";
 import { parseRoomConfig } from "@/lib/room-config";
 import { isValidRoomCode } from "@/lib/room-code";
+
+// Room éphémère/privée (un lien = deux personnes précises) : jamais indexée,
+// jamais suivie — voir aussi app/robots.ts (`disallow: "/r/"`).
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 interface RoomPageProps {
   params: Promise<{ code: string }>;

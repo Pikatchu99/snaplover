@@ -4,17 +4,41 @@ import { Logo } from "@/components/landing/Logo";
 import { HeroStrips } from "@/components/landing/HeroStrips";
 import { InlineJoinField } from "@/components/landing/InlineJoinField";
 import { fr } from "@/i18n/messages";
+import { SITE_URL } from "@/lib/site";
 
 // Photos de démo (chats/chiens, pas de vrais visages — voir CLAUDE.md).
 // 6 par bande décorative : images[i*2]/[i*2+1] = paire par case.
 const STRIP_A_IMAGES = Array.from({ length: 6 }, (_, i) => `/preview/photo-${String(i + 1).padStart(2, "0")}.jpeg`);
 const STRIP_B_IMAGES = Array.from({ length: 6 }, (_, i) => `/preview/photo-${String(i + 7).padStart(2, "0")}.jpeg`);
 
+// Données structurées schema.org (WebApplication) — contenu 100% statique et
+// maîtrisé par ce fichier (pas d'entrée utilisateur), voir CLAUDE.md OWASP #5 :
+// le `dangerouslySetInnerHTML` ci-dessous ne pose donc pas le risque XSS visé
+// par cette règle (elle s'applique au contenu non maîtrisé).
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: fr.seo.siteName,
+  description: fr.seo.defaultDescription,
+  url: SITE_URL,
+  applicationCategory: "PhotoApplication",
+  operatingSystem: "Tout navigateur avec WebRTC (Chrome, Firefox, Safari, Edge)",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "EUR",
+  },
+};
+
 // Landing (E1) — SNAPROOM-SPEC.md §12. Fond clair ; hero split avec panneau
 // sombre décoratif sur desktop, voir docs/design/snaproom-hifi.dc.html.
 export default function LandingPage() {
   return (
     <main className="flex min-h-screen flex-col bg-[#fbf7f1] md:flex-row">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       <div className="flex flex-1 flex-col items-center justify-center gap-8 px-6 py-16 text-center md:items-start md:justify-center md:px-16 md:py-0 md:text-left">
         <Logo />
 

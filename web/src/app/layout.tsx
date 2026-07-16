@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import { Bricolage_Grotesque, Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import { QueryProvider } from "@/components/providers/query-provider";
+import { fr } from "@/i18n/messages";
+import { metadataBase, SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 // Analytics (Umami auto-hébergé) — entièrement optionnel, désactivé si les
@@ -26,8 +28,26 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SnapLover",
-  description: "Une seule photo. À deux, même à distance.",
+  metadataBase,
+  title: {
+    template: fr.seo.titleTemplate,
+    default: fr.seo.defaultTitle,
+  },
+  description: fr.seo.defaultDescription,
+  keywords: [...fr.seo.keywords],
+  openGraph: {
+    title: fr.seo.defaultTitle,
+    description: fr.seo.defaultDescription,
+    url: SITE_URL ?? "/",
+    siteName: fr.seo.siteName,
+    locale: "fr_FR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: fr.seo.defaultTitle,
+    description: fr.seo.defaultDescription,
+  },
 };
 
 export default function RootLayout({

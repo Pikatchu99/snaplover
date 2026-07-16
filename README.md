@@ -103,6 +103,19 @@ changement de code nécessaire côté app (les identifiants sont déjà lus depu
 d'environnement, voir `web/src/lib/webrtc/turn-credentials.ts`), juste un peu plus
 d'infrastructure à faire tourner.
 
+### Petit lexique des termes techniques utilisés plus haut
+
+| Terme | Ce que c'est, en une phrase |
+| --- | --- |
+| **WebRTC** | La techno de navigateur qui permet à deux appareils de s'échanger vidéo/son/données en direct, sans plugin. |
+| **P2P** (pair à pair) | Les deux navigateurs se parlent directement entre eux, pas via un serveur central. |
+| **Signaling** | Le tout petit échange initial ("voici comment me joindre") qui permet à deux navigateurs de démarrer une connexion WebRTC — assuré ici par `signaling/`. |
+| **SDP** | La "carte d'identité" technique qu'échangent les deux navigateurs (codecs supportés, etc.) au moment de se présenter. |
+| **ICE candidate** | Une adresse réseau possible pour joindre un navigateur (il peut y en avoir plusieurs : locale, publique, via un relais…). |
+| **STUN** | Un service public qui aide un navigateur à découvrir sa propre adresse publique, pour la partager avec l'autre. |
+| **TURN** | Un serveur relais utilisé seulement quand la connexion directe échoue — il fait transiter le flux sans le stocker ni le regarder. |
+| **Data channel** | Le canal WebRTC utilisé ici pour tout ce qui n'est pas vidéo (déclenchement du compte à rebours, échange des photos, etc.). |
+
 ## Stack
 
 - Next.js (App Router) + React 19 + TypeScript strict — `web/`

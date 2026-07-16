@@ -19,7 +19,7 @@ interface RoomClientProps {
 }
 
 export function RoomClient({ code, poses, frameId, style }: RoomClientProps) {
-  const { localStream, remoteStream, status, dataChannel, isInitiator } = useRoomConnection(code);
+  const { localStream, remoteStream, status, dataChannel, isInitiator, retryCamera } = useRoomConnection(code);
   const localVideoRef = useRef<HTMLVideoElement>(null);
 
   const {
@@ -32,6 +32,7 @@ export function RoomClient({ code, poses, frameId, style }: RoomClientProps) {
     countdownMs,
     stripUrl,
     cells,
+    awaitingPeer,
     startSession,
     retry,
   } = useCaptureSession({ dataChannel, isInitiator, poses, frameId, style, localVideoRef });
@@ -58,6 +59,7 @@ export function RoomClient({ code, poses, frameId, style }: RoomClientProps) {
         currentPose={currentPose}
         poses={effectivePoses}
         countdownMs={countdownMs}
+        awaitingPeer={awaitingPeer}
       />
     );
   }
@@ -71,6 +73,7 @@ export function RoomClient({ code, poses, frameId, style }: RoomClientProps) {
       localVideoRef={localVideoRef}
       isInitiator={isInitiator}
       onLaunch={startSession}
+      onRetryCamera={retryCamera}
     />
   );
 }

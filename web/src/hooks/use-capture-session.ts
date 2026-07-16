@@ -12,7 +12,7 @@ import { FRAMES } from "@/lib/frames/frame-registry";
 import { config } from "@/lib/config";
 import type { FrameId, StripStyle } from "@/types/frame";
 
-export type CaptureSessionStatus = "idle" | "countdown" | "capturing" | "done";
+export type CaptureSessionStatus = "idle" | "countdown" | "capturing" | "composing" | "done";
 
 interface UseCaptureSessionOptions {
   dataChannel: RTCDataChannel | null;
@@ -41,6 +41,14 @@ export function useCaptureSession({
   const [stripUrl, setStripUrl] = useState<string | null>(null);
   const [cells, setCells] = useState<StripCell[]>([]);
   const [captureDeltasMs, setCaptureDeltasMs] = useState<number[]>([]);
+  // true tant que l'hôte a une pose à déclencher mais que le data channel
+  // n'est pas disponible (partenaire pas encore prêt, ou déconnecté en cours
+  // de séance) — alimente l'overlay "on attend Partenaire" / "Partenaire
+  // déconnecté·e" côté UI (CaptureStage).
+  const [awaitingPeer, setAwaitingPeer] = useState(false);
+  const hasStartedRef = useRef(false);
+  const currentPoseRef = useRef(0);
+  const pendingPoseRef = useRef<number | null>(null);
 
   // L'invité peut arriver via un code saisi (sans les query params de
   // l'hôte) — l'hôte diffuse sa config à la connexion et fait autorité.
@@ -107,6 +115,11 @@ export function useCaptureSession({
         stopClockSync = startClockSync(channel, (sample) => {
           offsetRef.current = sample.offset;
         });
+      } else if (pendingPoseRef.current != null) {
+        // Le partenaire vient de (re)rejoindre pendant qu'une pose était en
+        // attente (countdown suspendu / reconnexion en cours de séance) : on
+        // relance immédiatement, la séance reprend là où elle s'était arrêtée.
+        triggerCapture(pendingPoseRef.current);
       }
     });
 
@@ -117,6 +130,31 @@ export function useCaptureSession({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataChannel, isInitiator]);
+
+  useEffect(() => {
+    hasStartedRef.current = hasStarted;
+  }, [hasStarted]);
+
+  useEffect(() => {
+    currentPoseRef.current = currentPose;
+  }, [currentPose]);
+
+  useEffect(() => {
+    // Le data channel disparaît (partenaire déconnecté) alors qu'une séance
+    // est en cours : bascule immédiatement en "on attend Partenaire" plutôt
+    // que d'attendre le prochain essai de déclenchement. Toute moitié déjà
+    // capturée pour la pose en cours est invalidée (le partenaire reconnecté
+    // repart d'un état neuf, sans mémoire de cette pose) — sinon on resterait
+    // bloqué à vie en attendant une moitié qui n'arrivera jamais.
+    if (dataChannel === null && hasStartedRef.current) {
+      myHalfRef.current = null;
+      myCaptureHostTimeRef.current = null;
+      peerHalfRef.current = null;
+      peerCaptureHostTimeRef.current = null;
+      pendingPoseRef.current = currentPoseRef.current;
+      setAwaitingPeer(true);
+    }
+  }, [dataChannel]);
 
   function scheduleCapture(pose: number, fireAtHost: number) {
     setHasStarted(true);
@@ -185,7 +223,7 @@ export function useCaptureSession({
     setCurrentPose(nextPose);
 
     if (nextPose >= effectivePosesRef.current) {
-      setStatus("done");
+      setStatus("composing");
       const finalCells = [...cellsRef.current];
       setCells(finalCells);
       composeStrip(finalCells, {
@@ -193,7 +231,10 @@ export function useCaptureSession({
         filter: "classic",
         style: effectiveStyleRef.current,
       })
-        .then(setStripUrl)
+        .then((url) => {
+          setStripUrl(url);
+          setStatus("done");
+        })
         .catch((error) => console.error("[capture] échec de composition de la bande:", error));
       return;
     }
@@ -203,7 +244,16 @@ export function useCaptureSession({
   }
 
   function triggerCapture(pose: number) {
-    if (!isInitiator || !channelRef.current) return;
+    if (!isInitiator) return;
+    if (!channelRef.current) {
+      // Partenaire pas (encore) prêt — on suspend : reprise auto dès que le
+      // data channel (re)devient disponible (voir channel.onOpen ci-dessus).
+      pendingPoseRef.current = pose;
+      setAwaitingPeer(true);
+      return;
+    }
+    pendingPoseRef.current = null;
+    setAwaitingPeer(false);
     const fireAtHost = Date.now() + config.capture.leadMs;
     channelRef.current.send({ t: "capture", pose, fireAtHost });
     scheduleCapture(pose, fireAtHost);
@@ -217,6 +267,8 @@ export function useCaptureSession({
     setStripUrl(null);
     setCells([]);
     setCaptureDeltasMs([]);
+    setAwaitingPeer(false);
+    pendingPoseRef.current = null;
     cellsRef.current = [];
     myHalfRef.current = null;
     myCaptureHostTimeRef.current = null;
@@ -235,6 +287,7 @@ export function useCaptureSession({
     stripUrl,
     cells,
     captureDeltasMs,
+    awaitingPeer,
     startSession: () => triggerCapture(0),
     retry: () => {
       channelRef.current?.send({ t: "reset" });

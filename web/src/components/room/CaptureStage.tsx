@@ -1,4 +1,5 @@
-import type { RefObject } from "react";
+import { useState, type RefObject } from "react";
+import { Check, Link2 } from "lucide-react";
 import { CameraTile } from "@/components/room/CameraTile";
 import { Countdown } from "@/components/room/Countdown";
 import type { CaptureSessionStatus } from "@/hooks/use-capture-session";
@@ -12,6 +13,50 @@ interface CaptureStageProps {
   currentPose: number;
   poses: number;
   countdownMs: number;
+  // Une pose est en attente de déclenchement mais le partenaire n'est pas
+  // (ou plus) joignable — countdown suspendu si aucune pose n'est encore
+  // faite, "partenaire déconnecté" sinon (voir SNAPROOM-SPEC.md §12, états 3/4).
+  awaitingPeer: boolean;
+}
+
+function AwaitingPeerOverlay({ currentPose }: { currentPose: number }) {
+  const [copied, setCopied] = useState(false);
+  const disconnectedMidSession = currentPose > 0;
+
+  async function resendLink() {
+    await navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  return (
+    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-2xl bg-black/60 px-6 text-center">
+      <span className="font-heading text-lg font-bold text-white">
+        {disconnectedMidSession ? fr.captureStage.partnerDisconnectedTitle : fr.captureStage.awaitingPeerTitle}
+      </span>
+      <span className="max-w-xs text-sm text-white/70">
+        {disconnectedMidSession ? fr.captureStage.partnerDisconnectedMessage : fr.captureStage.awaitingPeerSubtitle}
+      </span>
+      {disconnectedMidSession && (
+        <button
+          onClick={resendLink}
+          className="mt-1 flex items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-sm text-white/90 transition hover:bg-white/10"
+        >
+          {copied ? <Check className="size-4" /> : <Link2 className="size-4" />}
+          {copied ? fr.captureStage.linkCopied : fr.captureStage.resendLink}
+        </button>
+      )}
+    </div>
+  );
+}
+
+function ComposingOverlay() {
+  return (
+    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 rounded-2xl bg-black/60 px-6 text-center">
+      <span className="font-heading text-lg font-bold text-white">{fr.captureStage.composingTitle}</span>
+      <span className="max-w-xs text-sm text-white/70">{fr.captureStage.composingSubtitle}</span>
+    </div>
+  );
 }
 
 // Écran de séance (compte à rebours 3·2·1 synchrone) — SNAPROOM-SPEC.md §12 (E5).
@@ -23,6 +68,7 @@ export function CaptureStage({
   currentPose,
   poses,
   countdownMs,
+  awaitingPeer,
 }: CaptureStageProps) {
   const poseNumber = Math.min(currentPose + 1, poses);
 
@@ -42,6 +88,8 @@ export function CaptureStage({
         <CameraTile stream={localStream} label={fr.lobby.you} state="ready" mirrored muted videoRef={localVideoRef} />
         <CameraTile stream={remoteStream} label={fr.lobby.partner} state={remoteStream ? "ready" : "off"} />
         {status === "countdown" && <Countdown remainingMs={countdownMs} />}
+        {status === "composing" && <ComposingOverlay />}
+        {awaitingPeer && <AwaitingPeerOverlay currentPose={currentPose} />}
       </div>
     </div>
   );

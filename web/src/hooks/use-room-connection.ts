@@ -16,13 +16,14 @@ export type RoomConnectionStatus =
   | "waiting-for-peer"
   | "connecting"
   | "connected"
+  | "reconnecting"
   | "room-full"
   | "invalid-room";
 
 // Orchestration temps réel d'une room : caméra locale → signaling → WebRTC.
 // Voir SNAPROOM-SPEC.md §8-§9.
 export function useRoomConnection(roomCode: string) {
-  const { stream: localStream, status: mediaStatus } = useUserMedia();
+  const { stream: localStream, status: mediaStatus, retry: retryCamera } = useUserMedia();
   const iceServersQuery = useIceServers();
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [status, setStatus] = useState<RoomConnectionStatus>("requesting-camera");
@@ -56,9 +57,8 @@ export function useRoomConnection(roomCode: string) {
         onRemoteStream: setRemoteStream,
         onConnectionStateChange: (state) => {
           if (state === "connected") setStatus("connected");
-          else if (state === "failed" || state === "disconnected" || state === "closed") {
-            setStatus("waiting-for-peer");
-          }
+          else if (state === "disconnected") setStatus("reconnecting");
+          else if (state === "failed" || state === "closed") setStatus("waiting-for-peer");
         },
         onDataChannel: setDataChannel,
         sendSignal: (data) => signaling.send({ type: "signal", data }),
@@ -95,10 +95,17 @@ export function useRoomConnection(roomCode: string) {
       }
     });
 
+    // Coupure serveur (pas initiée par nous) : la seule qu'émet le signaling
+    // aujourd'hui est le code 4000 (room orpheline expirée, voir server.ts).
+    const unsubscribeClose = signaling.onClose((code) => {
+      if (code === 4000) setStatus("invalid-room");
+    });
+
     signaling.connect(SIGNALING_URL, roomCode);
 
     return () => {
       unsubscribe();
+      unsubscribeClose();
       signaling.close();
       peerRef.current?.pc.close();
       peerRef.current = null;
@@ -107,5 +114,5 @@ export function useRoomConnection(roomCode: string) {
 
   const effectiveStatus: RoomConnectionStatus = mediaStatus === "denied" ? "camera-denied" : status;
 
-  return { localStream, remoteStream, status: effectiveStatus, dataChannel, isInitiator };
+  return { localStream, remoteStream, status: effectiveStatus, dataChannel, isInitiator, retryCamera };
 }

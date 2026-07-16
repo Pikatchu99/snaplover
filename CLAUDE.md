@@ -272,6 +272,39 @@ Voir docs/SNAPROOM-SPEC.md §17 pour les jalons J1–J6.
   (l'effet ne dépend que de `[dataChannel, isInitiator]`), donc toute valeur qui change après coup
   (la config reçue de l'hôte) doit être lue via une **ref**, pas une variable de state fermée par
   la closure du dispatcher, sous peine de rester bloqué sur sa valeur initiale indéfiniment.
-- Prochaine étape : **J5 — États & robustesse** (tous les états de §12 : réseau faible, countdown
-  suspendu, partenaire déconnecté, lien invalide déjà géré partiellement, reconnexion, purge des
-  rooms) — voir docs/SNAPROOM-SPEC.md §12, §17.
+- **J5 (États & robustesse)** fait, les 7 états obligatoires de §12 :
+  1. **Caméra bloquée** : `use-user-media.ts` expose `retry()` (relance `getUserMedia` via un
+     compteur `attempt` en dep d'effet) ; `Lobby.tsx` ajoute l'explication "Comment autoriser" +
+     bouton Réessayer.
+  2. **Réseau faible** : nouveau statut `RoomConnectionStatus` `"reconnecting"` — mappé depuis
+     `RTCPeerConnectionState === "disconnected"` (transitoire, l'ICE peut se rétablir seul, voir
+     `use-room-connection.ts`), badge "Signal faible" dans `Lobby.tsx`. `"failed"`/`"closed"`
+     restent mappés sur `"waiting-for-peer"` (rupture définitive).
+  3. **Countdown suspendu** / 4. **Partenaire déconnecté** : même mécanisme dans
+     `use-capture-session.ts` — `awaitingPeer` (+ `pendingPoseRef`) passe à `true` dès que
+     `triggerCapture` ne trouve pas de data channel prêt, ou dès que `dataChannel` redevient `null`
+     en cours de séance (effet dédié). Toute moitié de pose déjà capturée mais dont la moitié du
+     partenaire n'est jamais arrivée est **invalidée** à la détection de la coupure (sinon on reste
+     bloqué à vie à attendre une donnée qui ne viendra jamais) ; à la reconnexion, `channel.onOpen`
+     relance automatiquement `triggerCapture(pendingPoseRef.current)` côté hôte — la pose reprend
+     entièrement à zéro pour les deux pairs. `CaptureStage.tsx` affiche le bon message ("on attend
+     Partenaire" tant qu'aucune pose n'est faite, "Partenaire déconnecté·e" + bouton "Renvoyer le
+     lien" sinon) selon `currentPose > 0`.
+  5. **Lien introuvable/expiré** : en plus du cas déjà géré (code hors regex, `MAX_ROOMS`), le
+     `SignalingClient` expose désormais `onClose(code)` — la fermeture serveur du sweep des rooms
+     orphelines (`ws.close(4000, ...)` dans `signaling/src/server.ts`) est maintenant routée côté
+     client vers le statut `"invalid-room"` (elle ne l'était pas avant, gap trouvé pendant ce
+     passage). CTA "Créer une room" / "Saisir un code" ajoutés dans `Lobby.tsx`.
+  6. **Room pleine** : CTA "Créer une nouvelle room" ajouté.
+  7. **Composition (loading)** : nouveau statut `CaptureSessionStatus` `"composing"` (distinct de
+     `"done"`, posé pendant l'attente de `composeStrip()`), overlay dédié dans `CaptureStage.tsx`.
+  Vérifié bout en bout (2 onglets Chrome headless) : régression du flux nominal (connexion → 4
+  poses → composition → changement de filtre → Reprendre, 0 exception) ; `room-full` et
+  `invalid-room` avec leurs CTA respectifs ; coupure forcée d'un pair en cours de séance (process
+  Chrome tué) → overlay "on attend Partenaire" affiché sans exception, **bug réel trouvé et corrigé
+  pendant ce test** (le cas où la pose avait déjà été localement capturée et envoyée avant la
+  coupure ne relançait jamais rien, `pendingPoseRef` restant à `null` — fix ci-dessus) → reconnexion
+  du même pair sur le même code de room → séance reprise automatiquement et bande complète
+  composée des deux côtés.
+- Prochaine étape : **J6** — voir docs/SNAPROOM-SPEC.md §17 (purge complète des rooms orphelines
+  déjà en place côté signaling depuis J1 ; reste à confirmer le périmètre exact de J6 avec l'auteur).

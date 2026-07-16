@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type RefObject } from "react";
+import Link from "next/link";
 import { Check, Copy } from "lucide-react";
 import { CameraTile, type CameraTileState } from "@/components/room/CameraTile";
 import type { RoomConnectionStatus } from "@/hooks/use-room-connection";
@@ -14,6 +15,7 @@ interface LobbyProps {
   localVideoRef: RefObject<HTMLVideoElement | null>;
   isInitiator: boolean;
   onLaunch: () => void;
+  onRetryCamera: () => void;
 }
 
 const STATUS_LABEL: Record<RoomConnectionStatus, string> = {
@@ -22,6 +24,7 @@ const STATUS_LABEL: Record<RoomConnectionStatus, string> = {
   "waiting-for-peer": fr.lobby.status.waitingForPeer,
   connecting: fr.lobby.status.connecting,
   connected: fr.lobby.status.connected,
+  reconnecting: fr.lobby.status.reconnecting,
   "room-full": fr.lobby.status.roomFull,
   "invalid-room": fr.lobby.status.invalidRoom,
 };
@@ -34,9 +37,12 @@ function localTileState(status: RoomConnectionStatus): CameraTileState {
 
 function remoteTileState(status: RoomConnectionStatus, hasRemoteStream: boolean): CameraTileState {
   if (hasRemoteStream) return "ready";
-  if (status === "connecting") return "connecting";
+  if (status === "connecting" || status === "reconnecting") return "connecting";
   return "off";
 }
+
+const CTA_LINK_CLASS =
+  "inline-flex items-center justify-center rounded-2xl border border-white/20 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-white/10";
 
 function RoomShell({ children }: { children: React.ReactNode }) {
   return <div className="flex min-h-screen flex-col bg-[#161319] px-5 py-6">{children}</div>;
@@ -50,6 +56,7 @@ export function Lobby({
   localVideoRef,
   isInitiator,
   onLaunch,
+  onRetryCamera,
 }: LobbyProps) {
   const [copied, setCopied] = useState(false);
 
@@ -62,8 +69,15 @@ export function Lobby({
   if (status === "camera-denied") {
     return (
       <RoomShell>
-        <div className="flex flex-1 items-center justify-center">
-          <p className="max-w-sm text-center text-white">{fr.lobby.cameraDeniedMessage}</p>
+        <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
+          <p className="max-w-sm text-white">{fr.lobby.cameraDeniedMessage}</p>
+          <p className="max-w-sm text-sm text-white/60">{fr.lobby.cameraDeniedHelp}</p>
+          <button
+            onClick={onRetryCamera}
+            className="rounded-2xl bg-linear-to-r from-[#fb5a46] to-[#ff7d54] px-6 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
+          >
+            {fr.lobby.retry}
+          </button>
         </div>
       </RoomShell>
     );
@@ -72,8 +86,11 @@ export function Lobby({
   if (status === "room-full") {
     return (
       <RoomShell>
-        <div className="flex flex-1 items-center justify-center">
-          <p className="max-w-sm text-center text-white">{fr.lobby.roomFullMessage}</p>
+        <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
+          <p className="max-w-sm text-white">{fr.lobby.roomFullMessage}</p>
+          <Link href="/create" className={CTA_LINK_CLASS}>
+            {fr.lobby.roomFullCta}
+          </Link>
         </div>
       </RoomShell>
     );
@@ -82,8 +99,19 @@ export function Lobby({
   if (status === "invalid-room") {
     return (
       <RoomShell>
-        <div className="flex flex-1 items-center justify-center">
-          <p className="max-w-sm text-center text-white">{fr.lobby.invalidRoomMessage}</p>
+        <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
+          <p className="max-w-sm text-white">{fr.lobby.invalidRoomMessage}</p>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Link
+              href="/create"
+              className="inline-flex items-center justify-center rounded-2xl bg-linear-to-r from-[#fb5a46] to-[#ff7d54] px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
+            >
+              {fr.lobby.invalidRoomCreateCta}
+            </Link>
+            <Link href="/join" className={CTA_LINK_CLASS}>
+              {fr.lobby.invalidRoomJoinCta}
+            </Link>
+          </div>
         </div>
       </RoomShell>
     );

@@ -7,6 +7,9 @@
 
 export const messages = {
   fr: {
+    common: {
+      backToHome: "Retour à l'accueil",
+    },
     seo: {
       siteName: "SnapLover",
       /** Gabarit de titre (App Router `metadata.title.template`). */

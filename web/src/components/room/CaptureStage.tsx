@@ -1,4 +1,5 @@
 import { useState, type RefObject } from "react";
+import Link from "next/link";
 import { Check, Link2 } from "lucide-react";
 import { CameraTile } from "@/components/room/CameraTile";
 import { Countdown } from "@/components/room/Countdown";
@@ -83,6 +84,11 @@ function AwaitingPeerOverlay({ currentPose }: { currentPose: number }) {
           {copied ? fr.captureStage.linkCopied : fr.captureStage.resendLink}
         </button>
       )}
+      {/* Si le partenaire a du mal à rejoindre (ou ne revient plus), permettre
+          de sortir de la room plutôt que de rester bloqué sur cet écran. */}
+      <Link href="/" className="mt-1 text-sm text-white/50 underline-offset-2 hover:text-white/80 hover:underline">
+        {fr.common.backToHome}
+      </Link>
     </div>
   );
 }

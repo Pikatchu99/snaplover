@@ -90,6 +90,9 @@ export function Lobby({
           >
             {fr.lobby.retry}
           </button>
+          <Link href="/" className="text-sm text-white/50 underline-offset-2 hover:text-white/80 hover:underline">
+            {fr.common.backToHome}
+          </Link>
         </div>
       </RoomShell>
     );
@@ -102,6 +105,9 @@ export function Lobby({
           <p className="max-w-sm text-white">{fr.lobby.roomFullMessage}</p>
           <Link href="/create" className={CTA_LINK_CLASS}>
             {fr.lobby.roomFullCta}
+          </Link>
+          <Link href="/" className="text-sm text-white/50 underline-offset-2 hover:text-white/80 hover:underline">
+            {fr.common.backToHome}
           </Link>
         </div>
       </RoomShell>
@@ -124,6 +130,9 @@ export function Lobby({
               {fr.lobby.invalidRoomJoinCta}
             </Link>
           </div>
+          <Link href="/" className="text-sm text-white/50 underline-offset-2 hover:text-white/80 hover:underline">
+            {fr.common.backToHome}
+          </Link>
         </div>
       </RoomShell>
     );
@@ -170,6 +179,12 @@ export function Lobby({
             {fr.lobby.launch}
           </button>
         )}
+
+        {/* En cas de souci pour rejoindre côté partenaire, permettre de sortir
+            de la room sans être bloqué en salle d'attente indéfiniment. */}
+        <Link href="/" className="text-center text-sm text-white/40 underline-offset-2 hover:text-white/70 hover:underline">
+          {fr.common.backToHome}
+        </Link>
       </div>
     </RoomShell>
   );

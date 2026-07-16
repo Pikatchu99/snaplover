@@ -233,7 +233,7 @@ un seul VPS** (l'auteur a pointé le domaine dessus dès le départ, pas de Verc
   de Next.js (`next.config.ts` : `output: "standalone"` + `outputFileTracingRoot` fixé à la racine
   du monorepo — sans ça le build imbriquait `.next/standalone` sous le chemin absolu complet de la
   machine, cassé une fois en conteneur). Domaines : `snaplover.hbdwall.xyz` (web),
-  `signaling.snaplover.hbdwall.xyz` (signaling), même zone Cloudflare.
+  `snaplover-signaling.hbdwall.xyz` (signaling), même zone Cloudflare.
 - Exposition via **Cloudflare Tunnel** (`cloudflared`, service système sur le VPS, hors Docker) — le
   VPS se connecte lui-même en sortant vers Cloudflare, qui gère le TLS et route les deux domaines
   vers les bons ports locaux (`deploy/cloudflared/config.yml.example`, un seul tunnel, deux règles

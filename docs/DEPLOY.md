@@ -5,7 +5,7 @@ sur le VPS, Cloudflare gère le TLS. CI/CD via GitHub Actions : chaque push sur 
 `web/**` ou `signaling/**` build l'image Docker correspondante, la pousse sur GHCR, puis se connecte
 en SSH au VPS pour `docker compose pull && up -d` — automatique après le bootstrap ci-dessous.
 
-Domaines : `snaplover.hbdwall.xyz` (web) et `signaling.snaplover.hbdwall.xyz` (signaling), tous les
+Domaines : `snaplover.hbdwall.xyz` (web) et `snaplover-signaling.hbdwall.xyz` (signaling), tous les
 deux sur la zone Cloudflare de `hbdwall.xyz`.
 
 **Tout ce qui suit est à faire une seule fois.** Après ça, chaque push déploie tout seul.
@@ -70,7 +70,7 @@ cloudflared tunnel create snaplover
 # Route les deux domaines vers ce tunnel (crée les enregistrements DNS
 # nécessaires automatiquement sur la zone Cloudflare).
 cloudflared tunnel route dns snaplover snaplover.hbdwall.xyz
-cloudflared tunnel route dns snaplover signaling.snaplover.hbdwall.xyz
+cloudflared tunnel route dns snaplover snaplover-signaling.hbdwall.xyz
 ```
 
 ## Étape 6 — VPS : config du tunnel (2 services, 1 tunnel)
@@ -83,7 +83,7 @@ credentials-file: /root/.cloudflared/<TUNNEL_ID>.json
 ingress:
   - hostname: snaplover.hbdwall.xyz
     service: http://localhost:3002
-  - hostname: signaling.snaplover.hbdwall.xyz
+  - hostname: snaplover-signaling.hbdwall.xyz
     service: http://localhost:8080
   - service: http_status:404
 EOF
@@ -111,7 +111,7 @@ tout aussi bien et évite d'avoir deux emplacements différents à gérer) :
 | `VPS_DEPLOY_SSH_KEY` | contenu de `~/.ssh/snaplover_deploy` (la clé **privée** de l'étape 3) |
 | `VPS_SSH_PORT` | optionnel, `22` par défaut |
 | `NEXT_PUBLIC_SITE_URL` | `https://snaplover.hbdwall.xyz` |
-| `NEXT_PUBLIC_SIGNALING_URL` | `wss://signaling.snaplover.hbdwall.xyz` |
+| `NEXT_PUBLIC_SIGNALING_URL` | `wss://snaplover-signaling.hbdwall.xyz` |
 | `NEXT_PUBLIC_UMAMI_SCRIPT_URL` | optionnel, si analytics activé |
 | `NEXT_PUBLIC_UMAMI_WEBSITE_ID` | optionnel, si analytics activé |
 
@@ -135,7 +135,7 @@ docker compose up -d
 curl http://localhost:3002/          # doit répondre 200
 curl http://localhost:8080/health    # doit répondre "ok"
 curl https://snaplover.hbdwall.xyz/            # doit répondre via le tunnel
-curl https://signaling.snaplover.hbdwall.xyz/health   # idem
+curl https://snaplover-signaling.hbdwall.xyz/health   # idem
 ```
 
 ## Étape 9 — Vérifier l'automatisation

@@ -12,6 +12,6 @@ ingress:
   # ici si ce port venait lui aussi à être pris.
   - hostname: snaplover.hbdwall.xyz
     service: http://localhost:3002
-  - hostname: signaling.snaplover.hbdwall.xyz
+  - hostname: snaplover-signaling.hbdwall.xyz
     service: http://localhost:8080
   - service: http_status:404

@@ -1,0 +1,14 @@
+# Modèle — copier sur le VPS vers /etc/cloudflared/config.yml et remplacer
+# <TUNNEL_ID> par l'UUID affiché après `cloudflared tunnel create` (voir
+# docs/DEPLOY.md). Aucun secret dans ce fichier : le fichier de credentials
+# du tunnel (~/.cloudflared/<TUNNEL_ID>.json) est généré localement par
+# `cloudflared tunnel login`/`create`, jamais committé.
+tunnel: snaplover
+credentials-file: /root/.cloudflared/<TUNNEL_ID>.json
+
+ingress:
+  - hostname: snaplover.hbdwall.xyz
+    service: http://localhost:3000
+  - hostname: signaling.snaplover.hbdwall.xyz
+    service: http://localhost:8080
+  - service: http_status:404

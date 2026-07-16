@@ -1,0 +1,33 @@
+# Déployé sur le VPS dans ~/snaplover/ (voir docs/DEPLOY.md pour le bootstrap
+# complet). Ni web ni signaling n'écoutent en dehors de 127.0.0.1 — aucun
+# port public ouvert sur le VPS. C'est cloudflared (service système, hors
+# Docker, voir deploy/cloudflared/config.yml) qui expose les deux via un
+# tunnel Cloudflare sortant.
+services:
+  web:
+    image: ghcr.io/pikatchu99/snaplover/web:${WEB_IMAGE_TAG:-latest}
+    container_name: snaplover-web
+    restart: unless-stopped
+    env_file:
+      - web.env
+    ports:
+      - "127.0.0.1:3000:3000"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  signaling:
+    image: ghcr.io/pikatchu99/snaplover/signaling:${SIGNALING_IMAGE_TAG:-latest}
+    container_name: snaplover-signaling
+    restart: unless-stopped
+    env_file:
+      - signaling.env
+    ports:
+      - "127.0.0.1:8080:8080"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

@@ -72,6 +72,7 @@ snaproom/
 ├─ snaproom-spike/               # spike de faisabilité (référence, ne pas déployer)
 ├─ docs/
 │  ├─ SNAPROOM-SPEC.md          # spec produit/technique de référence
+│  ├─ SEO-COPY-AUDIT.md         # audit SEO/copy et recommandations de wording
 │  └─ design/                   # maquettes Pencil (.dc.html) — rendu exact des écrans
 │     └─ previews/              # captures des packs de cadres
 └─ pnpm-workspace.yaml
@@ -224,6 +225,38 @@ simple "scrub avant de rendre public" :
   l'auteur avant d'ajouter le fichier `LICENSE`).
 - Pas de docs de stratégie business/growth ni de captures d'écran perso dans le repo public.
 
+## Déploiement
+Voir `docs/DEPLOY.md` pour la procédure complète, étape par étape. Résumé de l'archi : **tout sur
+un seul VPS** (l'auteur a pointé le domaine dessus dès le départ, pas de Vercel) :
+- **`web/`** ET **`signaling/`** tournent chacun dans un conteneur Docker sur le même VPS, bindés
+  uniquement sur `127.0.0.1` — **zéro port entrant ouvert**. `web/` utilise la sortie `standalone`
+  de Next.js (`next.config.ts` : `output: "standalone"` + `outputFileTracingRoot` fixé à la racine
+  du monorepo — sans ça le build imbriquait `.next/standalone` sous le chemin absolu complet de la
+  machine, cassé une fois en conteneur). Domaines : `snaplover.hbdwall.xyz` (web),
+  `signaling.snaplover.hbdwall.xyz` (signaling), même zone Cloudflare.
+- Exposition via **Cloudflare Tunnel** (`cloudflared`, service système sur le VPS, hors Docker) — le
+  VPS se connecte lui-même en sortant vers Cloudflare, qui gère le TLS et route les deux domaines
+  vers les bons ports locaux (`deploy/cloudflared/config.yml.example`, un seul tunnel, deux règles
+  d'ingress).
+- CI/CD : deux workflows GitHub Actions (`.github/workflows/deploy-web.yml`,
+  `deploy-signaling.yml`), déclenchés indépendamment selon les chemins modifiés. Chacun build son
+  image Docker (`web/Dockerfile` ou `signaling/Dockerfile`, multi-stage, utilisateur non-root,
+  `signaling/` via `pnpm deploy --legacy` pour un artefact de prod isolé sans deps des packages
+  voisins du workspace), la pousse sur GHCR (`ghcr.io/pikatchu99/snaplover/{web,signaling}`), puis
+  SSH sur le VPS avec une clé de déploiement dédiée (jamais la clé perso de l'auteur) pour
+  `docker compose pull <service> && up -d <service>` (`deploy/docker-compose.yml`, un seul fichier
+  pour les deux services).
+- **Piège build-arg vs runtime** : les variables `NEXT_PUBLIC_*` (URL site/signaling/Umami) sont
+  figées dans le bundle client par Next.js **au build**, pas à l'exécution — elles passent donc en
+  `--build-arg` dans le workflow (repo Variables GitHub, pas Secrets : non sensibles par
+  construction), jamais en variable d'env runtime seule. Les variables serveur (`STUN_URLS`,
+  `TURN_*`, `ALLOWED_ORIGIN`) restent runtime-only (`deploy/web.env`/`deploy/signaling.env` sur le
+  VPS, jamais dans l'image).
+- Le bootstrap initial (Docker/cloudflared, utilisateur de déploiement dédié, clé SSH, tunnel
+  Cloudflare, secrets/variables GitHub) est manuel et unique — voir `docs/DEPLOY.md` pour les 9
+  étapes exactes dans l'ordre — après quoi chaque push sur `main` redéploie le service concerné
+  automatiquement, sans intervention.
+
 ## Design system
 - Voir docs/SNAPROOM-SPEC.md §13. Couleurs : `--ink #1c1712`, `--paper #fbf7f1`, `--muted #8c8378`,
   `--line #ece4d8`, `--coral #fb5a46`, `--coral2 #ff7d54`, `--violet #6a48f4`, `--dark #161319`.
@@ -264,6 +297,16 @@ simple "scrub avant de rendre public" :
   d'assets image), voir `web/src/lib/frames/paint.ts`. `film` dessine de vraies perforations façon
   35mm le long des bords. Packs illustrés (cerise, cœurs, etc.) différés — demandent de vrais
   assets graphiques non fournis à ce jour.
+
+## SEO & copy
+- Audit de référence : `docs/SEO-COPY-AUDIT.md`.
+- Avant toute refonte de la landing ou des textes publics, relire cet audit : la priorité est de
+  passer d'une copy fonctionnelle ("room", mécanique WebRTC, 3·2·1) à une promesse claire de
+  photobooth en ligne pour couples à distance.
+- Les textes visibles restent centralisés dans `web/src/i18n/messages.ts`. Ne pas disperser de
+  nouvelles chaînes dans les composants.
+- Ne jamais indexer les rooms privées `/r/[code]` : elles restent hors sitemap, bloquées par
+  `robots.ts`, et en `noindex`.
 
 ## i18n (architecture prête à évoluer)
 Une seule locale aujourd'hui (`fr`), mais l'architecture est pensée pour brancher une vraie lib

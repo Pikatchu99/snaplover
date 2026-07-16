@@ -1,9 +1,16 @@
-# CLAUDE.md — SnapRoom
+# CLAUDE.md — SnapLover
 
 ## What this is
-SnapRoom est une app web où deux personnes à distance rejoignent une room, activent leur caméra,
-et prennent une bande photo ensemble via un compte à rebours synchronisé (WebRTC P2P). Aucun
-compte requis. Projet gratuit et open source, FR-first. Spécification complète : `docs/SNAPROOM-SPEC.md`.
+SnapLover (nom de code technique/dossier : `snaproom`, voir note de nommage plus bas) est une app
+web où deux personnes à distance rejoignent une room, activent leur caméra, et prennent une bande
+photo ensemble via un compte à rebours synchronisé (WebRTC P2P). Aucun compte requis. Projet gratuit
+et open source, FR-first. Spécification complète : `docs/SNAPROOM-SPEC.md`.
+
+**Nommage** : le produit s'appelle **SnapLover** (marque affichée partout dans l'UI — logo,
+titres, footer de la bande composée). Le nom de code technique reste `snaproom`/`SnapRoom` dans
+certains chemins et docs historiques déjà existants (`docs/SNAPROOM-SPEC.md`, `snaproom-spike/`,
+`docs/design/snaproom-*.dc.html`, le dossier racine du repo) — ne pas les renommer, seulement le
+texte visible par l'utilisateur et les identifiants neufs. Le repo GitHub est `Pikatchu99/snaplover`.
 
 **Statut** : faisabilité technique validée par un spike (`snaproom-spike/`, ne pas déployer,
 référence pour l'algorithme temps réel — voir docs/SNAPROOM-SPEC.md §19).
@@ -195,6 +202,26 @@ simple "scrub avant de rendre public" :
   réagit à poses/style/cadre) ajouté sur demande explicite, avant même la construction du J5.
 - `StripPreview` (landing) accepte une prop `images` (paires par case, hôte/invité) pour de vraies
   photos plus tard — tant qu'aucune image n'est fournie, retombe sur des aplats de couleur.
+- **Logo** : mark "the strip" — 3 barres empilées (corail/violet/corail2) dans une tuile blanche
+  arrondie, **toute la tuile inclinée -6deg** (pas juste les barres individuellement). Favicon
+  généré à partir du même mark via `app/icon.tsx`/`app/apple-icon.tsx` (`ImageResponse` de
+  `next/og`, style inline `rotate(-6deg)` car rendu par Satori, pas du vrai CSS).
+- **12 photos réelles** (animaux, choisies pour éviter tout droit à l'image de vraies personnes)
+  câblées dans `web/public/preview/photo-01..12.jpeg`, 6 par bande décorative (`STRIP_A_IMAGES`/
+  `STRIP_B_IMAGES` dans `app/page.tsx`). Sources brutes dans `/images/` à la racine, gitignore.
+- **Landing responsive** : breakpoint `md` (au lieu de `lg`) pour mieux remplir le laptop ;
+  `create/page.tsx` en grille 2 colonnes sur `md:` (aperçu sticky à gauche, config à droite).
+- **Animation hero** (`HeroStrips.tsx`) : countdown 3·2·1 (450ms/étape) puis apparition en cascade
+  des cases de chaque bande (Framer Motion, stagger ~120ms). Les deux bandes (avant + arrière,
+  inclinées, superposées) doivent rester **toutes les deux visibles** ; bug corrigé : un `-z-10`
+  sur la bande arrière la faisait passer sous le fond opaque de la page faute de stacking context
+  sur le parent — fix : ordre DOM (arrière avant, avant après) + `isolate` sur le conteneur parent,
+  sans z-index négatif.
+- **Cadres étendus à 9** (`classic, noir, film, pop, kraft, vintage, gingham, checkers, denim`) —
+  tous procéduraux (`FrameDefinition.paint(ctx, width, height, margin)` en Canvas 2D, pas
+  d'assets image), voir `web/src/lib/frames/paint.ts`. `film` dessine de vraies perforations façon
+  35mm le long des bords. Packs illustrés (cerise, cœurs, etc.) différés — demandent de vrais
+  assets graphiques non fournis à ce jour.
 
 ## i18n (architecture prête à évoluer)
 Une seule locale aujourd'hui (`fr`), mais l'architecture est pensée pour brancher une vraie lib
@@ -230,7 +257,7 @@ Voir docs/SNAPROOM-SPEC.md §17 pour les jalons J1–J6.
   Film ; packs illustrés hearts/cherry/gingham/tulips/denim/meadow **pas encore implémentés**,
   faute d'assets réels dans le repo — structure prête à les accueillir), filtres Classic/N&B/Chaud
   (`lib/capture/filters.ts`, appliqués via `ctx.filter` à la composition pour un rendu identique
-  aperçu/export), `compose-strip.ts` étendu (marges, footer "SNAPROOM · DATE · À DEUX"), écran
+  aperçu/export), `compose-strip.ts` étendu (marges, footer "SNAPLOVER · DATE · À DEUX"), écran
   résultat (`PhotoStrip.tsx` : filtres, Télécharger PNG, Partager via Web Share API avec fallback
   téléchargement, Reprendre), message realtime `reset` pour resynchroniser les deux pairs sur
   "Reprendre". Vérifié bout en bout : bande composée des deux côtés, changement de filtre

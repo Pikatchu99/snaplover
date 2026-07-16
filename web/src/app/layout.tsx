@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SnapRoom",
+  title: "SnapLover",
   description: "Une seule photo. À deux, même à distance.",
 };
 

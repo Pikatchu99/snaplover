@@ -1,4 +1,4 @@
-// SnapRoom — service de signaling WebSocket.
+// SnapLover — service de signaling WebSocket.
 // Rôle unique : mettre en relation 2 pairs d'une même room et relayer les
 // messages WebRTC (offer / answer / ICE). Aucun média, aucune donnée de
 // séance ne transite ici. Porté et durci depuis snaproom-spike/server.js
@@ -164,7 +164,7 @@ process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);
 
 server.listen(PORT, () => {
-  console.log(`SnapRoom signaling listening on :${PORT}`);
+  console.log(`SnapLover signaling listening on :${PORT}`);
   if (!ALLOWED_ORIGIN) {
     console.warn("ALLOWED_ORIGIN not set — accepting connections from any origin (dev only).");
   }

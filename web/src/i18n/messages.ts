@@ -44,7 +44,7 @@ export const messages = {
       launch: "Lancer la séance",
       cameraDeniedMessage:
         "Caméra bloquée. Autorisez l'accès à votre caméra dans les réglages de votre navigateur, puis rechargez la page.",
-      roomFullMessage: "SnapRoom, c'est à deux — cette room est déjà complète.",
+      roomFullMessage: "SnapLover, c'est à deux — cette room est déjà complète.",
       invalidRoomMessage: "Cette room a expiré ou le code est incorrect.",
       status: {
         requestingCamera: "Activation de votre caméra…",
@@ -86,10 +86,16 @@ export const messages = {
       classic: "Classic",
       noir: "Noir",
       film: "Film",
+      pop: "Pop",
+      kraft: "Kraft",
+      vintage: "Vintage",
+      gingham: "Gingham",
+      checkers: "Checkers",
+      denim: "Denim",
     },
     strip: {
       /** Footer imprimé sur la bande composée (canvas), pas du JSX. */
-      footer: (date: string) => `SNAPROOM · ${date} · À DEUX`,
+      footer: (date: string) => `SNAPLOVER · ${date} · À DEUX`,
     },
   },
 } as const;

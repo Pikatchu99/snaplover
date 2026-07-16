@@ -25,7 +25,7 @@ export const config = {
   },
   turnEphemeral: {
     ttlSeconds: 3600,
-    label: "snaproom",
+    label: "snaplover",
   },
   strip: {
     gap: 12,

@@ -1,4 +1,4 @@
-# SnapRoom
+# SnapLover
 
 Une seule photo. À deux, même à distance.
 

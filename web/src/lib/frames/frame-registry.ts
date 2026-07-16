@@ -1,16 +1,20 @@
 import type { FrameDefinition, FrameId } from "@/types/frame";
+import * as paint from "@/lib/frames/paint";
 
-// Cadres de base (§13). Les packs illustrés (hearts, cherry, gingham, tulips,
-// denim, meadow…) demandent de vraies illustrations — pas encore d'assets
-// dans le repo. Ce registre est structuré pour en accueillir d'autres sans
-// changer la logique de composition (voir compose-strip.ts). Les labels
-// affichés vivent dans i18n/messages.ts (fr.frames), pas ici.
+// Cadres (§13). Les labels affichés vivent dans i18n/messages.ts (fr.frames),
+// pas ici — ce registre ne contient que la config visuelle pure.
 export const FRAMES: Record<FrameId, FrameDefinition> = {
-  classic: { id: "classic", background: "#fbf7f1", footerTextColor: "#1c1712" },
-  noir: { id: "noir", background: "#161319", footerTextColor: "#fbf7f1" },
-  film: { id: "film", background: "#2b2620", footerTextColor: "#f5ede1" },
+  classic: { id: "classic", footerTextColor: "#1c1712", paint: paint.solid("#fbf7f1") },
+  noir: { id: "noir", footerTextColor: "#fbf7f1", paint: paint.solid("#161319") },
+  film: { id: "film", footerTextColor: "#fbf7f1", paint: paint.film },
+  pop: { id: "pop", footerTextColor: "#1c1712", paint: paint.pop },
+  kraft: { id: "kraft", footerTextColor: "#1c1712", paint: paint.kraft },
+  vintage: { id: "vintage", footerTextColor: "#4a321c", paint: paint.vintage },
+  gingham: { id: "gingham", footerTextColor: "#1c1712", paint: paint.gingham },
+  checkers: { id: "checkers", footerTextColor: "#1c1712", paint: paint.checkers },
+  denim: { id: "denim", footerTextColor: "#fbf7f1", paint: paint.denim },
 };
 
-export const FRAME_IDS: FrameId[] = ["classic", "noir", "film"];
+export const FRAME_IDS: FrameId[] = ["classic", "noir", "film", "pop", "kraft", "vintage", "gingham", "checkers", "denim"];
 
 export const DEFAULT_FRAME_ID: FrameId = "classic";

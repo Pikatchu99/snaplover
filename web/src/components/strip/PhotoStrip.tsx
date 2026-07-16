@@ -38,11 +38,11 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, onRetry }: 
 
   async function handleShare() {
     const blob = await (await fetch(stripUrl)).blob();
-    const file = new File([blob], "snaproom.png", { type: "image/png" });
+    const file = new File([blob], "snaplover.png", { type: "image/png" });
 
     if (navigator.canShare?.({ files: [file] })) {
       try {
-        await navigator.share({ files: [file], title: "SnapRoom" });
+        await navigator.share({ files: [file], title: "SnapLover" });
         return;
       } catch {
         // annulé ou indisponible : on retombe sur le téléchargement
@@ -51,7 +51,7 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, onRetry }: 
 
     const a = document.createElement("a");
     a.href = stripUrl;
-    a.download = "snaproom.png";
+    a.download = "snaplover.png";
     a.click();
   }
 
@@ -72,7 +72,7 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, onRetry }: 
       <div className="flex flex-wrap items-center justify-center gap-3">
         <a
           href={stripUrl}
-          download="snaproom.png"
+          download="snaplover.png"
           className="inline-flex items-center gap-2 rounded-2xl bg-linear-to-r from-[#fb5a46] to-[#ff7d54] px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
         >
           <Download className="size-4" />

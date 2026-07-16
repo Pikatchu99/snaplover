@@ -77,8 +77,7 @@ export async function composeStrip(cells: StripCell[], options: ComposeOptions):
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("2D canvas context unavailable");
 
-  ctx.fillStyle = frame.background;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  frame.paint(ctx, canvas.width, canvas.height, margin);
 
   ctx.filter = FILTER_CSS[filter];
   loadedCells.forEach(({ left, right }, index) => {

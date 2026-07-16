@@ -10,8 +10,11 @@ services:
     restart: unless-stopped
     env_file:
       - web.env
+    # 3002 côté hôte : le VPS héberge d'autres projets, 3000/3001 sont déjà
+    # pris. Le conteneur écoute toujours sur 3000 en interne (PORT=3000,
+    # voir web/Dockerfile) — seul le port PUBLIÉ sur l'hôte change.
     ports:
-      - "127.0.0.1:3000:3000"
+      - "127.0.0.1:3002:3000"
     logging:
       driver: json-file
       options:

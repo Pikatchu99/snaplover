@@ -82,7 +82,7 @@ tunnel: snaplover
 credentials-file: /root/.cloudflared/<TUNNEL_ID>.json
 ingress:
   - hostname: snaplover.hbdwall.xyz
-    service: http://localhost:3000
+    service: http://localhost:3002
   - hostname: signaling.snaplover.hbdwall.xyz
     service: http://localhost:8080
   - service: http_status:404
@@ -132,7 +132,7 @@ docker login ghcr.io -u Pikatchu99   # PAT GitHub avec le scope read:packages su
 docker compose pull
 docker compose up -d
 
-curl http://localhost:3000/          # doit répondre 200
+curl http://localhost:3002/          # doit répondre 200
 curl http://localhost:8080/health    # doit répondre "ok"
 curl https://snaplover.hbdwall.xyz/            # doit répondre via le tunnel
 curl https://signaling.snaplover.hbdwall.xyz/health   # idem

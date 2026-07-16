@@ -7,8 +7,11 @@ tunnel: snaplover
 credentials-file: /root/.cloudflared/<TUNNEL_ID>.json
 
 ingress:
+  # 3002, pas 3000 : port hôte choisi pour éviter les autres services déjà
+  # en place sur ce VPS partagé (voir deploy/docker-compose.yml) — ajuster
+  # ici si ce port venait lui aussi à être pris.
   - hostname: snaplover.hbdwall.xyz
-    service: http://localhost:3000
+    service: http://localhost:3002
   - hostname: signaling.snaplover.hbdwall.xyz
     service: http://localhost:8080
   - service: http_status:404

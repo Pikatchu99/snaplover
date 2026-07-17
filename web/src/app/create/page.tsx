@@ -91,6 +91,8 @@ export default function CreateRoomPage() {
             <legend className="mb-1 text-xs font-semibold tracking-widest text-[#8c8378] uppercase">
               {fr.create.nameLabel}
             </legend>
+            {/* text-base (16px), pas text-sm : sous ce seuil, Safari iOS
+                zoome automatiquement toute la page au focus d'un champ. */}
             <input
               value={name}
               onChange={(event) => {
@@ -100,7 +102,7 @@ export default function CreateRoomPage() {
               placeholder={fr.create.namePlaceholder}
               maxLength={config.participant.nameMaxLength}
               aria-label={fr.create.nameLabel}
-              className="rounded-2xl border border-[#ece4d8] bg-white px-4 py-3 text-sm text-[#1c1712] placeholder:text-[#8c8378] focus:border-[#1c1712] focus:outline-none"
+              className="rounded-2xl border border-[#ece4d8] bg-white px-4 py-3 text-base text-[#1c1712] placeholder:text-[#8c8378] focus:border-[#1c1712] focus:outline-none"
             />
             {nameError && <p className="text-sm text-red-600">{fr.create.missingName}</p>}
           </fieldset>

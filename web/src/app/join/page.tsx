@@ -59,6 +59,9 @@ function JoinForm() {
 
         {error && <p className="text-sm text-red-600">{fr.join.invalidCode}</p>}
 
+        {/* text-base (16px), pas text-sm : sous ce seuil, Safari iOS zoome
+            automatiquement toute la page au focus d'un champ — ce champ
+            reçoit le focus dès le montage quand prefilledCode est défini. */}
         <input
           value={name}
           onChange={(event) => {
@@ -69,7 +72,7 @@ function JoinForm() {
           maxLength={config.participant.nameMaxLength}
           aria-label={fr.join.nameLabel}
           autoFocus={Boolean(prefilledCode)}
-          className="rounded-2xl border border-[#ece4d8] bg-white px-4 py-3 text-center text-sm text-[#1c1712] placeholder:text-[#8c8378] focus:border-[#1c1712] focus:outline-none"
+          className="rounded-2xl border border-[#ece4d8] bg-white px-4 py-3 text-center text-base text-[#1c1712] placeholder:text-[#8c8378] focus:border-[#1c1712] focus:outline-none"
         />
 
         {nameError && <p className="text-sm text-red-600">{fr.join.missingName}</p>}

@@ -30,11 +30,13 @@ export function InlineJoinField({ dark }: InlineJoinFieldProps) {
         dark ? "border-white/20 bg-white/5" : "border-[#ece4d8] bg-white"
       }`}
     >
+      {/* text-base (16px), pas text-sm : sous ce seuil, Safari iOS zoome
+          automatiquement toute la page au focus d'un champ. */}
       <input
         value={value}
         onChange={(event) => setValue(event.target.value)}
         placeholder={fr.landing.pasteLinkPlaceholder}
-        className={`w-40 bg-transparent px-2.5 text-sm outline-none sm:w-48 ${
+        className={`w-40 bg-transparent px-2.5 text-base outline-none sm:w-48 ${
           dark ? "text-white placeholder:text-white/40" : "text-[#1c1712] placeholder:text-[#8c8378]"
         }`}
       />

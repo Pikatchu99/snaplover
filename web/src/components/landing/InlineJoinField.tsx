@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { isValidRoomCode } from "@/lib/room-code";
-import { fr } from "@/i18n/messages";
+import { useRouter } from "@/i18n/navigation";
 
 interface InlineJoinFieldProps {
   dark?: boolean;
@@ -13,6 +13,8 @@ interface InlineJoinFieldProps {
 // (/r/CODE...) ou un code brut, et redirige vers la room.
 export function InlineJoinField({ dark }: InlineJoinFieldProps) {
   const router = useRouter();
+  const tLanding = useTranslations("landing");
+  const tJoin = useTranslations("join");
   const [value, setValue] = useState("");
 
   function handleSubmit(event: React.FormEvent) {
@@ -35,7 +37,7 @@ export function InlineJoinField({ dark }: InlineJoinFieldProps) {
       <input
         value={value}
         onChange={(event) => setValue(event.target.value)}
-        placeholder={fr.landing.pasteLinkPlaceholder}
+        placeholder={tLanding("pasteLinkPlaceholder")}
         className={`w-40 bg-transparent px-2.5 text-base outline-none sm:w-48 ${
           dark ? "text-white placeholder:text-white/40" : "text-[#1c1712] placeholder:text-[#8c8378]"
         }`}
@@ -46,7 +48,7 @@ export function InlineJoinField({ dark }: InlineJoinFieldProps) {
           dark ? "bg-white text-[#161319] hover:opacity-90" : "bg-[#1c1712] text-white hover:opacity-90"
         }`}
       >
-        {fr.join.submit}
+        {tJoin("submit")}
       </button>
     </form>
   );

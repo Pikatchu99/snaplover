@@ -29,6 +29,11 @@ export default defineConfig({
   use: {
     baseURL: `http://localhost:${WEB_PORT}`,
     trace: "retain-on-failure",
+    // Sans ça, Chromium envoie un Accept-Language par défaut (souvent en-US)
+    // — le middleware i18n (voir web/src/proxy.ts) détecte la langue du
+    // navigateur et servirait l'anglais, alors que tous ces tests vérifient
+    // du texte français (locale par défaut, sans préfixe /fr).
+    locale: "fr-FR",
     permissions: ["camera", "microphone"],
     launchOptions: {
       args: [

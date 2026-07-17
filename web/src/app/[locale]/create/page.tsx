@@ -1,20 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { ChevronLeft, LayoutGrid, Rows3 } from "lucide-react";
 import { generateRoomCode } from "@/lib/room-code";
 import { FRAME_IDS } from "@/lib/frames/frame-registry";
 import { config } from "@/lib/config";
 import { cn } from "@/lib/utils";
-import { fr } from "@/i18n/messages";
+import { useRouter } from "@/i18n/navigation";
 import { RoomPreview } from "@/components/landing/RoomPreview";
 import type { FrameId, StripStyle } from "@/types/frame";
-
-const STYLE_OPTIONS: { id: StripStyle; label: string; icon: typeof Rows3 }[] = [
-  { id: "vertical", label: fr.create.styleVertical, icon: Rows3 },
-  { id: "grid", label: fr.create.styleGrid, icon: LayoutGrid },
-];
 
 const PILL_CLASS = (active: boolean) =>
   cn(
@@ -40,11 +35,18 @@ const CARD_CLASS = (active: boolean) =>
 // sur laptop — une seule colonne empilée en dessous.
 export default function CreateRoomPage() {
   const router = useRouter();
+  const t = useTranslations("create");
+  const tFrames = useTranslations("frames");
   const [poses, setPoses] = useState<number>(config.roomConfig.defaultPoses);
   const [style, setStyle] = useState<StripStyle>("vertical");
   const [frameId, setFrameId] = useState<FrameId>("classic");
   const [name, setName] = useState("");
   const [nameError, setNameError] = useState(false);
+
+  const STYLE_OPTIONS: { id: StripStyle; label: string; icon: typeof Rows3 }[] = [
+    { id: "vertical", label: t("styleVertical"), icon: Rows3 },
+    { id: "grid", label: t("styleGrid"), icon: LayoutGrid },
+  ];
 
   async function handleCreate() {
     if (!name.trim()) {
@@ -73,12 +75,12 @@ export default function CreateRoomPage() {
       <div className="mx-auto flex w-full max-w-md items-center gap-3 md:max-w-4xl">
         <button
           onClick={() => router.back()}
-          aria-label={fr.create.back}
+          aria-label={t("back")}
           className="flex size-9 items-center justify-center rounded-full border border-[#ece4d8] text-[#1c1712] transition hover:bg-[#ece4d8]/40"
         >
           <ChevronLeft className="size-4" />
         </button>
-        <h1 className="font-heading text-xl font-bold text-[#1c1712]">{fr.create.title}</h1>
+        <h1 className="font-heading text-xl font-bold text-[#1c1712]">{t("title")}</h1>
       </div>
 
       <div className="mx-auto grid w-full max-w-md flex-1 gap-8 py-8 md:max-w-4xl md:grid-cols-2 md:items-center md:gap-16">
@@ -89,7 +91,7 @@ export default function CreateRoomPage() {
         <div className="flex flex-col gap-8">
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-1 text-xs font-semibold tracking-widest text-[#8c8378] uppercase">
-              {fr.create.nameLabel}
+              {t("nameLabel")}
             </legend>
             {/* text-base (16px), pas text-sm : sous ce seuil, Safari iOS
                 zoome automatiquement toute la page au focus d'un champ. */}
@@ -99,22 +101,22 @@ export default function CreateRoomPage() {
                 setName(event.target.value.slice(0, config.participant.nameMaxLength));
                 setNameError(false);
               }}
-              placeholder={fr.create.namePlaceholder}
+              placeholder={t("namePlaceholder")}
               maxLength={config.participant.nameMaxLength}
-              aria-label={fr.create.nameLabel}
+              aria-label={t("nameLabel")}
               className="rounded-2xl border border-[#ece4d8] bg-white px-4 py-3 text-base text-[#1c1712] placeholder:text-[#8c8378] focus:border-[#1c1712] focus:outline-none"
             />
-            {nameError && <p className="text-sm text-red-600">{fr.create.missingName}</p>}
+            {nameError && <p className="text-sm text-red-600">{t("missingName")}</p>}
           </fieldset>
 
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-1 text-xs font-semibold tracking-widest text-[#8c8378] uppercase">
-              {fr.create.posesLabel}
+              {t("posesLabel")}
             </legend>
             <div className="flex gap-2">
               {config.roomConfig.validPoses.map((n) => (
                 <button key={n} onClick={() => setPoses(n)} className={PILL_CLASS(poses === n)}>
-                  {fr.create.posesOption(n)}
+                  {t("posesOption", { n })}
                 </button>
               ))}
             </div>
@@ -122,7 +124,7 @@ export default function CreateRoomPage() {
 
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-1 text-xs font-semibold tracking-widest text-[#8c8378] uppercase">
-              {fr.create.styleLabel}
+              {t("styleLabel")}
             </legend>
             <div className="flex gap-2">
               {STYLE_OPTIONS.map((opt) => (
@@ -136,12 +138,12 @@ export default function CreateRoomPage() {
 
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-1 text-xs font-semibold tracking-widest text-[#8c8378] uppercase">
-              {fr.create.frameLabel}
+              {t("frameLabel")}
             </legend>
             <div className="flex flex-wrap gap-2">
               {FRAME_IDS.map((id) => (
                 <button key={id} onClick={() => setFrameId(id)} className={CHIP_CLASS(frameId === id)}>
-                  {fr.frames[id]}
+                  {tFrames(id)}
                 </button>
               ))}
             </div>
@@ -153,7 +155,7 @@ export default function CreateRoomPage() {
             onClick={handleCreate}
             className="w-full rounded-2xl bg-linear-to-r from-[#fb5a46] to-[#ff7d54] px-6 py-3.5 font-medium text-white transition hover:opacity-90"
           >
-            {fr.create.submit}
+            {t("submit")}
           </button>
         </div>
       </div>

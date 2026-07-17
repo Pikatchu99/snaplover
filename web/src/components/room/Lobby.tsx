@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, type RefObject } from "react";
-import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import { Check, Copy } from "lucide-react";
 import { CameraTile, type CameraTileState } from "@/components/room/CameraTile";
 import type { RoomConnectionStatus } from "@/hooks/use-room-connection";
-import { fr } from "@/i18n/messages";
+import { Link, getPathname } from "@/i18n/navigation";
 import type { FrameId, StripStyle } from "@/types/frame";
 
 interface LobbyProps {
@@ -23,18 +23,6 @@ interface LobbyProps {
   onLaunch: () => void;
   onRetryCamera: () => void;
 }
-
-const STATUS_LABEL: Record<RoomConnectionStatus, string> = {
-  "requesting-camera": fr.lobby.status.requestingCamera,
-  "camera-denied": fr.lobby.status.cameraDenied,
-  "waiting-for-peer": fr.lobby.status.waitingForPeer,
-  connecting: fr.lobby.status.connecting,
-  connected: fr.lobby.status.connected,
-  reconnecting: fr.lobby.status.reconnecting,
-  "room-full": fr.lobby.status.roomFull,
-  "invalid-room": fr.lobby.status.invalidRoom,
-  "turn-unavailable": fr.lobby.status.turnUnavailable,
-};
 
 function localTileState(status: RoomConnectionStatus): CameraTileState {
   if (status === "camera-denied") return "off";
@@ -68,13 +56,31 @@ export function Lobby({
   onLaunch,
   onRetryCamera,
 }: LobbyProps) {
+  const t = useTranslations("lobby");
+  const tCommon = useTranslations("common");
+  const locale = useLocale();
   const [copied, setCopied] = useState(false);
+
+  const STATUS_LABEL: Record<RoomConnectionStatus, string> = {
+    "requesting-camera": t("status.requestingCamera"),
+    "camera-denied": t("status.cameraDenied"),
+    "waiting-for-peer": t("status.waitingForPeer"),
+    connecting: t("status.connecting"),
+    connected: t("status.connected"),
+    reconnecting: t("status.reconnecting"),
+    "room-full": t("status.roomFull"),
+    "invalid-room": t("status.invalidRoom"),
+    "turn-unavailable": t("status.turnUnavailable"),
+  };
 
   async function copyLink() {
     // Le lien copié ici doit être directement partageable — jamais juste le
-    // code brut, qui seul ne permet pas de rejoindre avec la bonne config.
+    // code brut, qui seul ne permet pas de rejoindre avec la bonne config —
+    // et dans la langue courante, pour que le partenaire invité arrive dans
+    // la même langue que celle utilisée pour créer la room.
     const params = new URLSearchParams({ poses: String(poses), style, frame: frameId });
-    await navigator.clipboard.writeText(`${window.location.origin}/r/${roomCode}?${params.toString()}`);
+    const path = getPathname({ href: `/r/${roomCode}`, locale });
+    await navigator.clipboard.writeText(`${window.location.origin}${path}?${params.toString()}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
@@ -83,16 +89,16 @@ export function Lobby({
     return (
       <RoomShell>
         <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
-          <p className="max-w-sm text-white">{fr.lobby.cameraDeniedMessage}</p>
-          <p className="max-w-sm text-sm text-white/60">{fr.lobby.cameraDeniedHelp}</p>
+          <p className="max-w-sm text-white">{t("cameraDeniedMessage")}</p>
+          <p className="max-w-sm text-sm text-white/60">{t("cameraDeniedHelp")}</p>
           <button
             onClick={onRetryCamera}
             className="rounded-2xl bg-linear-to-r from-[#fb5a46] to-[#ff7d54] px-6 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
           >
-            {fr.lobby.retry}
+            {t("retry")}
           </button>
           <Link href="/" className="text-sm text-white/50 underline-offset-2 hover:text-white/80 hover:underline">
-            {fr.common.backToHome}
+            {tCommon("backToHome")}
           </Link>
         </div>
       </RoomShell>
@@ -103,12 +109,12 @@ export function Lobby({
     return (
       <RoomShell>
         <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
-          <p className="max-w-sm text-white">{fr.lobby.roomFullMessage}</p>
+          <p className="max-w-sm text-white">{t("roomFullMessage")}</p>
           <Link href="/create" className={CTA_LINK_CLASS}>
-            {fr.lobby.roomFullCta}
+            {t("roomFullCta")}
           </Link>
           <Link href="/" className="text-sm text-white/50 underline-offset-2 hover:text-white/80 hover:underline">
-            {fr.common.backToHome}
+            {tCommon("backToHome")}
           </Link>
         </div>
       </RoomShell>
@@ -119,15 +125,15 @@ export function Lobby({
     return (
       <RoomShell>
         <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
-          <p className="max-w-sm text-white">{fr.lobby.turnUnavailableMessage}</p>
+          <p className="max-w-sm text-white">{t("turnUnavailableMessage")}</p>
           <button
             onClick={() => window.location.reload()}
             className="rounded-2xl bg-linear-to-r from-[#fb5a46] to-[#ff7d54] px-6 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
           >
-            {fr.lobby.retry}
+            {t("retry")}
           </button>
           <Link href="/" className="text-sm text-white/50 underline-offset-2 hover:text-white/80 hover:underline">
-            {fr.common.backToHome}
+            {tCommon("backToHome")}
           </Link>
         </div>
       </RoomShell>
@@ -138,20 +144,20 @@ export function Lobby({
     return (
       <RoomShell>
         <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
-          <p className="max-w-sm text-white">{fr.lobby.invalidRoomMessage}</p>
+          <p className="max-w-sm text-white">{t("invalidRoomMessage")}</p>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <Link
               href="/create"
               className="inline-flex items-center justify-center rounded-2xl bg-linear-to-r from-[#fb5a46] to-[#ff7d54] px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
             >
-              {fr.lobby.invalidRoomCreateCta}
+              {t("invalidRoomCreateCta")}
             </Link>
             <Link href="/join" className={CTA_LINK_CLASS}>
-              {fr.lobby.invalidRoomJoinCta}
+              {t("invalidRoomJoinCta")}
             </Link>
           </div>
           <Link href="/" className="text-sm text-white/50 underline-offset-2 hover:text-white/80 hover:underline">
-            {fr.common.backToHome}
+            {tCommon("backToHome")}
           </Link>
         </div>
       </RoomShell>
@@ -162,7 +168,7 @@ export function Lobby({
     <RoomShell>
       <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6">
         <div className="flex items-center justify-between">
-          <h1 className="font-heading text-2xl font-bold text-white">{fr.lobby.title}</h1>
+          <h1 className="font-heading text-2xl font-bold text-white">{t("title")}</h1>
           <button
             onClick={copyLink}
             className="flex items-center gap-2 rounded-full border border-white/20 px-3 py-1.5 font-mono text-sm text-white/90 transition hover:bg-white/10"
@@ -177,7 +183,7 @@ export function Lobby({
         <div className="grid flex-1 grid-cols-2 gap-4">
           <CameraTile
             stream={localStream}
-            label={fr.lobby.you}
+            label={t("you")}
             state={localTileState(status)}
             mirrored
             muted
@@ -185,7 +191,7 @@ export function Lobby({
           />
           <CameraTile
             stream={remoteStream}
-            label={fr.lobby.partner}
+            label={t("partner")}
             state={remoteTileState(status, Boolean(remoteStream))}
           />
         </div>
@@ -196,14 +202,14 @@ export function Lobby({
             disabled={status !== "connected"}
             className="w-full rounded-2xl bg-linear-to-r from-[#fb5a46] to-[#ff7d54] px-6 py-3.5 font-medium text-white transition hover:opacity-90 disabled:from-white/15 disabled:to-white/15 disabled:text-white/50"
           >
-            {fr.lobby.launch}
+            {t("launch")}
           </button>
         )}
 
         {/* En cas de souci pour rejoindre côté partenaire, permettre de sortir
             de la room sans être bloqué en salle d'attente indéfiniment. */}
         <Link href="/" className="text-center text-sm text-white/40 underline-offset-2 hover:text-white/70 hover:underline">
-          {fr.common.backToHome}
+          {tCommon("backToHome")}
         </Link>
       </div>
     </RoomShell>

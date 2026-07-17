@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { FRAMES } from "@/lib/frames/frame-registry";
 import { cn } from "@/lib/utils";
 import type { FrameId, StripStyle } from "@/types/frame";
@@ -19,6 +20,7 @@ const PREVIEW_MARGIN = 14;
 // fond utilise le vrai `paint()` du cadre (mêmes motifs que l'export final),
 // pas une approximation CSS.
 export function RoomPreview({ poses, style, frameId }: RoomPreviewProps) {
+  const t = useTranslations("create");
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const frame = FRAMES[frameId];
   const columns = style === "grid" ? 2 : 1;
@@ -48,7 +50,7 @@ export function RoomPreview({ poses, style, frameId }: RoomPreviewProps) {
           ))}
         </div>
         <p className="mt-2 text-center text-[9px] tracking-widest" style={{ color: frame.footerTextColor }}>
-          PREVIEW
+          {t("previewLabel")}
         </p>
       </div>
     </div>

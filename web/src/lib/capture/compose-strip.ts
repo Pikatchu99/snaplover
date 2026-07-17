@@ -1,7 +1,6 @@
 import type { FilterId, FrameDefinition, StripStyle } from "@/types/frame";
 import { FILTER_PIXEL_OPS } from "@/lib/capture/filters";
 import { config } from "@/lib/config";
-import { fr } from "@/i18n/messages";
 
 export interface StripCell {
   /** Moitié gauche = hôte (initiator). */
@@ -15,10 +14,10 @@ export interface ComposeOptions {
   filter: FilterId;
   /** Strip vertical (1 case par ligne) ou grille (2 cases par ligne). Défaut : vertical. */
   style?: StripStyle;
-  /** Date affichée dans le footer (par défaut : maintenant). */
-  date?: Date;
-  /** Prénoms hôte/invité affichés dans le footer — omis : "À DEUX" générique. */
-  names?: { host: string; guest: string };
+  /** Texte du footer déjà résolu (traduit + date déjà formatée) — voir
+   * lib/capture/format-footer-date.ts. Cette fonction ne connaît pas la
+   * locale courante, donc jamais de i18n ici, seulement du dessin. */
+  footerText: string;
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -82,15 +81,11 @@ function drawCoverFiltered(
   ctx.drawImage(offscreen, x, y);
 }
 
-function formatFooterDate(date: Date): string {
-  return date.toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase();
-}
-
 // Compose la bande complète, look rétro-cabine : chaque case = une pose,
 // hôte à gauche / invité à droite, marges et footer "SNAPROOM · DATE · À DEUX"
 // habillés par le cadre choisi. Voir SNAPROOM-SPEC.md §10, §13.
 export async function composeStrip(cells: StripCell[], options: ComposeOptions): Promise<string> {
-  const { frame, filter, style = "vertical", date = new Date(), names } = options;
+  const { frame, filter, style = "vertical", footerText } = options;
   const { cellWidth, cellHeight, columns } = config.strip.layout[style];
   const { gap, margin, footerHeight } = config.strip;
 
@@ -126,7 +121,6 @@ export async function composeStrip(cells: StripCell[], options: ComposeOptions):
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   const footerY = canvas.height - margin - footerHeight / 2;
-  const footerText = fr.strip.footer(formatFooterDate(date), names);
   const footerMaxWidth = canvas.width - margin * 2;
 
   // Taille fixe par défaut, mais le footer peut contenir deux prénoms

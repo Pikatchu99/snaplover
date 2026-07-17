@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 interface StripPreviewProps {
   cells?: number;
@@ -24,13 +25,16 @@ interface StripPreviewProps {
 // comme les vraies cases (hôte / invité).
 export function StripPreview({
   cells = 3,
-  caption = "SNAPLOVER · JUL 14",
+  caption,
   className,
   images,
   large,
   revealed = true,
   revealDelay = 0,
 }: StripPreviewProps) {
+  const t = useTranslations("landing");
+  const resolvedCaption = caption ?? t("demoCaption");
+
   return (
     <div
       className={`${large ? "w-64 lg:w-72" : "w-40"} rounded-2xl border border-[#ece4d8] bg-white p-2 shadow-sm ${className ?? ""}`}
@@ -63,7 +67,7 @@ export function StripPreview({
           );
         })}
       </div>
-      <p className="mt-2 text-center text-[10px] tracking-[0.15em] text-[#8c8378]">{caption}</p>
+      <p className="mt-2 text-center text-[10px] tracking-[0.15em] text-[#8c8378]">{resolvedCaption}</p>
     </div>
   );
 }

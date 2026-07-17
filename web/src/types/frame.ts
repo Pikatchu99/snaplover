@@ -1,6 +1,16 @@
 // Cadres/thèmes et filtres du résultat — voir SNAPROOM-SPEC.md §13.
 
-export type FrameId = "classic" | "noir" | "film" | "pop" | "kraft" | "vintage" | "gingham" | "checkers" | "denim";
+export type FrameId =
+  | "classic"
+  | "noir"
+  | "film"
+  | "pop"
+  | "kraft"
+  | "vintage"
+  | "gingham"
+  | "checkers"
+  | "denim"
+  | "valentine";
 
 // Config visuelle pure (invariante par locale) — le label affiché vient de
 // i18n/messages.ts (fr.frames), pas d'ici.

@@ -175,7 +175,7 @@ const en = {
     imageAlt: "Composed photo strip",
     download: "Download PNG",
     share: "Share",
-    newSession: "New session",
+    newSession: "Create my own SnapLover session",
     note: "You each have your own copy. The full-resolution strip is saved on each device.",
     likePrompt: "Do you like the app?",
     filters: {
@@ -194,6 +194,7 @@ const en = {
     gingham: "Gingham",
     checkers: "Checkers",
     denim: "Denim",
+    valentine: "Valentine",
   },
   strip: {
     footerWithNames: "SNAPLOVER · {date} · {host} & {guest}",

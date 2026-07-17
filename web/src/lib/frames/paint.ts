@@ -95,6 +95,31 @@ export function pop(ctx: CanvasRenderingContext2D, width: number, height: number
   }
 }
 
+function heart(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, color: string) {
+  const top = size * 0.3;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x, y + top);
+  ctx.bezierCurveTo(x, y, x - size / 2, y, x - size / 2, y + top);
+  ctx.bezierCurveTo(x - size / 2, y + (size + top) / 2, x, y + (size + top) / 2, x, y + size);
+  ctx.bezierCurveTo(x, y + (size + top) / 2, x + size / 2, y + (size + top) / 2, x + size / 2, y + top);
+  ctx.bezierCurveTo(x + size / 2, y, x, y, x, y + top);
+  ctx.closePath();
+  ctx.fill();
+}
+
+export function valentine(ctx: CanvasRenderingContext2D, width: number, height: number) {
+  ctx.fillStyle = "#ffe4e9";
+  ctx.fillRect(0, 0, width, height);
+  const colors = ["#fb5a46", "#ff8fa3", "#e63950"];
+  for (let i = 0; i < 26; i++) {
+    const x = (i * 61 + 23) % width;
+    const y = 10 + ((i * 43) % (height - 20));
+    const size = 10 + (i % 3) * 3;
+    heart(ctx, x, y, size, colors[i % colors.length]);
+  }
+}
+
 function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);

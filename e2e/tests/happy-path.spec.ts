@@ -29,10 +29,10 @@ test("connexion → séance → bande composée → filtre → nouvelle séance"
     .poll(async () => stripImage.getAttribute("src"), { timeout: 10_000 })
     .not.toBe(initialSrc);
 
-  // "Nouvelle séance" repart directement de /create (pas de reprise de la
-  // room existante — voir CLAUDE.md, le retour en place était bugué : le
-  // partenaire ne revoyait pas la caméra de l'autre côté).
-  await a.getByRole("link", { name: "Nouvelle séance" }).click();
+  // "Créer ma propre séance SnapLover" repart directement de /create (pas de
+  // reprise de la room existante — voir CLAUDE.md, le retour en place était
+  // bugué : le partenaire ne revoyait pas la caméra de l'autre côté).
+  await a.getByRole("link", { name: "Créer ma propre séance SnapLover" }).click();
   await expect(a).toHaveURL(/\/create$/);
 
   await contextA.close();

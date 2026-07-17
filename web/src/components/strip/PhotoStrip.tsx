@@ -80,6 +80,25 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, names }: Ph
       {/* eslint-disable-next-line @next/next/no-img-element -- data URL générée côté client, next/image ne s'applique pas */}
       <img src={stripUrl} alt={t("imageAlt")} className="max-h-[50vh] rounded-lg border border-[#ece4d8] shadow-sm" />
 
+      {/* Avant le téléchargement : pour que les gens voient/essaient les
+          filtres avant de partir avec la version "classic" par défaut. */}
+      <div className="flex gap-2">
+        {FILTER_IDS.map((id) => (
+          <button
+            key={id}
+            onClick={() => setFilter(id)}
+            className={cn(
+              "rounded-full border px-4 py-1.5 text-sm font-medium transition",
+              filter === id
+                ? "border-[#1c1712] bg-[#1c1712] text-white"
+                : "border-[#ece4d8] text-[#8c8378] hover:border-[#8c8378]",
+            )}
+          >
+            {t(`filters.${id}`)}
+          </button>
+        ))}
+      </div>
+
       <div className="flex flex-wrap items-center justify-center gap-3">
         <a
           href={stripUrl}
@@ -109,26 +128,9 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, names }: Ph
         {t("likePrompt")}
       </button>
 
-      <div className="flex gap-2">
-        {FILTER_IDS.map((id) => (
-          <button
-            key={id}
-            onClick={() => setFilter(id)}
-            className={cn(
-              "rounded-full border px-4 py-1.5 text-sm font-medium transition",
-              filter === id
-                ? "border-[#1c1712] bg-[#1c1712] text-white"
-                : "border-[#ece4d8] text-[#8c8378] hover:border-[#8c8378]",
-            )}
-          >
-            {t(`filters.${id}`)}
-          </button>
-        ))}
-      </div>
-
       <Link
         href="/create"
-        className="inline-flex items-center gap-2 rounded-full border border-[#ece4d8] px-4 py-1.5 text-sm font-medium text-[#8c8378] transition hover:border-[#8c8378]"
+        className="inline-flex items-center gap-2 rounded-full bg-[#1c1712] px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
       >
         <Plus className="size-4" />
         {t("newSession")}

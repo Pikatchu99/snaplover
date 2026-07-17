@@ -8,7 +8,6 @@ interface HeroStripsProps {
   stripAImages: string[];
   stripBImages: string[];
   large?: boolean;
-  dark?: boolean;
   className?: string;
 }
 
@@ -17,7 +16,7 @@ const COUNTDOWN_STEPS = [3, 2, 1];
 // Duo de bandes superposées (hôte devant, "à deux" derrière/décalée) — un
 // petit countdown 3·2·1 joue une fois au montage, puis les cases de chaque
 // bande apparaissent en cascade. Sobre (Framer Motion, 250-300ms ease-out).
-export function HeroStrips({ stripAImages, stripBImages, large, dark, className }: HeroStripsProps) {
+export function HeroStrips({ stripAImages, stripBImages, large, className }: HeroStripsProps) {
   const [step, setStep] = useState(0);
   const revealed = step >= COUNTDOWN_STEPS.length;
 
@@ -42,18 +41,25 @@ export function HeroStrips({ stripAImages, stripBImages, large, dark, className 
 
       <AnimatePresence>
         {!revealed && (
-          <motion.span
-            key={COUNTDOWN_STEPS[step]}
-            initial={{ opacity: 0, scale: 0.6 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.3 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
-            className={`pointer-events-none absolute inset-0 z-20 flex items-center justify-center font-heading text-6xl font-extrabold ${
-              dark ? "text-white" : "text-[#1c1712]"
-            }`}
-          >
-            {COUNTDOWN_STEPS[step]}
-          </motion.span>
+          <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
+            {/* Badge plein (pas juste du texte) : les cases de la bande
+                dessous ont un fond blanc fixe quel que soit `dark`, un simple
+                texte blanc y devenait invisible sur la variante desktop
+                sombre (blanc sur blanc) — un aplat corail reste visible
+                dans les deux cas. */}
+            <motion.span
+              key={COUNTDOWN_STEPS[step]}
+              initial={{ opacity: 0, scale: 0.6 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.3 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className={`flex items-center justify-center rounded-full bg-[#fb5a46] font-heading font-extrabold text-white shadow-lg ${
+                large ? "size-20 text-6xl" : "size-14 text-4xl"
+              }`}
+            >
+              {COUNTDOWN_STEPS[step]}
+            </motion.span>
+          </div>
         )}
       </AnimatePresence>
     </div>

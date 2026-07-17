@@ -74,7 +74,6 @@ export default function LandingPage() {
             stripAImages={STRIP_A_IMAGES}
             stripBImages={STRIP_B_IMAGES}
             large
-            dark
             className="relative pr-10 pb-6"
           />
         </div>

@@ -3,12 +3,9 @@
 import { useState } from "react";
 import { Heart } from "lucide-react";
 import { fr } from "@/i18n/messages";
+import { trackLike } from "@/lib/analytics";
 
 const REPO_URL = "https://github.com/Pikatchu99/snaplover";
-
-function trackLike(kind: "experience" | "app") {
-  window.umami?.track(`like-${kind}`);
-}
 
 // Crédit auteur + liens contribution, visible sur toutes les pages (voir
 // app/layout.tsx). Barre fixe compacte, fond sombre translucide pour rester

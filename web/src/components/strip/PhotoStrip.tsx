@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download, RotateCcw, Share2 } from "lucide-react";
+import { Download, Heart, RotateCcw, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { composeStrip, type StripCell } from "@/lib/capture/compose-strip";
 import { FILTER_IDS } from "@/lib/capture/filters";
 import { FRAMES } from "@/lib/frames/frame-registry";
 import { fr } from "@/i18n/messages";
+import { trackLike } from "@/lib/analytics";
 import type { FilterId, FrameId, StripStyle } from "@/types/frame";
 
 interface PhotoStripProps {
@@ -25,6 +26,13 @@ interface PhotoStripProps {
 export function PhotoStrip({ cells, initialStripUrl, frameId, style, names, onRetry }: PhotoStripProps) {
   const [filter, setFilter] = useState<FilterId>("classic");
   const [stripUrl, setStripUrl] = useState(initialStripUrl);
+  const [liked, setLiked] = useState(false);
+
+  function handleLike() {
+    if (liked) return;
+    trackLike("app");
+    setLiked(true);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -87,6 +95,17 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, names, onRe
           {fr.photoStrip.share}
         </button>
       </div>
+
+      {/* Juste après la bande composée : le meilleur moment pour demander,
+          l'expérience vient d'être vécue en entier. */}
+      <button
+        onClick={handleLike}
+        disabled={liked}
+        className="flex items-center gap-2 rounded-full border border-[#ece4d8] px-4 py-1.5 text-sm font-medium text-[#8c8378] transition hover:border-[#8c8378] disabled:opacity-70"
+      >
+        <Heart className={`size-4 ${liked ? "fill-[#fb5a46] text-[#fb5a46]" : ""}`} />
+        {fr.photoStrip.likePrompt}
+      </button>
 
       <div className="flex gap-2">
         {FILTER_IDS.map((id) => (

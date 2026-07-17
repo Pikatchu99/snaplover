@@ -187,6 +187,7 @@ export const messages = {
       share: "Partager",
       retry: "Reprendre",
       note: "Vous avez chacun votre copie. La bande pleine résolution est enregistrée sur chaque appareil.",
+      likePrompt: "Vous aimez l'application ?",
       filters: {
         classic: "Classic",
         bw: "N&B",

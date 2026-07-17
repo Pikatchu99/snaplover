@@ -7,7 +7,7 @@ test.describe("i18n", () => {
     const page = await context.newPage();
     await page.goto("/");
     await expect(page).toHaveURL(/\/en$/);
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("photo booth");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("photobooth");
     await context.close();
   });
 

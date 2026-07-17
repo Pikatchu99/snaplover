@@ -7,13 +7,13 @@ const en = {
   seo: {
     siteName: "SnapLover",
     titleTemplate: "%s · SnapLover",
-    defaultTitle: "SnapLover — Online photo booth for a couple, taken apart",
+    defaultTitle: "SnapLover — Online photobooth for a couple, taken apart",
     defaultDescription:
       "Create a photo strip together, wherever you are — as if you were in the same room. SnapLover syncs your cameras in the browser to compose a shared keepsake, no account needed.",
     keywords: [
       "online photobooth",
       "long distance photo",
-      "virtual photo booth",
+      "virtual photobooth",
       "couple photo apart",
       "synced webcam",
       "online photo strip",
@@ -30,7 +30,7 @@ const en = {
     },
   },
   landing: {
-    titlePrefix: "The online photo booth for taking",
+    titlePrefix: "The online photobooth for taking",
     titleHighlight: "a photo strip together",
     subtitle:
       "Create a photo session for two, share a link, turn on your cameras, and both leave with the same keepsake photo strip.",

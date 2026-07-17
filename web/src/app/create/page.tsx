@@ -9,6 +9,7 @@ import { config } from "@/lib/config";
 import { cn } from "@/lib/utils";
 import { fr } from "@/i18n/messages";
 import { RoomPreview } from "@/components/landing/RoomPreview";
+import { useTurnStatus } from "@/lib/webrtc/use-turn-status";
 import type { FrameId, StripStyle } from "@/types/frame";
 
 const STYLE_OPTIONS: { id: StripStyle; label: string; icon: typeof Rows3 }[] = [
@@ -45,6 +46,10 @@ export default function CreateRoomPage() {
   const [frameId, setFrameId] = useState<FrameId>("classic");
   const [name, setName] = useState("");
   const [nameError, setNameError] = useState(false);
+  // Fail-open : tant que le statut n'est pas connu (chargement, erreur), on
+  // ne bloque pas — seul un `blocked: true` explicite empêche de créer.
+  const { data: turnStatus } = useTurnStatus();
+  const turnBlocked = turnStatus?.blocked ?? false;
 
   async function handleCreate() {
     if (!name.trim()) {
@@ -147,9 +152,17 @@ export default function CreateRoomPage() {
 
           <div className="flex-1 md:hidden" />
 
+          {turnBlocked && (
+            <div className="rounded-2xl border border-[#ece4d8] bg-[#fbf7f1] px-4 py-3 text-sm text-[#8c8378]">
+              <p className="font-medium text-[#1c1712]">{fr.create.turnBlockedTitle}</p>
+              <p className="mt-1">{fr.create.turnBlockedMessage}</p>
+            </div>
+          )}
+
           <button
             onClick={handleCreate}
-            className="w-full rounded-2xl bg-linear-to-r from-[#fb5a46] to-[#ff7d54] px-6 py-3.5 font-medium text-white transition hover:opacity-90"
+            disabled={turnBlocked}
+            className="w-full rounded-2xl bg-linear-to-r from-[#fb5a46] to-[#ff7d54] px-6 py-3.5 font-medium text-white transition hover:opacity-90 disabled:from-white/40 disabled:to-white/40 disabled:text-[#8c8378]"
           >
             {fr.create.submit}
           </button>

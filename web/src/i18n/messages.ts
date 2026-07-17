@@ -131,6 +131,9 @@ export const messages = {
       styleGrid: "Grille 2×2",
       frameLabel: "Cadre",
       submit: "Créer et copier le lien",
+      turnBlockedTitle: "Créations de séance en pause pour le moment",
+      turnBlockedMessage:
+        "Quand deux caméras n'arrivent pas à se parler directement, un service gratuit prend le relais pour faire passer la vidéo — et son quota gratuit du mois vient d'être atteint. Je m'en occupe (je passe sur une offre plus grande et/ou un autre compte) : réessayez un peu plus tard.",
     },
     lobby: {
       title: "Salle d'attente",

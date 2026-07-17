@@ -7,3 +7,7 @@ export interface IceServer {
 export interface TurnCredentialsResponse {
   iceServers: IceServer[];
 }
+
+export interface TurnStatusResponse {
+  blocked: boolean;
+}

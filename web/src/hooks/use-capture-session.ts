@@ -123,7 +123,6 @@ export function useCaptureSession({
         applyConfig(message.poses, message.frameId, message.style);
         peerNameRef.current = message.hostName;
       } else if (message.t === "capture") scheduleCapture(message.pose, message.fireAtHost);
-      else if (message.t === "reset") resetState();
       else receiveImage(message);
     });
 
@@ -288,23 +287,6 @@ export function useCaptureSession({
     scheduleCapture(pose, fireAtHost);
   }
 
-  function resetState() {
-    setStatus("idle");
-    setHasStarted(false);
-    setCurrentPose(0);
-    setCountdownMs(0);
-    setStripUrl(null);
-    setCells([]);
-    setCaptureDeltasMs([]);
-    setAwaitingPeer(false);
-    pendingPoseRef.current = null;
-    cellsRef.current = [];
-    myHalfRef.current = null;
-    myCaptureHostTimeRef.current = null;
-    peerHalfRef.current = null;
-    peerCaptureHostTimeRef.current = null;
-  }
-
   const { host: hostName, guest: guestName } = resolveNames();
 
   return {
@@ -322,9 +304,5 @@ export function useCaptureSession({
     hostName,
     guestName,
     startSession: () => triggerCapture(0),
-    retry: () => {
-      channelRef.current?.send({ t: "reset" });
-      resetState();
-    },
   };
 }

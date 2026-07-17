@@ -39,27 +39,8 @@ export function useRoomConnection(roomCode: string) {
   // combiné à un connectionState "failed" (le direct P2P peut réussir quand
   // même malgré un TURN indisponible, ce n'est pas fatal en soi).
   const hadTurnErrorRef = useRef(false);
-  // Ne doit passer de false à true qu'une seule fois (premier flux caméra
-  // obtenu) — voir l'effet de connexion plus bas, qui ne doit se déclencher
-  // qu'à cette transition, jamais sur un flux de remplacement ultérieur.
-  const hasLocalStream = Boolean(localStream);
-
-  // Une nouvelle caméra (ex. "Reprendre" après un track.stop() en arrivant
-  // sur le résultat, voir RoomClient) ne doit JAMAIS rouvrir une connexion —
-  // seulement remplacer les pistes de la connexion existante. Sinon on romprait
-  // la session en cours et on rejouerait le tirage hôte/invité au signaling
-  // (le pair qui rejoint après coup peut se retrouver non-initiateur).
-  useEffect(() => {
-    if (peerRef.current && localStream) {
-      peerRef.current.replaceLocalStream(localStream);
-    }
-  }, [localStream]);
 
   useEffect(() => {
-    // Boolean(localStream), pas localStream : ne doit se déclencher qu'une
-    // seule fois, au tout premier flux caméra obtenu (false → true). Un
-    // flux de remplacement plus tard (retryCamera) ne doit pas re-déclencher
-    // cet effet — géré séparément ci-dessus via replaceLocalStream.
     if (!localStream || !iceServersQuery.data) return;
     if (peerRef.current) return;
 
@@ -145,8 +126,7 @@ export function useRoomConnection(roomCode: string) {
       peerRef.current?.pc.close();
       peerRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- hasLocalStream, pas localStream (voir plus haut)
-  }, [hasLocalStream, iceServersQuery.data, roomCode]);
+  }, [localStream, iceServersQuery.data, roomCode]);
 
   const effectiveStatus: RoomConnectionStatus = mediaStatus === "denied" ? "camera-denied" : status;
 

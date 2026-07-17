@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download, Heart, RotateCcw, Share2 } from "lucide-react";
+import Link from "next/link";
+import { Download, Heart, Plus, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { composeStrip, type StripCell } from "@/lib/capture/compose-strip";
 import { FILTER_IDS } from "@/lib/capture/filters";
@@ -16,14 +17,13 @@ interface PhotoStripProps {
   frameId: FrameId;
   style: StripStyle;
   names: { host: string; guest: string };
-  onRetry: () => void;
 }
 
-// Résultat (E6) : bande composée, filtres, téléchargement, partage, reprendre.
+// Résultat (E6) : bande composée, filtres, téléchargement, partage.
 // Fond clair (comme landing/create) — seuls lobby/séance sont en sombre.
 // Cadres/thèmes (§13) : voir lib/frames/frame-registry.ts — packs illustrés
 // pas encore disponibles (assets manquants).
-export function PhotoStrip({ cells, initialStripUrl, frameId, style, names, onRetry }: PhotoStripProps) {
+export function PhotoStrip({ cells, initialStripUrl, frameId, style, names }: PhotoStripProps) {
   const [filter, setFilter] = useState<FilterId>("classic");
   const [stripUrl, setStripUrl] = useState(initialStripUrl);
   const [liked, setLiked] = useState(false);
@@ -124,13 +124,13 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, names, onRe
         ))}
       </div>
 
-      <button
-        onClick={onRetry}
+      <Link
+        href="/create"
         className="inline-flex items-center gap-2 rounded-full border border-[#ece4d8] px-4 py-1.5 text-sm font-medium text-[#8c8378] transition hover:border-[#8c8378]"
       >
-        <RotateCcw className="size-4" />
-        {fr.photoStrip.retry}
-      </button>
+        <Plus className="size-4" />
+        {fr.photoStrip.newSession}
+      </Link>
 
       <p className="max-w-md text-center text-xs text-[#8c8378]">{fr.photoStrip.note}</p>
     </div>

@@ -2,8 +2,8 @@ import { test, expect } from "@playwright/test";
 import { randomRoomCode, gotoRoom, launchSession } from "./helpers";
 
 // Flux nominal : connexion des deux pairs, séance complète, changement de
-// filtre, Reprendre — voir SNAPROOM-SPEC.md §12 (E4-E6).
-test("connexion → séance → bande composée → filtre → reprendre", async ({ browser }) => {
+// filtre, nouvelle séance — voir SNAPROOM-SPEC.md §12 (E4-E6).
+test("connexion → séance → bande composée → filtre → nouvelle séance", async ({ browser }) => {
   const room = randomRoomCode();
   const contextA = await browser.newContext();
   const contextB = await browser.newContext();
@@ -29,9 +29,11 @@ test("connexion → séance → bande composée → filtre → reprendre", async
     .poll(async () => stripImage.getAttribute("src"), { timeout: 10_000 })
     .not.toBe(initialSrc);
 
-  await a.getByRole("button", { name: "Reprendre" }).click();
-  await expect(a.getByText("Salle d'attente")).toBeVisible({ timeout: 10_000 });
-  await expect(b.getByText("Salle d'attente")).toBeVisible({ timeout: 10_000 });
+  // "Nouvelle séance" repart directement de /create (pas de reprise de la
+  // room existante — voir CLAUDE.md, le retour en place était bugué : le
+  // partenaire ne revoyait pas la caméra de l'autre côté).
+  await a.getByRole("link", { name: "Nouvelle séance" }).click();
+  await expect(a).toHaveURL(/\/create$/);
 
   await contextA.close();
   await contextB.close();

@@ -41,25 +41,18 @@ export function RoomClient({ code, poses, frameId, style, name }: RoomClientProp
     hostName,
     guestName,
     startSession,
-    retry,
   } = useCaptureSession({ dataChannel, isInitiator, poses, frameId, style, myName: name, localVideoRef });
 
   useEffect(() => {
     // Vie privée : une fois la bande composée, plus besoin de la caméra —
     // on coupe le flux (stop, pas juste enabled=false) pour éteindre
-    // vraiment le voyant caméra, pas seulement masquer l'aperçu.
+    // vraiment le voyant caméra, pas seulement masquer l'aperçu. Pas de
+    // retour en arrière possible depuis cet écran (voir PhotoStrip : "Nouvelle
+    // séance" repart de /create) — pas besoin de redemander la caméra ici.
     if (stripUrl && localStream) {
       for (const track of localStream.getTracks()) track.stop();
     }
   }, [stripUrl, localStream]);
-
-  // "Reprendre" doit redemander un flux caméra tout neuf : celui d'avant a
-  // été arrêté (track.stop(), ci-dessus) en arrivant sur le résultat, donc
-  // sans ça la caméra ne revient jamais en salle d'attente.
-  function handleRetry() {
-    retry();
-    retryCamera();
-  }
 
   if (stripUrl) {
     return (
@@ -69,7 +62,6 @@ export function RoomClient({ code, poses, frameId, style, name }: RoomClientProp
         frameId={effectiveFrameId}
         style={effectiveStyle}
         names={{ host: hostName, guest: guestName }}
-        onRetry={handleRetry}
       />
     );
   }

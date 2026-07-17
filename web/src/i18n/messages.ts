@@ -188,7 +188,7 @@ export const messages = {
       title: "Votre bande est prête",
       download: "Télécharger PNG",
       share: "Partager",
-      retry: "Reprendre",
+      newSession: "Nouvelle séance",
       note: "Vous avez chacun votre copie. La bande pleine résolution est enregistrée sur chaque appareil.",
       likePrompt: "Vous aimez l'application ?",
       filters: {

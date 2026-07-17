@@ -13,8 +13,20 @@ export const FRAMES: Record<FrameId, FrameDefinition> = {
   gingham: { id: "gingham", footerTextColor: "#1c1712", paint: paint.gingham },
   checkers: { id: "checkers", footerTextColor: "#1c1712", paint: paint.checkers },
   denim: { id: "denim", footerTextColor: "#fbf7f1", paint: paint.denim },
+  valentine: { id: "valentine", footerTextColor: "#8a2846", paint: paint.valentine },
 };
 
-export const FRAME_IDS: FrameId[] = ["classic", "noir", "film", "pop", "kraft", "vintage", "gingham", "checkers", "denim"];
+export const FRAME_IDS: FrameId[] = [
+  "classic",
+  "noir",
+  "film",
+  "pop",
+  "kraft",
+  "vintage",
+  "gingham",
+  "checkers",
+  "denim",
+  "valentine",
+];
 
 export const DEFAULT_FRAME_ID: FrameId = "classic";

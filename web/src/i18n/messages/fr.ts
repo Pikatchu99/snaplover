@@ -177,7 +177,7 @@ const fr = {
     imageAlt: "Bande photo composée",
     download: "Télécharger PNG",
     share: "Partager",
-    newSession: "Nouvelle séance",
+    newSession: "Créer ma propre séance SnapLover",
     note: "Vous avez chacun votre copie. La bande pleine résolution est enregistrée sur chaque appareil.",
     likePrompt: "Vous aimez l'application ?",
     filters: {
@@ -196,6 +196,7 @@ const fr = {
     gingham: "Gingham",
     checkers: "Checkers",
     denim: "Denim",
+    valentine: "Saint-Valentin",
   },
   strip: {
     /** Footer imprimé sur la bande composée (canvas), pas du JSX. */

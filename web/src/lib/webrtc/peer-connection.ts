@@ -17,6 +17,40 @@ interface PeerConnectionOptions {
   // échec isolé n'est pas forcément fatal (le direct P2P peut réussir quand
   // même) : à combiner avec onConnectionStateChange côté appelant.
   onTurnCandidateError?: (event: RTCPeerConnectionIceErrorEvent) => void;
+  // Connu une fois la paire de candidats ICE effectivement retenue identifiée
+  // (voir reportConnectionType) — "relay" si la vidéo transite par le TURN,
+  // "direct" sinon (host/srflx/prflx). Appelé une seule fois par connexion établie.
+  onConnectionTypeKnown?: (type: "direct" | "relay") => void;
+}
+
+// Type de la paire de candidats effectivement utilisée pour cette connexion
+// (par opposition aux candidats simplement *rassemblés*, voir onicecandidate
+// ci-dessus) — seule source fiable pour savoir si le relais TURN est utilisé.
+async function resolveConnectionType(pc: RTCPeerConnection): Promise<"direct" | "relay" | null> {
+  const stats = await pc.getStats();
+  let selectedPairId: string | undefined;
+
+  stats.forEach((report) => {
+    if (report.type === "transport" && report.selectedCandidatePairId) {
+      selectedPairId = report.selectedCandidatePairId;
+    }
+  });
+  if (!selectedPairId) {
+    stats.forEach((report) => {
+      if (report.type === "candidate-pair" && report.nominated && report.state === "succeeded") {
+        selectedPairId = report.id;
+      }
+    });
+  }
+  if (!selectedPairId) return null;
+
+  const pairReport = stats.get(selectedPairId);
+  if (!pairReport) return null;
+
+  const localCandidate = stats.get(pairReport.localCandidateId);
+  const remoteCandidate = stats.get(pairReport.remoteCandidateId);
+  const isRelay = localCandidate?.candidateType === "relay" || remoteCandidate?.candidateType === "relay";
+  return isRelay ? "relay" : "direct";
 }
 
 // Établissement WebRTC (P2P vidéo + data channel) — voir SNAPROOM-SPEC.md §9.
@@ -31,6 +65,7 @@ export function createPeerConnection(options: PeerConnectionOptions) {
     onDataChannel,
     sendSignal,
     onTurnCandidateError,
+    onConnectionTypeKnown,
   } = options;
 
   const pc = new RTCPeerConnection({ iceServers });
@@ -49,7 +84,16 @@ export function createPeerConnection(options: PeerConnectionOptions) {
     sendSignal({ candidate: event.candidate.toJSON() });
   };
 
-  pc.onconnectionstatechange = () => onConnectionStateChange(pc.connectionState);
+  pc.onconnectionstatechange = () => {
+    onConnectionStateChange(pc.connectionState);
+    if (pc.connectionState === "connected" && onConnectionTypeKnown) {
+      resolveConnectionType(pc)
+        .then((type) => {
+          if (type) onConnectionTypeKnown(type);
+        })
+        .catch((error) => console.error("[webrtc] échec de résolution du type de connexion:", error));
+    }
+  };
 
   // Ne se déclenche QUE pour un serveur STUN/TURN configuré (event.url pointe
   // vers l'un des iceServers) — un rejet côté serveur TURN (creds invalides,

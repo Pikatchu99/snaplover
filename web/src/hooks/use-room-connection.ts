@@ -5,6 +5,7 @@ import { SignalingClient } from "@/lib/signaling/client";
 import { createPeerConnection, type SignalPayload } from "@/lib/webrtc/peer-connection";
 import { useIceServers } from "@/lib/webrtc/use-ice-servers";
 import { useUserMedia } from "@/hooks/use-user-media";
+import { trackConnectionType } from "@/lib/analytics";
 import type { ServerMessage } from "@/types/signaling";
 
 // Aucune valeur d'infra en dur (voir CLAUDE.md) : pas de fallback localhost.
@@ -95,6 +96,7 @@ export function useRoomConnection(roomCode: string) {
         onTurnCandidateError: () => {
           hadTurnErrorRef.current = true;
         },
+        onConnectionTypeKnown: trackConnectionType,
       });
 
       peerRef.current = peer;

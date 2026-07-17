@@ -33,6 +33,7 @@ const STATUS_LABEL: Record<RoomConnectionStatus, string> = {
   reconnecting: fr.lobby.status.reconnecting,
   "room-full": fr.lobby.status.roomFull,
   "invalid-room": fr.lobby.status.invalidRoom,
+  "turn-unavailable": fr.lobby.status.turnUnavailable,
 };
 
 function localTileState(status: RoomConnectionStatus): CameraTileState {
@@ -106,6 +107,25 @@ export function Lobby({
           <Link href="/create" className={CTA_LINK_CLASS}>
             {fr.lobby.roomFullCta}
           </Link>
+          <Link href="/" className="text-sm text-white/50 underline-offset-2 hover:text-white/80 hover:underline">
+            {fr.common.backToHome}
+          </Link>
+        </div>
+      </RoomShell>
+    );
+  }
+
+  if (status === "turn-unavailable") {
+    return (
+      <RoomShell>
+        <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
+          <p className="max-w-sm text-white">{fr.lobby.turnUnavailableMessage}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="rounded-2xl bg-linear-to-r from-[#fb5a46] to-[#ff7d54] px-6 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
+          >
+            {fr.lobby.retry}
+          </button>
           <Link href="/" className="text-sm text-white/50 underline-offset-2 hover:text-white/80 hover:underline">
             {fr.common.backToHome}
           </Link>

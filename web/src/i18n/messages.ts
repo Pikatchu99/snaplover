@@ -147,6 +147,8 @@ export const messages = {
       invalidRoomMessage: "Ce lien a expiré ou le code d'invitation est incorrect.",
       invalidRoomCreateCta: "Créer une séance",
       invalidRoomJoinCta: "Saisir un code",
+      turnUnavailableMessage:
+        "Vos deux caméras n'arrivent pas à se parler directement, et le service gratuit qui sert de relais dans ce cas ne répond plus (son quota du mois est sûrement atteint). Je m'en occupe. Réessayez un peu plus tard, ou avec un autre réseau (le direct fonctionne parfois même sans lui).",
       status: {
         requestingCamera: "Activation de votre caméra…",
         cameraDenied: "Caméra bloquée",
@@ -156,6 +158,7 @@ export const messages = {
         reconnecting: "Signal faible — reconnexion…",
         roomFull: "Cette séance est déjà complète",
         invalidRoom: "Code d'invitation invalide",
+        turnUnavailable: "Relais indisponible",
       },
     },
     cameraTile: {

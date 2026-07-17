@@ -18,7 +18,8 @@ export type RoomConnectionStatus =
   | "connected"
   | "reconnecting"
   | "room-full"
-  | "invalid-room";
+  | "invalid-room"
+  | "turn-unavailable";
 
 // Orchestration temps réel d'une room : caméra locale → signaling → WebRTC.
 // Voir SNAPROOM-SPEC.md §8-§9.
@@ -31,6 +32,12 @@ export function useRoomConnection(roomCode: string) {
   const [isInitiator, setIsInitiator] = useState(false);
 
   const peerRef = useRef<ReturnType<typeof createPeerConnection> | null>(null);
+  // Au moins une allocation TURN rejetée (creds invalides, quota fournisseur
+  // épuisé...) pour la tentative de connexion en cours — voir
+  // ensurePeerConnection ci-dessous : ne devient un statut affiché que
+  // combiné à un connectionState "failed" (le direct P2P peut réussir quand
+  // même malgré un TURN indisponible, ce n'est pas fatal en soi).
+  const hadTurnErrorRef = useRef(false);
   // Ne doit passer de false à true qu'une seule fois (premier flux caméra
   // obtenu) — voir l'effet de connexion plus bas, qui ne doit se déclencher
   // qu'à cette transition, jamais sur un flux de remplacement ultérieur.
@@ -69,6 +76,7 @@ export function useRoomConnection(roomCode: string) {
       if (peerRef.current || !localStream || !iceServersQuery.data) return;
       setStatus("connecting");
       setIsInitiator(initiator);
+      hadTurnErrorRef.current = false;
 
       const peer = createPeerConnection({
         iceServers: iceServersQuery.data.iceServers,
@@ -78,10 +86,15 @@ export function useRoomConnection(roomCode: string) {
         onConnectionStateChange: (state) => {
           if (state === "connected") setStatus("connected");
           else if (state === "disconnected") setStatus("reconnecting");
-          else if (state === "failed" || state === "closed") setStatus("waiting-for-peer");
+          else if (state === "failed" || state === "closed") {
+            setStatus(hadTurnErrorRef.current ? "turn-unavailable" : "waiting-for-peer");
+          }
         },
         onDataChannel: setDataChannel,
         sendSignal: (data) => signaling.send({ type: "signal", data }),
+        onTurnCandidateError: () => {
+          hadTurnErrorRef.current = true;
+        },
       });
 
       peerRef.current = peer;

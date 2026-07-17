@@ -12,13 +12,26 @@ interface PeerConnectionOptions {
   onConnectionStateChange: (state: RTCPeerConnectionState) => void;
   onDataChannel: (channel: RTCDataChannel) => void;
   sendSignal: (data: SignalPayload) => void;
+  // Le serveur TURN a rejeté la demande d'allocation (creds invalides, quota
+  // épuisé côté fournisseur...) — voir onicecandidateerror ci-dessous. Un
+  // échec isolé n'est pas forcément fatal (le direct P2P peut réussir quand
+  // même) : à combiner avec onConnectionStateChange côté appelant.
+  onTurnCandidateError?: (event: RTCPeerConnectionIceErrorEvent) => void;
 }
 
 // Établissement WebRTC (P2P vidéo + data channel) — voir SNAPROOM-SPEC.md §9.
 // L'hôte (initiator) crée le data channel "ctrl" et l'offer ; l'invité répond.
 export function createPeerConnection(options: PeerConnectionOptions) {
-  const { iceServers, initiator, localStream, onRemoteStream, onConnectionStateChange, onDataChannel, sendSignal } =
-    options;
+  const {
+    iceServers,
+    initiator,
+    localStream,
+    onRemoteStream,
+    onConnectionStateChange,
+    onDataChannel,
+    sendSignal,
+    onTurnCandidateError,
+  } = options;
 
   const pc = new RTCPeerConnection({ iceServers });
 
@@ -37,6 +50,17 @@ export function createPeerConnection(options: PeerConnectionOptions) {
   };
 
   pc.onconnectionstatechange = () => onConnectionStateChange(pc.connectionState);
+
+  // Ne se déclenche QUE pour un serveur STUN/TURN configuré (event.url pointe
+  // vers l'un des iceServers) — un rejet côté serveur TURN (creds invalides,
+  // quota fournisseur épuisé...) se manifeste ici, pas dans connectionState.
+  pc.onicecandidateerror = (event) => {
+    const iceErrorEvent = event as RTCPeerConnectionIceErrorEvent;
+    console.debug(`[webrtc] ice candidate error (${iceErrorEvent.url}): ${iceErrorEvent.errorCode} ${iceErrorEvent.errorText}`);
+    if (iceErrorEvent.url?.startsWith("turn:") || iceErrorEvent.url?.startsWith("turns:")) {
+      onTurnCandidateError?.(iceErrorEvent);
+    }
+  };
 
   let dataChannel: RTCDataChannel | null = null;
   if (initiator) {

@@ -122,7 +122,8 @@ export function CaptureStage({
   const poseNumber = Math.min(currentPose + 1, poses);
 
   return (
-    <div className="flex min-h-screen flex-col gap-6 bg-[#161319] px-5 pt-6 pb-16">
+    // pt-16 (pas pt-6) : même raison que Lobby.tsx (LanguageSwitcher fixe).
+    <div className="flex min-h-screen flex-col gap-6 bg-[#161319] px-5 pt-16 pb-16">
       <div className="mx-auto flex w-full max-w-2xl items-center justify-between">
         <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white">
           {t("pose", { current: poseNumber, total: poses })}

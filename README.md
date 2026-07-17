@@ -1,6 +1,6 @@
 # SnapLover
 
-Une seule photo. À deux, même à distance.
+Une seule photo. À deux, à distance.
 
 Deux personnes rejoignent une room, activent leur caméra, et prennent une bande photo ensemble :
 un compte à rebours 3·2·1 synchronisé déclenche la capture sur les deux écrans au même instant.

@@ -14,9 +14,9 @@ export const messages = {
       siteName: "SnapLover",
       /** Gabarit de titre (App Router `metadata.title.template`). */
       titleTemplate: "%s · SnapLover",
-      defaultTitle: "SnapLover — Cabine photo en ligne à deux, même à distance",
+      defaultTitle: "SnapLover — Cabine photo en ligne pour une bande à deux, à distance",
       defaultDescription:
-        "Créez une bande photo à deux, même à distance. SnapLover synchronise vos caméras dans le navigateur pour composer un souvenir partagé, sans compte.",
+        "Créez une bande photo à deux, à distance — comme si vous étiez dans la même pièce. SnapLover synchronise vos caméras dans le navigateur pour composer un souvenir partagé, sans compte.",
       keywords: [
         "photobooth en ligne",
         "photo à distance",

@@ -1,17 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Heart } from "lucide-react";
-import { fr } from "@/i18n/messages";
 import { trackLike } from "@/lib/analytics";
 
 const REPO_URL = "https://github.com/Pikatchu99/snaplover";
 
 // Crédit auteur + liens contribution, visible sur toutes les pages (voir
-// app/layout.tsx). Barre fixe compacte, fond sombre translucide pour rester
-// lisible aussi bien sur les écrans clairs (landing/create/join) que sombres
-// (lobby/séance) sans avoir à connaître le thème de la page qui l'affiche.
+// app/[locale]/layout.tsx). Barre fixe compacte, fond sombre translucide pour
+// rester lisible aussi bien sur les écrans clairs (landing/create/join) que
+// sombres (lobby/séance) sans avoir à connaître le thème de la page qui l'affiche.
 export function SiteCredit() {
+  const t = useTranslations("siteCredit");
   const [liked, setLiked] = useState<Record<"experience" | "app", boolean>>({
     experience: false,
     app: false,
@@ -34,14 +35,14 @@ export function SiteCredit() {
         rel="noopener noreferrer"
         className="block truncate font-medium text-white hover:underline sm:hidden"
       >
-        {fr.siteCredit.credit}
+        {t("credit")}
       </a>
       <div className="hidden flex-wrap items-center justify-center gap-x-3 gap-y-1 sm:flex">
         <span>
           <a href={REPO_URL} target="_blank" rel="noopener noreferrer" className="font-medium text-white hover:underline">
-            {fr.siteCredit.credit}
+            {t("credit")}
           </a>{" "}
-          · {fr.siteCredit.contribute}
+          · {t("contribute")}
         </span>
         <span className="flex items-center gap-2">
           <button
@@ -50,7 +51,7 @@ export function SiteCredit() {
             className="flex items-center gap-1 rounded-full border border-white/20 px-2 py-0.5 transition hover:bg-white/10 disabled:opacity-60"
           >
             <Heart className={`size-3 ${liked.experience ? "fill-[#fb5a46] text-[#fb5a46]" : ""}`} />
-            {fr.siteCredit.likeExperience}
+            {t("likeExperience")}
           </button>
           <button
             onClick={() => handleLike("app")}
@@ -58,7 +59,7 @@ export function SiteCredit() {
             className="flex items-center gap-1 rounded-full border border-white/20 px-2 py-0.5 transition hover:bg-white/10 disabled:opacity-60"
           >
             <Heart className={`size-3 ${liked.app ? "fill-[#fb5a46] text-[#fb5a46]" : ""}`} />
-            {fr.siteCredit.likeApp}
+            {t("likeApp")}
           </button>
         </span>
       </div>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
+import { setRequestLocale } from "next-intl/server";
+import { redirect } from "@/i18n/navigation";
 import { RoomClient } from "@/components/room/RoomClient";
 import { parseRoomConfig } from "@/lib/room-config";
 import { isValidRoomCode } from "@/lib/room-code";
@@ -11,12 +12,13 @@ export const metadata: Metadata = {
 };
 
 interface RoomPageProps {
-  params: Promise<{ code: string }>;
+  params: Promise<{ locale: string; code: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
 export default async function RoomPage({ params, searchParams }: RoomPageProps) {
-  const { code } = await params;
+  const { locale, code } = await params;
+  setRequestLocale(locale);
   const config = parseRoomConfig(await searchParams);
 
   // Un prénom est requis pour entrer — /create et /join le garantissent déjà
@@ -27,7 +29,7 @@ export default async function RoomPage({ params, searchParams }: RoomPageProps) 
   // afficher l'état dédié "lien introuvable/expiré" (Lobby), pas être masqué
   // par cette redirection.
   if (!config.name && isValidRoomCode(code)) {
-    redirect(`/join?code=${code.toUpperCase()}`);
+    redirect({ href: `/join?code=${code.toUpperCase()}`, locale });
   }
 
   return (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type RefObject } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { RealtimeChannel } from "@/lib/realtime/channel";
 import { respondToPing, startClockSync } from "@/lib/realtime/clock-sync";
 import { computeCaptureDelay } from "@/lib/realtime/schedule-capture";
@@ -8,10 +9,10 @@ import { captureFrame } from "@/lib/capture/capture-frame";
 import { waitForVideoReady } from "@/lib/capture/wait-for-video-ready";
 import { createImageReceiver, sendImage } from "@/lib/capture/image-transfer";
 import { composeStrip, type StripCell } from "@/lib/capture/compose-strip";
+import { formatFooterDate } from "@/lib/capture/format-footer-date";
 import { playShutter } from "@/lib/audio/sound-effects";
 import { FRAMES } from "@/lib/frames/frame-registry";
 import { config } from "@/lib/config";
-import { fr } from "@/i18n/messages";
 import type { FrameId, StripStyle } from "@/types/frame";
 
 export type CaptureSessionStatus = "idle" | "countdown" | "capturing" | "composing" | "done";
@@ -39,6 +40,9 @@ export function useCaptureSession({
   myName,
   localVideoRef,
 }: UseCaptureSessionOptions) {
+  const tParticipant = useTranslations("participant");
+  const tStrip = useTranslations("strip");
+  const locale = useLocale();
   const [status, setStatus] = useState<CaptureSessionStatus>("idle");
   const [hasStarted, setHasStarted] = useState(false);
   const [currentPose, setCurrentPose] = useState(0);
@@ -220,8 +224,8 @@ export function useCaptureSession({
   function resolveNames() {
     const peerName = peerNameRef.current;
     return {
-      host: isInitiator ? myName : (peerName ?? fr.participant.defaultHost),
-      guest: isInitiator ? (peerName ?? fr.participant.defaultGuest) : myName,
+      host: isInitiator ? myName : (peerName ?? tParticipant("defaultHost")),
+      guest: isInitiator ? (peerName ?? tParticipant("defaultGuest")) : myName,
     };
   }
 
@@ -253,11 +257,14 @@ export function useCaptureSession({
     if (nextPose >= effectivePosesRef.current) {
       setStatus("composing");
       const finalCells = [...cellsRef.current];
+      const { host, guest } = resolveNames();
+      const footerDate = formatFooterDate(new Date(), locale);
+      const footerText = tStrip("footerWithNames", { date: footerDate, host, guest });
       composeStrip(finalCells, {
         frame: FRAMES[effectiveFrameIdRef.current],
         filter: "classic",
         style: effectiveStyleRef.current,
-        names: resolveNames(),
+        footerText,
       })
         .then((url) => {
           setStripUrl(url);

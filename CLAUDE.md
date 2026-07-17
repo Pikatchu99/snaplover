@@ -308,19 +308,34 @@ un seul VPS** (l'auteur a pointé le domaine dessus dès le départ, pas de Verc
 - Ne jamais indexer les rooms privées `/r/[code]` : elles restent hors sitemap, bloquées par
   `robots.ts`, et en `noindex`.
 
-## i18n (architecture prête à évoluer)
-Une seule locale aujourd'hui (`fr`), mais l'architecture est pensée pour brancher une vraie lib
-i18n (next-intl ou équivalent) plus tard sans réécrire les appelants :
-- **Tous** les textes visibles par l'utilisateur vivent dans `web/src/i18n/messages.ts`, jamais en
-  dur dans un composant/hook/page. Structure : un objet par locale (`messages.fr`), une clé par
-  écran/feature, exporté aussi directement comme `fr` pour un usage simple aujourd'hui.
-  Import : `import { fr } from "@/i18n/messages"`, puis `fr.lobby.title`, etc. Fonctions avec
-  paramètres pour les messages interpolés (ex. `fr.captureStage.pose(current, total)`).
+## i18n (next-intl, fr + en)
+Deux locales : `fr` (défaut, aucun préfixe d'URL — les liens déjà indexés/partagés ne changent
+pas) et `en` (préfixe `/en`), voir `web/src/i18n/routing.ts` (`localePrefix: "as-needed"`).
+- **Tous** les textes visibles par l'utilisateur vivent dans `web/src/i18n/messages/{fr,en}.ts`
+  (même arborescence de clés dans les deux fichiers), jamais en dur dans un composant/hook/page.
+  Composants client : `useTranslations("namespace")` puis `t("clé")` (voir n'importe quel
+  composant sous `components/`). Server Components/metadata : `getTranslations({ locale, ... })`
+  (voir `app/[locale]/layout.tsx`, `app/[locale]/page.tsx`). Valeurs paramétrées en format ICU
+  (`"Pose {current} / {total}"`, appelé `t("pose", { current, total })`) — jamais de fonction JS
+  comme valeur de message (next-intl ne les supporte pas).
+- Navigation interne : toujours `Link`/`redirect`/`useRouter`/`usePathname`/`getPathname` depuis
+  `@/i18n/navigation` (jamais `next/link`/`next/navigation` bruts) — ils gèrent seuls le préfixe
+  `/en` selon la locale courante.
+- Détection de langue : middleware (`web/src/proxy.ts`, via `next-intl/middleware`) lit
+  `Accept-Language` au premier chargement. Switch manuel en haut de chaque page
+  (`components/layout/LanguageSwitcher.tsx`), change la locale sans perdre la page courante.
 - Les registres de config (frames, filtres) ne contiennent **jamais** de label affiché — juste des
-  IDs et de la config visuelle pure (couleurs, CSS). Le mapping ID → label affiché vit dans
-  `messages.ts` (`fr.frames`, `fr.photoStrip.filters`), résolu au niveau du composant.
-- Quand une vraie lib i18n sera branchée : remplacer l'import direct de `fr` par un hook
-  `useTranslations()`/équivalent qui lit dans le même arbre de clés — pas de refonte de structure.
+  IDs et de la config visuelle pure (couleurs, CSS). Le mapping ID → label affiché vit dans les
+  dictionnaires (`frames`, `photoStrip.filters`), résolu au niveau du composant.
+- `compose-strip.ts` (dessin canvas du footer de la bande) ne connaît pas la locale — l'appelant
+  (`use-capture-session.ts`/`PhotoStrip.tsx`) lui passe un `footerText` déjà traduit et formaté
+  (voir `lib/capture/format-footer-date.ts` pour le formatage de date par locale).
+- Routes sous `app/[locale]/...` (localisées) ; `api/`, `icon.tsx`/`apple-icon.tsx`, `robots.ts`,
+  `sitemap.ts` restent hors `[locale]` (pas de contenu textuel par langue). `opengraph-image.tsx`/
+  `twitter-image.tsx` sont sous `[locale]` (aperçu de partage traduit).
+- e2e (Playwright) : `locale: "fr-FR"` fixé dans `playwright.config.ts` — sans ça Chromium envoie
+  un `Accept-Language` par défaut (souvent `en-US`), le middleware sert l'anglais, et tous les
+  tests qui vérifient du texte français échouent silencieusement (piège rencontré en migrant).
 
 ## Séquencement du build
 Voir docs/SNAPROOM-SPEC.md §17 pour les jalons J1–J6.

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { StripPreview } from "@/components/landing/StripPreview";
 
 interface HeroStripsProps {
@@ -17,6 +18,7 @@ const COUNTDOWN_STEPS = [3, 2, 1];
 // petit countdown 3·2·1 joue une fois au montage, puis les cases de chaque
 // bande apparaissent en cascade. Sobre (Framer Motion, 250-300ms ease-out).
 export function HeroStrips({ stripAImages, stripBImages, large, className }: HeroStripsProps) {
+  const t = useTranslations("landing");
   const [step, setStep] = useState(0);
   const revealed = step >= COUNTDOWN_STEPS.length;
 
@@ -31,7 +33,7 @@ export function HeroStrips({ stripAImages, stripBImages, large, className }: Her
       <StripPreview
         images={stripBImages}
         cells={3}
-        caption="À DEUX"
+        caption={t("demoCaptionTogether")}
         large={large}
         revealed={revealed}
         revealDelay={0.15}

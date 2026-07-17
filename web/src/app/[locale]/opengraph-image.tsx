@@ -1,16 +1,17 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
-import { fr } from "@/i18n/messages";
+import { getTranslations } from "next-intl/server";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-export const alt = fr.seo.defaultTitle;
+export const alt = "SnapLover";
 
-// 3 paires de photos de démo (mêmes assets que la landing, voir app/page.tsx
-// STRIP_A_IMAGES) — encodées en data URI : satori (le moteur derrière
-// ImageResponse) ne peut pas résoudre un chemin /public relatif, et une URL
-// absolue dépendrait de SITE_URL (pas garanti configuré, notamment en dev).
+// 3 paires de photos de démo (mêmes assets que la landing, voir
+// app/[locale]/page.tsx STRIP_A_IMAGES) — encodées en data URI : satori (le
+// moteur derrière ImageResponse) ne peut pas résoudre un chemin /public
+// relatif, et une URL absolue dépendrait de SITE_URL (pas garanti configuré,
+// notamment en dev).
 function loadPhotoDataUri(filename: string): string {
   const buffer = readFileSync(join(process.cwd(), "public", "preview", filename));
   return `data:image/jpeg;base64,${buffer.toString("base64")}`;
@@ -22,11 +23,19 @@ const STRIP_PAIRS = [
   [loadPhotoDataUri("photo-05.jpeg"), loadPhotoDataUri("photo-06.jpeg")],
 ] as const;
 
+interface OpengraphImageProps {
+  params: Promise<{ locale: string }>;
+}
+
 // Image Open Graph/Twitter : la marque SnapLover (logo procédural, mêmes
 // géométrie/couleurs que icon.tsx/apple-icon.tsx) à côté d'un aperçu de la
 // vraie bande photo — texte seul ne donnait pas une idée immédiate du
 // produit au partage du lien, un aperçu visuel du photobooth si.
-export default function OpengraphImage() {
+export default async function OpengraphImage({ params }: OpengraphImageProps) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "landing" });
+  const tOg = await getTranslations({ locale, namespace: "ogImage" });
+
   return new ImageResponse(
     (
       <div
@@ -81,7 +90,7 @@ export default function OpengraphImage() {
               maxWidth: 480,
             }}
           >
-            {fr.landing.titlePrefix} {fr.landing.titleHighlight}
+            {t("titlePrefix")} {t("titleHighlight")}
           </div>
         </div>
 
@@ -115,7 +124,7 @@ export default function OpengraphImage() {
               marginTop: 4,
             }}
           >
-            SNAPLOVER · À DEUX
+            {tOg("caption")}
           </div>
         </div>
       </div>

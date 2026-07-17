@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, type RefObject } from "react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
-import { fr } from "@/i18n/messages";
 
 export type CameraTileState = "ready" | "connecting" | "off";
 
@@ -25,6 +25,7 @@ const STATE_DOT_CLASS = {
 } as const;
 
 export function CameraTile({ stream, label, state, mirrored, muted, videoRef: externalRef }: CameraTileProps) {
+  const t = useTranslations("cameraTile");
   const localRef = useRef<HTMLVideoElement>(null);
   const videoRef = externalRef ?? localRef;
 
@@ -48,7 +49,7 @@ export function CameraTile({ stream, label, state, mirrored, muted, videoRef: ex
       />
       {state !== "ready" && (
         <div className="absolute inset-0 flex items-center justify-center px-4 text-center text-sm text-white/60">
-          {state === "connecting" ? fr.cameraTile.connecting : fr.cameraTile.off}
+          {state === "connecting" ? t("connecting") : t("off")}
         </div>
       )}
       <span

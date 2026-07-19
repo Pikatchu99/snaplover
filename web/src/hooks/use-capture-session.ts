@@ -19,7 +19,10 @@ import { trackChallengeCompleted, trackChallengeDuoStarted, trackChallengeStarte
 import type { FrameId, StripStyle } from "@/types/frame";
 import type { ChallengeMode, StickerId, StickerPackId } from "@/types/sticker";
 
-export type CaptureSessionStatus = "idle" | "countdown" | "capturing" | "composing" | "done";
+// "reveal" : sticker affiché seul, sans décompte visible — phase de
+// préparation avant le 3·2·1, uniquement en mode challenge (voir
+// docs/STICKER-CHALLENGES.md "Décisions validées").
+export type CaptureSessionStatus = "idle" | "reveal" | "countdown" | "capturing" | "composing" | "done";
 
 interface UseCaptureSessionOptions {
   dataChannel: RTCDataChannel | null;
@@ -169,6 +172,9 @@ export function useCaptureSession({
       } else if (message.t === "config") {
         applyConfig(message.poses, message.frameId, message.style, message.mode, message.stickerPackId, message.stickerIds ?? []);
         peerNameRef.current = message.hostName;
+      } else if (message.t === "reveal") {
+        setHasStarted(true);
+        setStatus("reveal");
       } else if (message.t === "capture") scheduleCapture(message.pose, message.fireAtHost);
       else receiveImage(message);
     });
@@ -341,6 +347,32 @@ export function useCaptureSession({
     if (pose === 0 && mode === "challenge") {
       trackChallengeDuoStarted();
       trackChallengeStarted();
+    }
+
+    if (mode === "challenge") {
+      // Phase de lecture/préparation : le sticker s'affiche seul, sans
+      // décompte, le temps de configurable via config.challenge.revealMs
+      // (ex. le temps d'attraper un accessoire) — voir
+      // docs/STICKER-CHALLENGES.md. Le vrai 3·2·1 démarre juste après.
+      setHasStarted(true);
+      setStatus("reveal");
+      channelRef.current.send({ t: "reveal", pose, durationMs: config.challenge.revealMs });
+      setTimeout(() => startCountdown(pose), config.challenge.revealMs);
+      return;
+    }
+
+    startCountdown(pose);
+  }
+
+  function startCountdown(pose: number) {
+    if (!isInitiator) return;
+    if (!channelRef.current) {
+      // Partenaire déconnecté pendant la phase de lecture (challenge) —
+      // même suspension que ci-dessus, reprise complète (reveal inclus) sur
+      // le prochain "hello".
+      pendingPoseRef.current = pose;
+      setAwaitingPeer(true);
+      return;
     }
     const fireAtHost = Date.now() + config.capture.leadMs;
     channelRef.current.send({ t: "capture", pose, fireAtHost });

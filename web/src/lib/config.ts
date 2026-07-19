@@ -52,5 +52,10 @@ export const config = {
     /** Largeur colonne sticker relative à cellWidth — voir docs/STICKER-CHALLENGES.md
      * (décision produit : même taille que les photos, ou au maximum 25% plus petit). */
     stickerWidthRatio: 1,
+    /** Phase de lecture/préparation (sticker affiché, pas de décompte) avant
+     * le 3·2·1 — voir docs/STICKER-CHALLENGES.md "Décisions validées". Fixe
+     * pour tout le monde au MVP ; à rendre configurable si trop court/long
+     * selon les stickers une fois testé en usage réel. */
+    revealMs: 4000,
   },
 } as const;

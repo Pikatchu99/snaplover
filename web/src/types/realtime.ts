@@ -26,6 +26,10 @@ export type RealtimeMessage =
       stickerPackId?: StickerPackId;
       stickerIds?: StickerId[];
     }
+  // Mode challenge uniquement : annonce le sticker à afficher (phase de
+  // lecture/préparation) avant que "capture" ne lance le vrai 3·2·1 — voir
+  // docs/STICKER-CHALLENGES.md.
+  | { t: "reveal"; pose: number; durationMs: number }
   | { t: "capture"; pose: number; fireAtHost: number }
   | { t: "img-meta"; pose: number }
   | { t: "img"; part: string }

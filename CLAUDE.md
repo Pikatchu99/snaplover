@@ -3,8 +3,15 @@
 ## What this is
 SnapLover (nom de code technique/dossier : `snaproom`, voir note de nommage plus bas) est une app
 web où deux personnes à distance rejoignent une room, activent leur caméra, et prennent une bande
-photo ensemble via un compte à rebours synchronisé (WebRTC P2P). Aucun compte requis. Projet gratuit
-et open source, FR-first. Spécification complète : `docs/SNAPROOM-SPEC.md`.
+photo ensemble via un compte à rebours synchronisé (WebRTC P2P) — faites une bande photo ensemble,
+même à distance. Aucun compte requis. Une version de base est gratuite, et le cœur technique est
+open source, FR-first. Spécification complète : `docs/SNAPROOM-SPEC.md`.
+
+**Positionnement** : ne jamais présenter SnapLover principalement comme "gratuit et open source" —
+ce n'est pas la promesse centrale. Message principal : "Faites une bande photo ensemble, même à
+distance." Message secondaire seulement : "Une version de base est gratuite, et le cœur technique
+est open source." (La stratégie produit/growth/monétisation détaillée vit dans le repo privé
+`snaplover-private`, pas ici.)
 
 **Nommage** : le produit s'appelle **SnapLover** (marque affichée partout dans l'UI — logo,
 titres, footer de la bande composée). Le nom de code technique reste `snaproom`/`SnapRoom` dans
@@ -72,7 +79,6 @@ snaproom/
 ├─ snaproom-spike/               # spike de faisabilité (référence, ne pas déployer)
 ├─ docs/
 │  ├─ SNAPROOM-SPEC.md          # spec produit/technique de référence
-│  ├─ SEO-COPY-AUDIT.md         # audit SEO/copy et recommandations de wording
 │  └─ design/                   # maquettes Pencil (.dc.html) — rendu exact des écrans
 │     └─ previews/              # captures des packs de cadres
 └─ pnpm-workspace.yaml
@@ -299,12 +305,11 @@ un seul VPS** (l'auteur a pointé le domaine dessus dès le départ, pas de Verc
   assets graphiques non fournis à ce jour.
 
 ## SEO & copy
-- Audit de référence : `docs/SEO-COPY-AUDIT.md`.
-- Avant toute refonte de la landing ou des textes publics, relire cet audit : la priorité est de
-  passer d'une copy fonctionnelle ("room", mécanique WebRTC, 3·2·1) à une promesse claire de
-  photobooth en ligne pour couples à distance.
-- Les textes visibles restent centralisés dans `web/src/i18n/messages.ts`. Ne pas disperser de
-  nouvelles chaînes dans les composants.
+- Passe de refonte copy déjà faite (landing passée d'une copy fonctionnelle "room"/mécanique WebRTC
+  à une promesse claire de photobooth en ligne à deux) — l'audit détaillé et les recommandations de
+  positionnement/growth vivent désormais dans le repo privé `snaplover-private`, pas ici.
+- Les textes visibles restent centralisés dans `web/src/i18n/messages/{fr,en}.ts`. Ne pas disperser
+  de nouvelles chaînes dans les composants.
 - Ne jamais indexer les rooms privées `/r/[code]` : elles restent hors sitemap, bloquées par
   `robots.ts`, et en `noindex`.
 

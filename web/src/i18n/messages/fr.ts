@@ -85,7 +85,10 @@ const fr = {
           question: "Est-ce que je peux télécharger la bande ?",
           answer: "Oui, en PNG, directement depuis l'écran de résultat.",
         },
-        { question: "Est-ce que SnapLover est gratuit ?", answer: "Oui, SnapLover est gratuit et open source." },
+        {
+          question: "Est-ce que SnapLover est gratuit ?",
+          answer: "Une version de base est gratuite, et le cœur technique est open source.",
+        },
         {
           question: "Pourquoi autoriser la caméra ?",
           answer:

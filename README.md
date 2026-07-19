@@ -1,10 +1,10 @@
 # SnapLover
 
-Une seule photo. À deux, à distance.
+Faites une bande photo ensemble, même à distance.
 
 Deux personnes rejoignent une room, activent leur caméra, et prennent une bande photo ensemble :
 un compte à rebours 3·2·1 synchronisé déclenche la capture sur les deux écrans au même instant.
-Aucun compte requis. Gratuit et open source.
+Aucun compte requis. Une version de base est gratuite, et le cœur technique est open source.
 
 Spécification complète : [`docs/SNAPROOM-SPEC.md`](./docs/SNAPROOM-SPEC.md).
 

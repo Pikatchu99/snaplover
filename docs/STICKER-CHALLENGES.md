@@ -53,10 +53,6 @@ Variante solo :
 
 > Reproduisez des stickers droles en solo et gardez une photo fun a poster.
 
-Phrase reseaux :
-
-> On a tente le SnapLover Challenge. Fou rire garanti. A vous de faire mieux.
-
 ## Parcours utilisateur
 
 ### Creation de session
@@ -276,45 +272,6 @@ Cela evite les problemes de moderation et de stockage au demarrage.
 
 Sur la page, on peut deja afficher une petite mention produit du type : `Bientot : ajoute tes propres
 stickers`.
-
-## Lien et viralite
-
-Le sous-domaine actuel `snaplover.hbdwall.xyz` n'est pas bloquant pour tester le concept.
-
-Pour du partage social, le plus important n'est pas que le domaine soit court, mais que :
-
-- la preview partagee soit claire ;
-- le nom SnapLover soit visible ;
-- la page explique vite le challenge ;
-- le lien inspire confiance ;
-- la bande finale porte la marque.
-
-Un Bitly peut aider pour des posts courts, mais ce n'est pas ideal comme lien principal :
-
-- certaines personnes font moins confiance aux liens raccourcis ;
-- les previews sociales peuvent etre moins propres ;
-- ca ajoute une dependance externe ;
-- on perd un peu le signal de marque.
-
-Recommandation :
-
-1. Garder `snaplover.hbdwall.xyz` pour le MVP et les premiers tests.
-2. Ajouter plus tard un domaine court dedie si le concept prend, par exemple `snaplover.app`,
-   `snaplover.fun`, ou un domaine plus court disponible.
-3. Utiliser Bitly seulement pour des campagnes ponctuelles, pas comme lien produit principal.
-
-Pour les rooms, on peut aussi ameliorer la perception sans changer de domaine :
-
-```text
-https://snaplover.hbdwall.xyz/r/ABCD12
-```
-
-C'est acceptable. Le vrai probleme serait une URL avec trop de query params visibles. Si la config
-challenge devient longue, il faudra envisager :
-
-- soit garder les query params mais les compacter ;
-- soit transmettre la config apres creation via l'hote ;
-- soit introduire une persistance minimale plus tard pour obtenir des liens plus propres.
 
 ## Analytics a prevoir
 

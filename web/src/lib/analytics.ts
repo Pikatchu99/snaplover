@@ -13,14 +13,18 @@ export function trackConnectionType(type: "direct" | "relay") {
   window.umami?.track(`connection-${type}`);
 }
 
-// Mode Challenge stickers (docs/STICKER-CHALLENGES.md) — duo uniquement
-// pour l'instant, pas d'équivalent solo/upload (pas encore implémentés).
+// Mode Challenge stickers (docs/STICKER-CHALLENGES.md) — pas d'équivalent
+// upload utilisateur pour l'instant (pas encore implémenté).
 export function trackChallengeRoomCreated() {
   window.umami?.track("challenge-room-created");
 }
 
 export function trackChallengeDuoStarted() {
   window.umami?.track("challenge-duo-started");
+}
+
+export function trackChallengeSoloStarted() {
+  window.umami?.track("challenge-solo-started");
 }
 
 export function trackChallengeStarted() {

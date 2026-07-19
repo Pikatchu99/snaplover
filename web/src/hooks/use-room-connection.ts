@@ -5,7 +5,7 @@ import { SignalingClient } from "@/lib/signaling/client";
 import { createPeerConnection, type SignalPayload } from "@/lib/webrtc/peer-connection";
 import { useIceServers } from "@/lib/webrtc/use-ice-servers";
 import { useUserMedia } from "@/hooks/use-user-media";
-import { trackConnectionType } from "@/lib/analytics";
+import { trackConnectionType, trackRoomJoined } from "@/lib/analytics";
 import type { ServerMessage } from "@/types/signaling";
 
 // Aucune valeur d'infra en dur (voir CLAUDE.md) : pas de fallback localhost.
@@ -87,7 +87,13 @@ export function useRoomConnection(roomCode: string) {
     const unsubscribe = signaling.onMessage((message: ServerMessage) => {
       switch (message.type) {
         case "joined":
-          if (message.peers === 2) ensurePeerConnection(message.initiator);
+          // peers === 2 && !initiator : cette connexion est le second pair à
+          // rejoindre une room où l'hôte attendait déjà — le seul moment où
+          // "rejoindre" a un sens (peers === 1 = simple création de room).
+          if (message.peers === 2) {
+            if (!message.initiator) trackRoomJoined();
+            ensurePeerConnection(message.initiator);
+          }
           break;
         case "peer-ready":
           ensurePeerConnection(true);

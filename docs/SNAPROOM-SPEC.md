@@ -3,7 +3,8 @@
 > Document de référence pour le build (Claude Code / VSCode).
 > **Statut : faisabilité technique validée par un spike** (voir §4). On construit le vrai produit.
 > Langue produit : **français**. Commentaires de code : anglais.
-> Projet **gratuit et open source**.
+> Faites une bande photo ensemble, même à distance. Une version de base est gratuite, et le cœur
+> technique est open source.
 
 ---
 

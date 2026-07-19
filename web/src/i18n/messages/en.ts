@@ -84,7 +84,10 @@ const en = {
           question: "Can I download the strip?",
           answer: "Yes, as a PNG, directly from the result screen.",
         },
-        { question: "Is SnapLover free?", answer: "Yes, SnapLover is free and open source." },
+        {
+          question: "Is SnapLover free?",
+          answer: "A basic version is free, and the technical core is open source.",
+        },
         {
           question: "Why allow camera access?",
           answer:

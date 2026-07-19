@@ -3,14 +3,16 @@ import { useTranslations } from "next-intl";
 import { CameraTile } from "@/components/room/CameraTile";
 import { Link } from "@/i18n/navigation";
 import type { UserMediaStatus } from "@/hooks/use-user-media";
-import type { StickerPackId } from "@/types/sticker";
+import type { ChallengeMode, StickerPackId } from "@/types/sticker";
 
 interface SoloPrepProps {
   localStream: MediaStream | null;
   status: UserMediaStatus;
   localVideoRef: RefObject<HTMLVideoElement | null>;
   poses: number;
-  stickerPackId: StickerPackId;
+  mode: ChallengeMode;
+  /** Présent uniquement en mode challenge. */
+  stickerPackId?: StickerPackId;
   onLaunch: () => void;
   onRetryCamera: () => void;
 }
@@ -19,11 +21,12 @@ interface SoloPrepProps {
 // de room, pas de code à copier, pas de partenaire à attendre) : voir
 // docs/STICKER-CHALLENGES.md "En mode solo, cette étape devient un écran de
 // préparation plus simple".
-export function SoloPrep({ localStream, status, localVideoRef, poses, stickerPackId, onLaunch, onRetryCamera }: SoloPrepProps) {
+export function SoloPrep({ localStream, status, localVideoRef, poses, mode, stickerPackId, onLaunch, onRetryCamera }: SoloPrepProps) {
   const t = useTranslations("solo");
   const tLobby = useTranslations("lobby");
   const tCommon = useTranslations("common");
   const tStickerPacks = useTranslations("stickerPacks");
+  const isChallenge = mode === "challenge";
 
   if (status === "denied") {
     return (
@@ -47,7 +50,7 @@ export function SoloPrep({ localStream, status, localVideoRef, poses, stickerPac
     // pt-16 (pas pt-6) : même raison que Lobby.tsx (LanguageSwitcher fixe).
     <div className="flex min-h-screen flex-col bg-[#161319] px-5 pt-16 pb-16">
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6">
-        <h1 className="font-heading text-2xl font-bold text-white">{t("prepTitle")}</h1>
+        <h1 className="font-heading text-2xl font-bold text-white">{isChallenge ? t("prepTitleChallenge") : t("prepTitleClassic")}</h1>
 
         <CameraTile
           stream={localStream}
@@ -58,14 +61,18 @@ export function SoloPrep({ localStream, status, localVideoRef, poses, stickerPac
           videoRef={localVideoRef}
         />
 
-        <p className="text-sm text-white/60">{t("prepSummary", { n: poses, pack: tStickerPacks(stickerPackId) })}</p>
+        <p className="text-sm text-white/60">
+          {isChallenge && stickerPackId
+            ? t("prepSummaryChallenge", { n: poses, pack: tStickerPacks(stickerPackId) })
+            : t("prepSummaryClassic", { n: poses })}
+        </p>
 
         <button
           onClick={onLaunch}
           disabled={status !== "ready"}
           className="w-full rounded-2xl bg-linear-to-r from-[#fb5a46] to-[#ff7d54] px-6 py-3.5 font-medium text-white transition hover:opacity-90 disabled:from-white/15 disabled:to-white/15 disabled:text-white/50"
         >
-          {t("launch")}
+          {isChallenge ? t("launchChallenge") : t("launchClassic")}
         </button>
 
         <Link href="/" className="text-center text-sm text-white/40 underline-offset-2 hover:text-white/70 hover:underline">

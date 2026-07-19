@@ -6,26 +6,34 @@ import { useSoloCaptureSession } from "@/hooks/use-solo-capture-session";
 import { SoloPrep } from "@/components/solo/SoloPrep";
 import { SoloCaptureStage } from "@/components/solo/SoloCaptureStage";
 import { PhotoStrip } from "@/components/strip/PhotoStrip";
-import type { FrameId } from "@/types/frame";
-import type { StickerPackId } from "@/types/sticker";
+import type { FrameId, StripStyle } from "@/types/frame";
+import type { ChallengeMode, StickerPackId } from "@/types/sticker";
 
 interface SoloClientProps {
   poses: number;
   frameId: FrameId;
-  stickerPackId: StickerPackId;
+  style: StripStyle;
+  mode: ChallengeMode;
+  /** Présent uniquement quand mode === "challenge". */
+  stickerPackId?: StickerPackId;
+  /** Prénom local à ce navigateur — signature du footer, requis même en solo. */
+  name: string;
 }
 
-// Équivalent de RoomClient.tsx pour le challenge solo : pas de
+// Équivalent de RoomClient.tsx pour le solo (classique ou challenge) : pas de
 // useRoomConnection (pas de room, pas de WebRTC) — juste la caméra locale et
 // l'orchestration de séance. Voir docs/STICKER-CHALLENGES.md.
-export function SoloClient({ poses, frameId, stickerPackId }: SoloClientProps) {
+export function SoloClient({ poses, frameId, style, mode, stickerPackId, name }: SoloClientProps) {
   const { stream: localStream, status: mediaStatus, retry: retryCamera } = useUserMedia();
   const localVideoRef = useRef<HTMLVideoElement>(null);
 
   const { status, hasStarted, currentPose, countdownMs, stripUrl, cells, currentSticker, startSession } = useSoloCaptureSession({
     poses,
     frameId,
+    style,
+    mode,
     stickerPackId,
+    myName: name,
     localVideoRef,
   });
 
@@ -38,7 +46,7 @@ export function SoloClient({ poses, frameId, stickerPackId }: SoloClientProps) {
   }, [stripUrl, localStream]);
 
   if (stripUrl) {
-    return <PhotoStrip cells={cells} initialStripUrl={stripUrl} frameId={frameId} style="vertical" mode="challenge" />;
+    return <PhotoStrip cells={cells} initialStripUrl={stripUrl} frameId={frameId} style={style} mode={mode} soloName={name} />;
   }
 
   if (hasStarted) {
@@ -51,6 +59,7 @@ export function SoloClient({ poses, frameId, stickerPackId }: SoloClientProps) {
         poses={poses}
         countdownMs={countdownMs}
         cells={cells}
+        mode={mode}
         currentSticker={currentSticker}
       />
     );
@@ -62,6 +71,7 @@ export function SoloClient({ poses, frameId, stickerPackId }: SoloClientProps) {
       status={mediaStatus}
       localVideoRef={localVideoRef}
       poses={poses}
+      mode={mode}
       stickerPackId={stickerPackId}
       onLaunch={startSession}
       onRetryCamera={retryCamera}

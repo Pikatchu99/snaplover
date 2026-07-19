@@ -13,24 +13,39 @@ import { pickStickers } from "@/lib/stickers/pick-stickers";
 import { config } from "@/lib/config";
 import { trackChallengeCompleted, trackChallengeSoloStarted, trackChallengeStarted } from "@/lib/analytics";
 import type { CaptureSessionStatus } from "@/hooks/use-capture-session";
-import type { FrameId } from "@/types/frame";
-import type { StickerDefinition, StickerId, StickerPackId } from "@/types/sticker";
+import type { FrameId, StripStyle } from "@/types/frame";
+import type { ChallengeMode, StickerDefinition, StickerId, StickerPackId } from "@/types/sticker";
 
 interface UseSoloCaptureSessionOptions {
   poses: number;
   frameId: FrameId;
-  stickerPackId: StickerPackId;
+  style: StripStyle;
+  mode: ChallengeMode;
+  /** Présent uniquement quand mode === "challenge". */
+  stickerPackId?: StickerPackId;
+  /** Signature du footer de la bande — requis même en solo. */
+  myName: string;
   localVideoRef: RefObject<HTMLVideoElement | null>;
 }
 
-// Orchestration du challenge solo : pas de pair, pas de data channel — chaque
-// pose s'enchaîne localement (lecture du sticker → 3·2·1 → capture) jusqu'à
-// composer la bande "moi | sticker". Voir docs/STICKER-CHALLENGES.md. Volontairement
-// une implémentation séparée de use-capture-session.ts (pas une extension) :
-// rien à synchroniser/reconnecter, la logique réellement utile est plus simple.
-export function useSoloCaptureSession({ poses, frameId, stickerPackId, localVideoRef }: UseSoloCaptureSessionOptions) {
+// Orchestration d'une séance solo (classique ou challenge) : pas de pair, pas
+// de data channel — chaque pose s'enchaîne localement jusqu'à composer la
+// bande (une seule photo par pose, + sticker en challenge). Voir
+// docs/STICKER-CHALLENGES.md. Volontairement une implémentation séparée de
+// use-capture-session.ts (pas une extension) : rien à synchroniser/reconnecter,
+// la logique réellement utile est plus simple.
+export function useSoloCaptureSession({
+  poses,
+  frameId,
+  style,
+  mode,
+  stickerPackId,
+  myName,
+  localVideoRef,
+}: UseSoloCaptureSessionOptions) {
   const tStrip = useTranslations("strip");
   const locale = useLocale();
+  const isChallenge = mode === "challenge";
   const [status, setStatus] = useState<CaptureSessionStatus>("idle");
   const [hasStarted, setHasStarted] = useState(false);
   const [currentPose, setCurrentPose] = useState(0);
@@ -38,8 +53,8 @@ export function useSoloCaptureSession({ poses, frameId, stickerPackId, localVide
   const [stripUrl, setStripUrl] = useState<string | null>(null);
   const [cells, setCells] = useState<StripCell[]>([]);
   // Tiré une seule fois au montage — pas besoin d'attendre un pair pour
-  // connaître la séquence de stickers, contrairement au duo.
-  const [stickerIds] = useState<StickerId[]>(() => pickStickers(stickerPackId, poses));
+  // connaître la séquence de stickers, contrairement au duo. Vide en classique.
+  const [stickerIds] = useState<StickerId[]>(() => (isChallenge && stickerPackId ? pickStickers(stickerPackId, poses) : []));
   const cellsRef = useRef<StripCell[]>([]);
 
   function scheduleCapture(pose: number) {
@@ -74,7 +89,7 @@ export function useSoloCaptureSession({ poses, frameId, stickerPackId, localVide
     }
     playShutter();
 
-    cellsRef.current[pose] = { left: dataUrl, sticker: STICKERS[stickerIds[pose]] };
+    cellsRef.current[pose] = { left: dataUrl, sticker: isChallenge ? STICKERS[stickerIds[pose]] : undefined };
     setCells([...cellsRef.current]);
 
     const nextPose = pose + 1;
@@ -84,18 +99,21 @@ export function useSoloCaptureSession({ poses, frameId, stickerPackId, localVide
       setStatus("composing");
       const finalCells = [...cellsRef.current];
       const footerDate = formatFooterDate(new Date(), locale);
-      const footerText = tStrip("footerChallengeSolo", { date: footerDate });
+      const footerText = isChallenge
+        ? tStrip("footerChallengeSolo", { date: footerDate, name: myName })
+        : tStrip("footerSolo", { date: footerDate, name: myName });
       composeStrip(finalCells, {
         frame: FRAMES[frameId],
         filter: "classic",
-        style: "vertical",
+        style,
         footerText,
-        challenge: { widthRatio: config.challenge.stickerWidthRatio, participants: "solo" },
+        participants: "solo",
+        challenge: isChallenge ? { widthRatio: config.challenge.stickerWidthRatio } : undefined,
       })
         .then((url) => {
           setStripUrl(url);
           setStatus("done");
-          trackChallengeCompleted();
+          if (isChallenge) trackChallengeCompleted();
         })
         .catch((error) => console.error("[capture] échec de composition de la bande:", error));
       return;
@@ -106,15 +124,23 @@ export function useSoloCaptureSession({ poses, frameId, stickerPackId, localVide
   }
 
   function triggerCapture(pose: number) {
-    if (pose === 0) {
+    if (pose === 0 && isChallenge) {
       trackChallengeSoloStarted();
       trackChallengeStarted();
     }
-    // Phase de lecture/préparation — même mécanisme qu'en duo (voir
-    // use-capture-session.ts), utile aussi en solo pour attraper un accessoire.
     setHasStarted(true);
-    setStatus("reveal");
-    setTimeout(() => scheduleCapture(pose), config.challenge.revealMs);
+
+    if (isChallenge) {
+      // Phase de lecture/préparation — même mécanisme qu'en duo (voir
+      // use-capture-session.ts), utile aussi en solo pour attraper un accessoire.
+      setStatus("reveal");
+      setTimeout(() => scheduleCapture(pose), config.challenge.revealMs);
+      return;
+    }
+
+    // Classique : rien à préparer/regarder avant la pose, décompte direct
+    // (même comportement que le duo classique).
+    scheduleCapture(pose);
   }
 
   const currentStickerId = stickerIds[currentPose];

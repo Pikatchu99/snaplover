@@ -4,9 +4,10 @@ import { CameraTile } from "@/components/room/CameraTile";
 import { Countdown } from "@/components/room/Countdown";
 import { ComposingOverlay } from "@/components/room/CaptureStage";
 import { StickerTile, StickerThumb } from "@/components/room/StickerTile";
+import { cn } from "@/lib/utils";
 import type { CaptureSessionStatus } from "@/hooks/use-capture-session";
 import type { StripCell } from "@/lib/capture/compose-strip";
-import type { StickerDefinition } from "@/types/sticker";
+import type { ChallengeMode, StickerDefinition } from "@/types/sticker";
 
 interface SoloCaptureStageProps {
   localStream: MediaStream | null;
@@ -16,6 +17,8 @@ interface SoloCaptureStageProps {
   poses: number;
   countdownMs: number;
   cells: StripCell[];
+  mode: ChallengeMode;
+  /** Uniquement en mode challenge. */
   currentSticker?: StickerDefinition;
 }
 
@@ -62,11 +65,13 @@ export function SoloCaptureStage({
   poses,
   countdownMs,
   cells,
+  mode,
   currentSticker,
 }: SoloCaptureStageProps) {
   const t = useTranslations("captureStage");
   const tLobby = useTranslations("lobby");
   const poseNumber = Math.min(currentPose + 1, poses);
+  const isChallenge = mode === "challenge";
 
   return (
     // pt-16 (pas pt-6) : même raison que Lobby.tsx (LanguageSwitcher fixe).
@@ -77,13 +82,20 @@ export function SoloCaptureStage({
         </span>
         <span className="flex items-center gap-1.5 text-xs font-semibold text-[#fb5a46]">
           <span className="size-1.5 rounded-full bg-[#fb5a46]" />
-          {t("stickerInstruction")}
+          {isChallenge ? t("stickerInstruction") : t("instruction")}
         </span>
       </div>
 
-      <div className="relative mx-auto grid w-full max-w-2xl flex-1 grid-cols-2 gap-4">
+      {/* Sans sticker (solo classique), une seule tuile caméra — pas la
+          peine d'occuper toute la largeur comme pour la grille à 2 cases. */}
+      <div
+        className={cn(
+          "relative mx-auto grid w-full flex-1 gap-4",
+          isChallenge ? "max-w-2xl grid-cols-2" : "max-w-sm grid-cols-1",
+        )}
+      >
         <CameraTile stream={localStream} label={tLobby("you")} state="ready" mirrored muted videoRef={localVideoRef} />
-        {currentSticker && <StickerTile sticker={currentSticker} />}
+        {isChallenge && currentSticker && <StickerTile sticker={currentSticker} />}
         {status === "countdown" && <Countdown remainingMs={countdownMs} poseNumber={poseNumber} poses={poses} />}
         {status === "composing" && <ComposingOverlay />}
       </div>

@@ -117,7 +117,6 @@ const en = {
     challengeTypeLabel: "Format",
     challengeTypeDuo: "Duo",
     challengeTypeSolo: "Solo",
-    soonBadge: "Coming soon",
     packLabel: "Sticker pack",
     posesLabel: "Poses per strip",
     posesOption: "{n} poses",
@@ -192,6 +191,7 @@ const en = {
     download: "Download PNG",
     share: "Share",
     newSession: "Create my own SnapLover session",
+    doItTogether: "Do it together",
     note: "You each have your own copy. The full-resolution strip is saved on each device.",
     likePrompt: "Do you like the app?",
     filters: {
@@ -221,6 +221,12 @@ const en = {
     footerWithNames: "SNAPLOVER · {date} · {host} & {guest}",
     footerGeneric: "SNAPLOVER · {date} · TOGETHER",
     footerChallenge: "SNAPLOVER CHALLENGE · {date} · {host} & {guest}",
+    footerChallengeSolo: "SNAPLOVER CHALLENGE · {date}",
+  },
+  solo: {
+    prepTitle: "Ready to take on the challenge?",
+    prepSummary: "{n} poses · {pack} pack",
+    launch: "Launch the challenge",
   },
   participant: {
     defaultHost: "Host",

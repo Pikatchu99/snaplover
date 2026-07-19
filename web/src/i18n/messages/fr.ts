@@ -118,7 +118,6 @@ const fr = {
     challengeTypeLabel: "Format",
     challengeTypeDuo: "Duo",
     challengeTypeSolo: "Solo",
-    soonBadge: "Bientôt",
     packLabel: "Pack de stickers",
     posesLabel: "Poses par bande",
     posesOption: "{n} poses",
@@ -194,6 +193,7 @@ const fr = {
     download: "Télécharger PNG",
     share: "Partager",
     newSession: "Créer ma propre séance SnapLover",
+    doItTogether: "Le faire à deux",
     note: "Vous avez chacun votre copie. La bande pleine résolution est enregistrée sur chaque appareil.",
     likePrompt: "Vous aimez l'application ?",
     filters: {
@@ -224,6 +224,12 @@ const fr = {
     footerWithNames: "SNAPLOVER · {date} · {host} & {guest}",
     footerGeneric: "SNAPLOVER · {date} · À DEUX",
     footerChallenge: "SNAPLOVER CHALLENGE · {date} · {host} & {guest}",
+    footerChallengeSolo: "SNAPLOVER CHALLENGE · {date}",
+  },
+  solo: {
+    prepTitle: "Prêt·e à relever le défi ?",
+    prepSummary: "{n} poses · pack {pack}",
+    launch: "Lancer le challenge",
   },
   participant: {
     defaultHost: "Hôte",

@@ -28,8 +28,13 @@ export const config = {
     label: "snaplover",
   },
   strip: {
-    gap: 12,
-    margin: 30,
+    // Marge/gap épaissis (étaient 12/30) pour que le cadre se remarque
+    // vraiment autour et entre les photos, pas juste un filet — retour
+    // utilisateur après comparaison avec une vraie bande photobooth.
+    gap: 22,
+    margin: 48,
+    /** Rayon des coins arrondis de chaque case (photo ou sticker). */
+    cellCornerRadius: 14,
     footerHeight: 54,
     layout: {
       vertical: { cellWidth: 450, cellHeight: 600, columns: 1 },

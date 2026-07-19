@@ -29,6 +29,17 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
+function clipRoundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+  ctx.clip();
+}
+
 function drawCover(ctx: CanvasRenderingContext2D, img: HTMLImageElement, x: number, y: number, w: number, h: number) {
   const imageRatio = img.width / img.height;
   const targetRatio = w / h;
@@ -52,6 +63,8 @@ function drawCover(ctx: CanvasRenderingContext2D, img: HTMLImageElement, x: numb
 // Recadre l'image ("cover") sur un canvas hors-écran de la taille cible, puis
 // applique le filtre pixel par pixel dessus avant de le reporter sur le
 // canvas final — voir lib/capture/filters.ts pour pourquoi pas ctx.filter.
+// Coins arrondis (config.strip.cellCornerRadius) : chaque photo se détache
+// nettement du cadre plutôt que de s'y fondre en rectangle brut.
 function drawCoverFiltered(
   ctx: CanvasRenderingContext2D,
   img: HTMLImageElement,
@@ -61,9 +74,13 @@ function drawCoverFiltered(
   h: number,
   filter: FilterId,
 ) {
+  ctx.save();
+  clipRoundRect(ctx, x, y, w, h, config.strip.cellCornerRadius);
+
   const op = FILTER_PIXEL_OPS[filter];
   if (!op) {
     drawCover(ctx, img, x, y, w, h);
+    ctx.restore();
     return;
   }
 
@@ -79,6 +96,7 @@ function drawCoverFiltered(
   offCtx.putImageData(imageData, 0, 0);
 
   ctx.drawImage(offscreen, x, y);
+  ctx.restore();
 }
 
 // Compose la bande complète, look rétro-cabine : chaque case = une pose,
@@ -106,7 +124,10 @@ export async function composeStrip(cells: StripCell[], options: ComposeOptions):
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("2D canvas context unavailable");
 
-  frame.paint(ctx, canvas.width, canvas.height, margin);
+  // Frontière entre chaque colonne de poses (style grille uniquement) — voir
+  // FrameCellLayout, utilisé par le cadre `film` pour ses perforations.
+  const columnBoundaries = Array.from({ length: columns - 1 }, (_, i) => margin + (i + 1) * poseWidth + i * gap + gap / 2);
+  frame.paint(ctx, canvas.width, canvas.height, margin, { columnBoundaries });
 
   loadedCells.forEach(({ left, right }, index) => {
     const col = index % columns;

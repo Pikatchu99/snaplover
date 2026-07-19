@@ -151,9 +151,10 @@ const fr = {
     turnUnavailableMessage:
       "Vos deux caméras n'arrivent pas à se parler directement, et le service gratuit qui sert de relais dans ce cas ne répond plus (son quota du mois est sûrement atteint). Je m'en occupe. Réessayez un peu plus tard, ou avec un autre réseau (le direct fonctionne parfois même sans lui).",
     challengeTutorial: {
-      title: "Voici ce que vous allez faire",
-      intro:
-        "Vous allez reproduire ces {n} stickers, chacun votre tour à l'écran. Appuyez sur le bouton pour lancer, un compte à rebours démarre juste après.",
+      titleHost: "{name} vient d'arriver — montre-lui comment on fait",
+      titleGuest: "{name} t'a invité·e à reproduire ces mèmes. Tu peux faire mieux ?",
+      stepCounter: "{current} / {total}",
+      next: "Suivant",
       gotIt: "J'ai compris",
     },
     status: {

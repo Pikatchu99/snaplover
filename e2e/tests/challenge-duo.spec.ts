@@ -24,14 +24,20 @@ test("challenge duo : connexion → sticker affiché → bande composée", async
   await gotoRoom(a, room, { poses: 3, mode: "challenge", pack: "cats" });
   await gotoRoom(b, room, { mode: "challenge", pack: "cats" });
 
-  // Tuto "voici ce que vous allez faire" (aperçu des stickers de la séance) —
-  // affiché aux deux pairs dès la connexion (remplace l'écran "2 connectés"
-  // habituel en mode challenge, voir Lobby.tsx), doit être fermé avant que le
-  // bouton de lancement ne redevienne accessible.
-  await expect(a.getByText("Voici ce que vous allez faire")).toBeVisible({ timeout: 20_000 });
-  await expect(b.getByText("Voici ce que vous allez faire")).toBeVisible({ timeout: 20_000 });
-  await a.getByRole("button", { name: "J'ai compris" }).click();
-  await b.getByRole("button", { name: "J'ai compris" }).click();
+  // Tuto (aperçu des stickers de la séance, un par un) — affiché aux deux
+  // pairs dès la connexion (remplace l'écran "2 connectés" habituel en mode
+  // challenge, voir Lobby.tsx). Titre différent hôte/invité ("Testeur" étant
+  // le nom des deux côtés ici, non déterministe lequel est hôte — voir
+  // commentaire plus haut), donc on vérifie le compteur d'étape plutôt que le
+  // titre : 3 poses → 2 clics "Suivant" puis "J'ai compris".
+  for (const page of [a, b]) {
+    await expect(page.getByText("1 / 3")).toBeVisible({ timeout: 20_000 });
+    await page.getByRole("button", { name: "Suivant" }).click();
+    await expect(page.getByText("2 / 3")).toBeVisible();
+    await page.getByRole("button", { name: "Suivant" }).click();
+    await expect(page.getByText("3 / 3")).toBeVisible();
+    await page.getByRole("button", { name: "J'ai compris" }).click();
+  }
 
   await launchSession(a, b);
 

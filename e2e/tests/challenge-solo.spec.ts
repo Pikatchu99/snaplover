@@ -4,7 +4,7 @@ import { test, expect } from "@playwright/test";
 // locale, sans room ni WebRTC — premier test de la suite à un seul contexte
 // de navigateur (pas de pair à connecter).
 test("challenge solo : caméra prête → sticker affiché → bande composée", async ({ page }) => {
-  await page.goto("/solo?poses=3&frame=classic&pack=cats");
+  await page.goto("/solo?poses=3&frame=classic&mode=challenge&pack=cats&name=Testeur");
 
   await expect(page.getByRole("button", { name: "Lancer le challenge" })).toBeEnabled({ timeout: 20_000 });
   await page.getByRole("button", { name: "Lancer le challenge" }).click();

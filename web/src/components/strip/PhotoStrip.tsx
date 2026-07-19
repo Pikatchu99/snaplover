@@ -19,7 +19,8 @@ interface PhotoStripProps {
   initialStripUrl: string;
   frameId: FrameId;
   style: StripStyle;
-  names: { host: string; guest: string };
+  /** Absent en challenge solo (une seule personne, pas de prénoms à afficher). */
+  names?: { host: string; guest: string };
   mode: ChallengeMode;
 }
 
@@ -35,6 +36,7 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, names, mode
   const [stripUrl, setStripUrl] = useState(initialStripUrl);
   const [liked, setLiked] = useState(false);
   const isChallenge = mode === "challenge";
+  const isSolo = isChallenge && !names;
 
   function handleLike() {
     if (liked) return;
@@ -45,15 +47,17 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, names, mode
   useEffect(() => {
     let cancelled = false;
     const footerDate = formatFooterDate(new Date(), locale);
-    const footerText = isChallenge
-      ? tStrip("footerChallenge", { date: footerDate, host: names.host, guest: names.guest })
-      : tStrip("footerWithNames", { date: footerDate, host: names.host, guest: names.guest });
+    const footerText = isSolo
+      ? tStrip("footerChallengeSolo", { date: footerDate })
+      : isChallenge
+        ? tStrip("footerChallenge", { date: footerDate, host: names?.host ?? "", guest: names?.guest ?? "" })
+        : tStrip("footerWithNames", { date: footerDate, host: names?.host ?? "", guest: names?.guest ?? "" });
     composeStrip(cells, {
       frame: FRAMES[frameId],
       filter,
       style,
       footerText,
-      challenge: isChallenge ? { widthRatio: config.challenge.stickerWidthRatio } : undefined,
+      challenge: isChallenge ? { widthRatio: config.challenge.stickerWidthRatio, participants: isSolo ? "solo" : "duo" } : undefined,
     }).then((url) => {
       if (!cancelled) setStripUrl(url);
     });
@@ -153,6 +157,17 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, names, mode
         <Plus className="size-4" />
         {t("newSession")}
       </Link>
+
+      {/* Après un challenge solo : suggérer le format duo, décision explicite
+          du spec (docs/STICKER-CHALLENGES.md) — pas pertinent en classique/duo. */}
+      {isSolo && (
+        <Link
+          href="/create?mode=challenge&type=duo"
+          className="text-sm text-[#8c8378] underline-offset-2 hover:text-[#1c1712] hover:underline"
+        >
+          {t("doItTogether")}
+        </Link>
+      )}
 
       <p className="max-w-md text-center text-xs text-[#8c8378]">{t("note")}</p>
     </div>

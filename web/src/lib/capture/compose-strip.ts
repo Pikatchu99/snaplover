@@ -4,10 +4,10 @@ import { FILTER_PIXEL_OPS } from "@/lib/capture/filters";
 import { config } from "@/lib/config";
 
 export interface StripCell {
-  /** Moitié gauche = hôte (initiator). */
+  /** Moitié gauche = hôte (initiator), ou l'unique photo en challenge solo. */
   left: string;
-  /** Moitié droite = invité (peer). */
-  right: string;
+  /** Moitié droite = invité (peer) — absent en challenge solo (une seule personne). */
+  right?: string;
   /** Sticker à afficher au centre de la pose — uniquement en mode challenge. */
   sticker?: StickerDefinition;
 }
@@ -21,8 +21,9 @@ export interface ComposeOptions {
    * lib/capture/format-footer-date.ts. Cette fonction ne connaît pas la
    * locale courante, donc jamais de i18n ici, seulement du dessin. */
   footerText: string;
-  /** Présent uniquement en mode challenge — active la colonne sticker centrale. */
-  challenge?: { widthRatio: number };
+  /** Présent uniquement en mode challenge — active la colonne sticker centrale.
+   * `participants: "solo"` = layout `moi | sticker` (pas de `right`). */
+  challenge?: { widthRatio: number; participants: "duo" | "solo" };
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -121,17 +122,23 @@ export async function composeStrip(cells: StripCell[], options: ComposeOptions):
   const { cellWidth, cellHeight, columns } = config.strip.layout[style];
   const { gap, margin, footerHeight } = config.strip;
 
+  const isSolo = challenge?.participants === "solo";
+
   const loadedCells = await Promise.all(
     cells.map(async (cell) => ({
       left: await loadImage(cell.left),
-      right: await loadImage(cell.right),
+      right: cell.right ? await loadImage(cell.right) : undefined,
       sticker: cell.sticker,
     })),
   );
 
   const rows = Math.ceil(loadedCells.length / columns);
   const stickerWidth = challenge ? cellWidth * challenge.widthRatio : 0;
-  const poseWidth = challenge ? cellWidth * 2 + stickerWidth + gap * 2 : cellWidth * 2 + gap;
+  const poseWidth = !challenge
+    ? cellWidth * 2 + gap
+    : isSolo
+      ? cellWidth + stickerWidth + gap
+      : cellWidth * 2 + stickerWidth + gap * 2;
 
   const canvas = document.createElement("canvas");
   canvas.width = margin * 2 + poseWidth * columns + gap * (columns - 1);
@@ -154,8 +161,8 @@ export async function composeStrip(cells: StripCell[], options: ComposeOptions):
     if (challenge && sticker) {
       const stickerX = x + cellWidth + gap;
       await paintStickerCell(ctx, sticker, stickerX, y, stickerWidth, cellHeight);
-      drawCoverFiltered(ctx, right, stickerX + stickerWidth + gap, y, cellWidth, cellHeight, filter);
-    } else {
+      if (right) drawCoverFiltered(ctx, right, stickerX + stickerWidth + gap, y, cellWidth, cellHeight, filter);
+    } else if (right) {
       drawCoverFiltered(ctx, right, x + cellWidth + gap, y, cellWidth, cellHeight, filter);
     }
   }

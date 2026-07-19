@@ -1,4 +1,5 @@
 import type { FilterId, FrameDefinition, StripStyle } from "@/types/frame";
+import type { StickerDefinition } from "@/types/sticker";
 import { FILTER_PIXEL_OPS } from "@/lib/capture/filters";
 import { config } from "@/lib/config";
 
@@ -7,6 +8,8 @@ export interface StripCell {
   left: string;
   /** Moitié droite = invité (peer). */
   right: string;
+  /** Sticker à afficher au centre de la pose — uniquement en mode challenge. */
+  sticker?: StickerDefinition;
 }
 
 export interface ComposeOptions {
@@ -18,6 +21,8 @@ export interface ComposeOptions {
    * lib/capture/format-footer-date.ts. Cette fonction ne connaît pas la
    * locale courante, donc jamais de i18n ici, seulement du dessin. */
   footerText: string;
+  /** Présent uniquement en mode challenge — active la colonne sticker centrale. */
+  challenge?: { widthRatio: number };
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -81,11 +86,37 @@ function drawCoverFiltered(
   ctx.drawImage(offscreen, x, y);
 }
 
+// Dessine un sticker (canvas carré, voir lib/stickers/paint.ts) centré dans
+// une cellule portrait, avec un fond carte discret — contrairement aux
+// photos capturées, un sticker n'est jamais recadré en "cover".
+function paintStickerCell(
+  ctx: CanvasRenderingContext2D,
+  sticker: StickerDefinition,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+) {
+  ctx.fillStyle = "rgba(255,255,255,0.08)";
+  ctx.fillRect(x, y, w, h);
+
+  const size = Math.min(w, h);
+  const offscreen = document.createElement("canvas");
+  offscreen.width = size;
+  offscreen.height = size;
+  const offCtx = offscreen.getContext("2d");
+  if (!offCtx) throw new Error("2D canvas context unavailable");
+  sticker.paint(offCtx, size);
+
+  ctx.drawImage(offscreen, x + (w - size) / 2, y + (h - size) / 2, size, size);
+}
+
 // Compose la bande complète, look rétro-cabine : chaque case = une pose,
-// hôte à gauche / invité à droite, marges et footer "SNAPROOM · DATE · À DEUX"
-// habillés par le cadre choisi. Voir SNAPROOM-SPEC.md §10, §13.
+// hôte à gauche / invité à droite (+ sticker au centre en mode challenge),
+// marges et footer habillés par le cadre choisi. Voir SNAPROOM-SPEC.md §10,
+// §13, et docs/STICKER-CHALLENGES.md pour le mode challenge.
 export async function composeStrip(cells: StripCell[], options: ComposeOptions): Promise<string> {
-  const { frame, filter, style = "vertical", footerText } = options;
+  const { frame, filter, style = "vertical", footerText, challenge } = options;
   const { cellWidth, cellHeight, columns } = config.strip.layout[style];
   const { gap, margin, footerHeight } = config.strip;
 
@@ -93,11 +124,13 @@ export async function composeStrip(cells: StripCell[], options: ComposeOptions):
     cells.map(async (cell) => ({
       left: await loadImage(cell.left),
       right: await loadImage(cell.right),
+      sticker: cell.sticker,
     })),
   );
 
   const rows = Math.ceil(loadedCells.length / columns);
-  const poseWidth = cellWidth * 2 + gap;
+  const stickerWidth = challenge ? cellWidth * challenge.widthRatio : 0;
+  const poseWidth = challenge ? cellWidth * 2 + stickerWidth + gap * 2 : cellWidth * 2 + gap;
 
   const canvas = document.createElement("canvas");
   canvas.width = margin * 2 + poseWidth * columns + gap * (columns - 1);
@@ -108,13 +141,20 @@ export async function composeStrip(cells: StripCell[], options: ComposeOptions):
 
   frame.paint(ctx, canvas.width, canvas.height, margin);
 
-  loadedCells.forEach(({ left, right }, index) => {
+  loadedCells.forEach(({ left, right, sticker }, index) => {
     const col = index % columns;
     const row = Math.floor(index / columns);
     const x = margin + col * (poseWidth + gap);
     const y = margin + row * (cellHeight + gap);
     drawCoverFiltered(ctx, left, x, y, cellWidth, cellHeight, filter);
-    drawCoverFiltered(ctx, right, x + cellWidth + gap, y, cellWidth, cellHeight, filter);
+
+    if (challenge && sticker) {
+      const stickerX = x + cellWidth + gap;
+      paintStickerCell(ctx, sticker, stickerX, y, stickerWidth, cellHeight);
+      drawCoverFiltered(ctx, right, stickerX + stickerWidth + gap, y, cellWidth, cellHeight, filter);
+    } else {
+      drawCoverFiltered(ctx, right, x + cellWidth + gap, y, cellWidth, cellHeight, filter);
+    }
   });
 
   ctx.fillStyle = frame.footerTextColor;

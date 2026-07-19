@@ -12,8 +12,12 @@ import { composeStrip, type StripCell } from "@/lib/capture/compose-strip";
 import { formatFooterDate } from "@/lib/capture/format-footer-date";
 import { playShutter } from "@/lib/audio/sound-effects";
 import { FRAMES } from "@/lib/frames/frame-registry";
+import { STICKERS } from "@/lib/stickers/sticker-registry";
+import { pickStickers } from "@/lib/stickers/pick-stickers";
 import { config } from "@/lib/config";
+import { trackChallengeCompleted, trackChallengeDuoStarted, trackChallengeStarted } from "@/lib/analytics";
 import type { FrameId, StripStyle } from "@/types/frame";
+import type { ChallengeMode, StickerId, StickerPackId } from "@/types/sticker";
 
 export type CaptureSessionStatus = "idle" | "countdown" | "capturing" | "composing" | "done";
 
@@ -23,6 +27,9 @@ interface UseCaptureSessionOptions {
   poses: number;
   frameId: FrameId;
   style: StripStyle;
+  mode: ChallengeMode;
+  /** Présent uniquement quand mode === "challenge". */
+  stickerPackId?: StickerPackId;
   /** Prénom local (résolu avec fallback avant d'arriver ici — voir RoomClient). */
   myName: string;
   localVideoRef: RefObject<HTMLVideoElement | null>;
@@ -37,6 +44,8 @@ export function useCaptureSession({
   poses,
   frameId,
   style,
+  mode,
+  stickerPackId,
   myName,
   localVideoRef,
 }: UseCaptureSessionOptions) {
@@ -71,17 +80,34 @@ export function useCaptureSession({
   const [effectivePoses, setEffectivePosesState] = useState(poses);
   const [effectiveFrameId, setEffectiveFrameIdState] = useState(frameId);
   const [effectiveStyle, setEffectiveStyleState] = useState(style);
+  const [effectiveMode, setEffectiveModeState] = useState(mode);
+  const [effectiveStickerPackId, setEffectiveStickerPackIdState] = useState(stickerPackId);
+  const [stickerIds, setStickerIdsState] = useState<StickerId[]>([]);
   const effectivePosesRef = useRef(poses);
   const effectiveFrameIdRef = useRef(frameId);
   const effectiveStyleRef = useRef(style);
+  const effectiveModeRef = useRef(mode);
+  const stickerIdsRef = useRef<StickerId[]>([]);
 
-  function applyConfig(nextPoses: number, nextFrameId: FrameId, nextStyle: StripStyle) {
+  function applyConfig(
+    nextPoses: number,
+    nextFrameId: FrameId,
+    nextStyle: StripStyle,
+    nextMode: ChallengeMode,
+    nextStickerPackId: StickerPackId | undefined,
+    nextStickerIds: StickerId[],
+  ) {
     effectivePosesRef.current = nextPoses;
     effectiveFrameIdRef.current = nextFrameId;
     effectiveStyleRef.current = nextStyle;
+    effectiveModeRef.current = nextMode;
+    stickerIdsRef.current = nextStickerIds;
     setEffectivePosesState(nextPoses);
     setEffectiveFrameIdState(nextFrameId);
     setEffectiveStyleState(nextStyle);
+    setEffectiveModeState(nextMode);
+    setEffectiveStickerPackIdState(nextStickerPackId);
+    setStickerIdsState(nextStickerIds);
   }
 
   const channelRef = useRef<RealtimeChannel | null>(null);
@@ -120,11 +146,28 @@ export function useCaptureSession({
         // coupure) est déjà attaché côté React à ce moment précis.
         peerNameRef.current = message.name;
         if (isInitiator) {
-          channel.send({ t: "config", poses, frameId, style, hostName: myName });
+          // Tirage des stickers une seule fois, jamais recalculé sur un
+          // second "hello" (reconnexion) — sinon les poses déjà jouées se
+          // verraient réassigner un autre sticker que celui affiché pendant
+          // la capture (même précaution que pendingPoseRef ci-dessus).
+          if (mode === "challenge" && stickerIdsRef.current.length === 0) {
+            stickerIdsRef.current = pickStickers(stickerPackId ?? "couple", poses);
+            setStickerIdsState(stickerIdsRef.current);
+          }
+          channel.send({
+            t: "config",
+            poses,
+            frameId,
+            style,
+            hostName: myName,
+            mode,
+            stickerPackId,
+            stickerIds: mode === "challenge" ? stickerIdsRef.current : undefined,
+          });
           if (pendingPoseRef.current != null) triggerCapture(pendingPoseRef.current);
         }
       } else if (message.t === "config") {
-        applyConfig(message.poses, message.frameId, message.style);
+        applyConfig(message.poses, message.frameId, message.style, message.mode, message.stickerPackId, message.stickerIds ?? []);
         peerNameRef.current = message.hostName;
       } else if (message.t === "capture") scheduleCapture(message.pose, message.fireAtHost);
       else receiveImage(message);
@@ -241,6 +284,7 @@ export function useCaptureSession({
     cellsRef.current[pose] = {
       left: isInitiator ? myHalfRef.current : peerHalfRef.current,
       right: isInitiator ? peerHalfRef.current : myHalfRef.current,
+      sticker: effectiveModeRef.current === "challenge" ? STICKERS[stickerIdsRef.current[pose]] : undefined,
     };
     // Reflété en state à chaque pose (pas seulement à la toute fin) — permet
     // d'afficher un aperçu live des poses déjà prises pendant la séance.
@@ -259,16 +303,21 @@ export function useCaptureSession({
       const finalCells = [...cellsRef.current];
       const { host, guest } = resolveNames();
       const footerDate = formatFooterDate(new Date(), locale);
-      const footerText = tStrip("footerWithNames", { date: footerDate, host, guest });
+      const isChallenge = effectiveModeRef.current === "challenge";
+      const footerText = isChallenge
+        ? tStrip("footerChallenge", { date: footerDate, host, guest })
+        : tStrip("footerWithNames", { date: footerDate, host, guest });
       composeStrip(finalCells, {
         frame: FRAMES[effectiveFrameIdRef.current],
         filter: "classic",
         style: effectiveStyleRef.current,
         footerText,
+        challenge: isChallenge ? { widthRatio: config.challenge.stickerWidthRatio } : undefined,
       })
         .then((url) => {
           setStripUrl(url);
           setStatus("done");
+          if (isChallenge) trackChallengeCompleted();
         })
         .catch((error) => console.error("[capture] échec de composition de la bande:", error));
       return;
@@ -289,12 +338,18 @@ export function useCaptureSession({
     }
     pendingPoseRef.current = null;
     setAwaitingPeer(false);
+    if (pose === 0 && mode === "challenge") {
+      trackChallengeDuoStarted();
+      trackChallengeStarted();
+    }
     const fireAtHost = Date.now() + config.capture.leadMs;
     channelRef.current.send({ t: "capture", pose, fireAtHost });
     scheduleCapture(pose, fireAtHost);
   }
 
   const { host: hostName, guest: guestName } = resolveNames();
+  const currentStickerId = stickerIds[currentPose];
+  const currentSticker = currentStickerId ? STICKERS[currentStickerId] : undefined;
 
   return {
     status,
@@ -303,6 +358,9 @@ export function useCaptureSession({
     poses: effectivePoses,
     frameId: effectiveFrameId,
     style: effectiveStyle,
+    mode: effectiveMode,
+    stickerPackId: effectiveStickerPackId,
+    currentSticker,
     countdownMs,
     stripUrl,
     cells,

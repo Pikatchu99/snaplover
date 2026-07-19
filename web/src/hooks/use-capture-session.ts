@@ -318,7 +318,7 @@ export function useCaptureSession({
         filter: "classic",
         style: effectiveStyleRef.current,
         footerText,
-        challenge: isChallenge ? { widthRatio: config.challenge.stickerWidthRatio, participants: "duo" } : undefined,
+        challenge: isChallenge ? { widthRatio: config.challenge.stickerWidthRatio } : undefined,
       })
         .then((url) => {
           setStripUrl(url);

@@ -19,8 +19,10 @@ interface PhotoStripProps {
   initialStripUrl: string;
   frameId: FrameId;
   style: StripStyle;
-  /** Absent en challenge solo (une seule personne, pas de prénoms à afficher). */
+  /** Duo uniquement (RoomClient) — prénoms des deux participants. */
   names?: { host: string; guest: string };
+  /** Solo uniquement (SoloClient) — signature du footer. */
+  soloName?: string;
   mode: ChallengeMode;
 }
 
@@ -28,7 +30,7 @@ interface PhotoStripProps {
 // Fond clair (comme landing/create) — seuls lobby/séance sont en sombre.
 // Cadres/thèmes (§13) : voir lib/frames/frame-registry.ts — packs illustrés
 // pas encore disponibles (assets manquants).
-export function PhotoStrip({ cells, initialStripUrl, frameId, style, names, mode }: PhotoStripProps) {
+export function PhotoStrip({ cells, initialStripUrl, frameId, style, names, soloName, mode }: PhotoStripProps) {
   const t = useTranslations("photoStrip");
   const tStrip = useTranslations("strip");
   const locale = useLocale();
@@ -36,7 +38,9 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, names, mode
   const [stripUrl, setStripUrl] = useState(initialStripUrl);
   const [liked, setLiked] = useState(false);
   const isChallenge = mode === "challenge";
-  const isSolo = isChallenge && !names;
+  // Absent aussi bien en challenge solo qu'en solo classique (docs/STICKER-CHALLENGES.md
+  // + extension solo classique) — une seule personne, aucun prénom de partenaire à afficher.
+  const isSolo = !names;
 
   function handleLike() {
     if (liked) return;
@@ -48,7 +52,9 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, names, mode
     let cancelled = false;
     const footerDate = formatFooterDate(new Date(), locale);
     const footerText = isSolo
-      ? tStrip("footerChallengeSolo", { date: footerDate })
+      ? isChallenge
+        ? tStrip("footerChallengeSolo", { date: footerDate, name: soloName ?? "" })
+        : tStrip("footerSolo", { date: footerDate, name: soloName ?? "" })
       : isChallenge
         ? tStrip("footerChallenge", { date: footerDate, host: names?.host ?? "", guest: names?.guest ?? "" })
         : tStrip("footerWithNames", { date: footerDate, host: names?.host ?? "", guest: names?.guest ?? "" });
@@ -57,7 +63,8 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, names, mode
       filter,
       style,
       footerText,
-      challenge: isChallenge ? { widthRatio: config.challenge.stickerWidthRatio, participants: isSolo ? "solo" : "duo" } : undefined,
+      participants: isSolo ? "solo" : "duo",
+      challenge: isChallenge ? { widthRatio: config.challenge.stickerWidthRatio } : undefined,
     }).then((url) => {
       if (!cancelled) setStripUrl(url);
     });
@@ -158,11 +165,12 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, names, mode
         {t("newSession")}
       </Link>
 
-      {/* Après un challenge solo : suggérer le format duo, décision explicite
-          du spec (docs/STICKER-CHALLENGES.md) — pas pertinent en classique/duo. */}
+      {/* Après une séance solo (classique ou challenge) : suggérer le format
+          duo équivalent, décision explicite du spec (docs/STICKER-CHALLENGES.md)
+          — pas pertinent une fois déjà en duo. */}
       {isSolo && (
         <Link
-          href="/create?mode=challenge&type=duo"
+          href={`/create?mode=${mode}&type=duo`}
           className="text-sm text-[#8c8378] underline-offset-2 hover:text-[#1c1712] hover:underline"
         >
           {t("doItTogether")}

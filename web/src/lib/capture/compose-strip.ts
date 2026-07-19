@@ -21,9 +21,11 @@ export interface ComposeOptions {
    * lib/capture/format-footer-date.ts. Cette fonction ne connaît pas la
    * locale courante, donc jamais de i18n ici, seulement du dessin. */
   footerText: string;
-  /** Présent uniquement en mode challenge — active la colonne sticker centrale.
-   * `participants: "solo"` = layout `moi | sticker` (pas de `right`). */
-  challenge?: { widthRatio: number; participants: "duo" | "solo" };
+  /** "duo" (défaut) = 2 photos par pose (StripCell.right requis), "solo" = 1
+   * seule (StripCell.left uniquement) — indépendant du mode challenge. */
+  participants?: "duo" | "solo";
+  /** Présent uniquement en mode challenge — active la colonne sticker centrale. */
+  challenge?: { widthRatio: number };
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -118,11 +120,11 @@ async function paintStickerCell(
 // marges et footer habillés par le cadre choisi. Voir SNAPROOM-SPEC.md §10,
 // §13, et docs/STICKER-CHALLENGES.md pour le mode challenge.
 export async function composeStrip(cells: StripCell[], options: ComposeOptions): Promise<string> {
-  const { frame, filter, style = "vertical", footerText, challenge } = options;
+  const { frame, filter, style = "vertical", footerText, participants = "duo", challenge } = options;
   const { cellWidth, cellHeight, columns } = config.strip.layout[style];
   const { gap, margin, footerHeight } = config.strip;
 
-  const isSolo = challenge?.participants === "solo";
+  const isSolo = participants === "solo";
 
   const loadedCells = await Promise.all(
     cells.map(async (cell) => ({
@@ -133,12 +135,13 @@ export async function composeStrip(cells: StripCell[], options: ComposeOptions):
   );
 
   const rows = Math.ceil(loadedCells.length / columns);
+  const photoCount = isSolo ? 1 : 2;
   const stickerWidth = challenge ? cellWidth * challenge.widthRatio : 0;
-  const poseWidth = !challenge
-    ? cellWidth * 2 + gap
-    : isSolo
-      ? cellWidth + stickerWidth + gap
-      : cellWidth * 2 + stickerWidth + gap * 2;
+  // Nombre d'espaces internes à la pose = (nb de slots - 1) : 1 photo seule
+  // (solo classique) n'a besoin d'aucun gap, 2 photos (duo classique) en ont
+  // un, +1 de plus si un sticker s'intercale (mode challenge).
+  const slots = photoCount + (challenge ? 1 : 0);
+  const poseWidth = cellWidth * photoCount + stickerWidth + gap * (slots - 1);
 
   const canvas = document.createElement("canvas");
   canvas.width = margin * 2 + poseWidth * columns + gap * (columns - 1);

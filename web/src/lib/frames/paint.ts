@@ -130,22 +130,31 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.closePath();
 }
 
-// Film : fond très sombre + perforations façon pellicule 35mm sur les
-// bords, le vrai motif demandé plutôt qu'un simple aplat.
-export function film(ctx: CanvasRenderingContext2D, width: number, height: number, margin: number) {
+// Film : fond très sombre + perforations façon pellicule 35mm sur les bords
+// ET entre chaque colonne de poses (cellLayout, en style grille) — deux
+// bandes accolées ont chacune leurs propres perforations, pas juste celles
+// des bords extérieurs (retour utilisateur après comparaison avec une vraie
+// bande photobooth).
+export function film(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  margin: number,
+  cellLayout?: { columnBoundaries: number[] },
+) {
   ctx.fillStyle = "#161319";
   ctx.fillRect(0, 0, width, height);
 
   const holeWidth = Math.max(6, margin * 0.3);
   const holeHeight = holeWidth * 1.4;
   const gap = holeHeight * 0.8;
-  const centerX = margin / 2;
+  const centerXs = [margin / 2, width - margin / 2, ...(cellLayout?.columnBoundaries ?? [])];
 
   ctx.fillStyle = "#3a3640";
-  for (let y = margin / 2; y < height - margin / 2; y += holeHeight + gap) {
-    roundRect(ctx, centerX - holeWidth / 2, y, holeWidth, holeHeight, 2);
-    ctx.fill();
-    roundRect(ctx, width - centerX - holeWidth / 2, y, holeWidth, holeHeight, 2);
-    ctx.fill();
+  for (const centerX of centerXs) {
+    for (let y = margin / 2; y < height - margin / 2; y += holeHeight + gap) {
+      roundRect(ctx, centerX - holeWidth / 2, y, holeWidth, holeHeight, 2);
+      ctx.fill();
+    }
   }
 }

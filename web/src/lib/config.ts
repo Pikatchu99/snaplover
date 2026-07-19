@@ -28,8 +28,13 @@ export const config = {
     label: "snaplover",
   },
   strip: {
-    gap: 12,
-    margin: 30,
+    // Marge/gap épaissis (étaient 12/30) pour que le cadre se remarque
+    // vraiment autour et entre les photos, pas juste un filet — retour
+    // utilisateur après comparaison avec une vraie bande photobooth.
+    gap: 22,
+    margin: 48,
+    /** Rayon des coins arrondis de chaque case (photo ou sticker). */
+    cellCornerRadius: 14,
     footerHeight: 54,
     layout: {
       vertical: { cellWidth: 450, cellHeight: 600, columns: 1 },
@@ -47,5 +52,15 @@ export const config = {
   },
   participant: {
     nameMaxLength: 24,
+  },
+  challenge: {
+    /** Largeur colonne sticker relative à cellWidth — voir docs/STICKER-CHALLENGES.md
+     * (décision produit : même taille que les photos, ou au maximum 25% plus petit). */
+    stickerWidthRatio: 1,
+    /** Phase de lecture/préparation (sticker affiché, pas de décompte) avant
+     * le 3·2·1 — voir docs/STICKER-CHALLENGES.md "Décisions validées". Fixe
+     * pour tout le monde au MVP ; à rendre configurable si trop court/long
+     * selon les stickers une fois testé en usage réel. */
+    revealMs: 4000,
   },
 } as const;

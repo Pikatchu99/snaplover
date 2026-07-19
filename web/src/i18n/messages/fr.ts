@@ -85,7 +85,10 @@ const fr = {
           question: "Est-ce que je peux télécharger la bande ?",
           answer: "Oui, en PNG, directement depuis l'écran de résultat.",
         },
-        { question: "Est-ce que SnapLover est gratuit ?", answer: "Oui, SnapLover est gratuit et open source." },
+        {
+          question: "Est-ce que SnapLover est gratuit ?",
+          answer: "Une version de base est gratuite, et le cœur technique est open source.",
+        },
         {
           question: "Pourquoi autoriser la caméra ?",
           answer:
@@ -112,6 +115,15 @@ const fr = {
     nameLabel: "Votre prénom",
     namePlaceholder: "Ex. Camille",
     missingName: "Entrez votre prénom.",
+    participantsLabel: "Participants",
+    participantsDuo: "Duo",
+    participantsSolo: "Solo",
+    modeLabel: "Mode",
+    modeOptionClassic: "Classique",
+    modeOptionChallenge: "Challenge",
+    packLabel: "Pack de stickers",
+    customizeLabel: "Personnaliser",
+    customizeSummary: "{n} poses · {frame}",
     posesLabel: "Poses par bande",
     posesOption: "{n} poses",
     styleLabel: "Style de bande",
@@ -119,6 +131,7 @@ const fr = {
     styleGrid: "Grille 2×2",
     frameLabel: "Cadre",
     submit: "Créer et copier le lien",
+    submitSolo: "Commencer ma séance",
     previewLabel: "APERÇU",
   },
   lobby: {
@@ -137,6 +150,12 @@ const fr = {
     invalidRoomJoinCta: "Saisir un code",
     turnUnavailableMessage:
       "Vos deux caméras n'arrivent pas à se parler directement, et le service gratuit qui sert de relais dans ce cas ne répond plus (son quota du mois est sûrement atteint). Je m'en occupe. Réessayez un peu plus tard, ou avec un autre réseau (le direct fonctionne parfois même sans lui).",
+    challengeTutorial: {
+      title: "Voici ce que vous allez faire",
+      intro:
+        "Vous allez reproduire ces {n} stickers, chacun votre tour à l'écran. Appuyez sur le bouton pour lancer, un compte à rebours démarre juste après.",
+      gotIt: "J'ai compris",
+    },
     status: {
       requestingCamera: "Activation de votre caméra…",
       cameraDenied: "Caméra bloquée",
@@ -158,6 +177,8 @@ const fr = {
     live: "live",
     pose: "Pose {current} / {total}",
     instruction: "Regardez l'objectif…",
+    stickerLabel: "Modèle",
+    stickerInstruction: "Reproduisez le sticker…",
     awaitingPeerTitle: "On attend Partenaire…",
     awaitingPeerSubtitle: "Le 3·2·1 ne se déclenche que si vous êtes prêts tous les deux.",
     partnerDisconnectedTitle: "Partenaire s'est déconnecté·e",
@@ -178,6 +199,7 @@ const fr = {
     download: "Télécharger PNG",
     share: "Partager",
     newSession: "Créer ma propre séance SnapLover",
+    doItTogether: "Le faire à deux",
     note: "Vous avez chacun votre copie. La bande pleine résolution est enregistrée sur chaque appareil.",
     likePrompt: "Vous aimez l'application ?",
     filters: {
@@ -198,18 +220,32 @@ const fr = {
     denim: "Denim",
     valentine: "Saint-Valentin",
   },
+  stickerPacks: {
+    cats: "Chats",
+    drama: "Drama",
+    cute: "Cute",
+  },
   strip: {
     /** Footer imprimé sur la bande composée (canvas), pas du JSX. */
     footerWithNames: "SNAPLOVER · {date} · {host} & {guest}",
     footerGeneric: "SNAPLOVER · {date} · À DEUX",
+    footerChallenge: "SNAPLOVER CHALLENGE · {date} · {host} & {guest}",
+    footerChallengeSolo: "SNAPLOVER CHALLENGE · {date} · {name}",
+    footerSolo: "SNAPLOVER · {date} · {name}",
+  },
+  solo: {
+    prepTitleClassic: "Prêt·e pour votre séance ?",
+    prepTitleChallenge: "Prêt·e à relever le défi ?",
+    prepSummaryClassic: "{n} poses",
+    prepSummaryChallenge: "{n} poses · pack {pack}",
+    launchClassic: "Lancer la séance",
+    launchChallenge: "Lancer le challenge",
   },
   participant: {
     defaultHost: "Hôte",
     defaultGuest: "Invité",
   },
   siteCredit: {
-    credit: "Un projet open source de Yemalin",
-    contribute: "Envie de contribuer ou d'en discuter ? Le code est public.",
     likeExperience: "J'aime l'expérience",
     likeApp: "J'aime l'app",
   },

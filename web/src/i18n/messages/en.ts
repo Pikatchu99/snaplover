@@ -84,7 +84,10 @@ const en = {
           question: "Can I download the strip?",
           answer: "Yes, as a PNG, directly from the result screen.",
         },
-        { question: "Is SnapLover free?", answer: "Yes, SnapLover is free and open source." },
+        {
+          question: "Is SnapLover free?",
+          answer: "A basic version is free, and the technical core is open source.",
+        },
         {
           question: "Why allow camera access?",
           answer:
@@ -111,6 +114,15 @@ const en = {
     nameLabel: "Your first name",
     namePlaceholder: "e.g. Camille",
     missingName: "Enter your first name.",
+    participantsLabel: "Participants",
+    participantsDuo: "Duo",
+    participantsSolo: "Solo",
+    modeLabel: "Mode",
+    modeOptionClassic: "Classic",
+    modeOptionChallenge: "Challenge",
+    packLabel: "Sticker pack",
+    customizeLabel: "Customize",
+    customizeSummary: "{n} poses · {frame}",
     posesLabel: "Poses per strip",
     posesOption: "{n} poses",
     styleLabel: "Strip style",
@@ -118,6 +130,7 @@ const en = {
     styleGrid: "2×2 grid",
     frameLabel: "Frame",
     submit: "Create and copy the link",
+    submitSolo: "Start my session",
     previewLabel: "PREVIEW",
   },
   lobby: {
@@ -135,6 +148,12 @@ const en = {
     invalidRoomJoinCta: "Enter a code",
     turnUnavailableMessage:
       "Your two cameras can't reach each other directly, and the free relay service that usually helps in that case isn't responding (its monthly quota is probably used up). I'm on it. Try again a bit later, or from a different network (direct connections sometimes work even without it).",
+    challengeTutorial: {
+      title: "Here's what you'll do",
+      intro:
+        "You'll each take turns reproducing these {n} stickers on screen. Press the button to launch, a countdown starts right after.",
+      gotIt: "Got it",
+    },
     status: {
       requestingCamera: "Turning on your camera…",
       cameraDenied: "Camera blocked",
@@ -156,6 +175,8 @@ const en = {
     live: "live",
     pose: "Pose {current} / {total}",
     instruction: "Look at the camera…",
+    stickerLabel: "Model",
+    stickerInstruction: "Copy the sticker…",
     awaitingPeerTitle: "Waiting for Partner…",
     awaitingPeerSubtitle: "The 3·2·1 only starts once you're both ready.",
     partnerDisconnectedTitle: "Partner disconnected",
@@ -176,6 +197,7 @@ const en = {
     download: "Download PNG",
     share: "Share",
     newSession: "Create my own SnapLover session",
+    doItTogether: "Do it together",
     note: "You each have your own copy. The full-resolution strip is saved on each device.",
     likePrompt: "Do you like the app?",
     filters: {
@@ -196,17 +218,31 @@ const en = {
     denim: "Denim",
     valentine: "Valentine",
   },
+  stickerPacks: {
+    cats: "Cats",
+    drama: "Drama",
+    cute: "Cute",
+  },
   strip: {
     footerWithNames: "SNAPLOVER · {date} · {host} & {guest}",
     footerGeneric: "SNAPLOVER · {date} · TOGETHER",
+    footerChallenge: "SNAPLOVER CHALLENGE · {date} · {host} & {guest}",
+    footerChallengeSolo: "SNAPLOVER CHALLENGE · {date} · {name}",
+    footerSolo: "SNAPLOVER · {date} · {name}",
+  },
+  solo: {
+    prepTitleClassic: "Ready for your session?",
+    prepTitleChallenge: "Ready to take on the challenge?",
+    prepSummaryClassic: "{n} poses",
+    prepSummaryChallenge: "{n} poses · {pack} pack",
+    launchClassic: "Launch the session",
+    launchChallenge: "Launch the challenge",
   },
   participant: {
     defaultHost: "Host",
     defaultGuest: "Guest",
   },
   siteCredit: {
-    credit: "An open source project by Yemalin",
-    contribute: "Want to contribute or chat about it? The code is public.",
     likeExperience: "I like the experience",
     likeApp: "I like the app",
   },

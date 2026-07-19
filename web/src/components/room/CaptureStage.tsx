@@ -3,8 +3,11 @@ import { useTranslations } from "next-intl";
 import { Check, Link2 } from "lucide-react";
 import { CameraTile } from "@/components/room/CameraTile";
 import { Countdown } from "@/components/room/Countdown";
+import { StickerTile, StickerThumb } from "@/components/room/StickerTile";
+import { cn } from "@/lib/utils";
 import type { CaptureSessionStatus } from "@/hooks/use-capture-session";
 import type { StripCell } from "@/lib/capture/compose-strip";
+import type { ChallengeMode, StickerDefinition } from "@/types/sticker";
 import { Link } from "@/i18n/navigation";
 
 interface CaptureStageProps {
@@ -22,11 +25,14 @@ interface CaptureStageProps {
   // Poses déjà composées (mises à jour au fil de la séance, pas seulement à
   // la fin) — alimente l'aperçu live en bas d'écran.
   cells: StripCell[];
+  mode: ChallengeMode;
+  /** Sticker de la pose courante — uniquement en mode challenge. */
+  currentSticker?: StickerDefinition;
 }
 
 // Rangée de vignettes montrant où on en est dans la séance (quelle pose
 // est déjà faite, laquelle reste) — un slot par pose prévue.
-function PoseProgress({ cells, poses }: { cells: StripCell[]; poses: number }) {
+function PoseProgress({ cells, poses, mode }: { cells: StripCell[]; poses: number; mode: ChallengeMode }) {
   return (
     <div className="mx-auto flex w-full max-w-2xl items-center justify-center gap-2">
       {Array.from({ length: poses }, (_, index) => {
@@ -42,8 +48,12 @@ function PoseProgress({ cells, poses }: { cells: StripCell[]; poses: number }) {
               <>
                 {/* eslint-disable-next-line @next/next/no-img-element -- data URL, décoratif */}
                 <img src={cell.left} alt="" className="h-full flex-1 object-cover" />
-                {/* eslint-disable-next-line @next/next/no-img-element -- data URL, décoratif */}
-                <img src={cell.right} alt="" className="h-full flex-1 object-cover" />
+                {mode === "challenge" && cell.sticker && <StickerThumb sticker={cell.sticker} />}
+                {/* right toujours présent en duo/classique — cette page ne sert jamais le solo */}
+                {cell.right && (
+                  // eslint-disable-next-line @next/next/no-img-element -- data URL, décoratif
+                  <img src={cell.right} alt="" className="h-full flex-1 object-cover" />
+                )}
               </>
             ) : (
               <span className="flex flex-1 items-center justify-center text-[10px] font-semibold text-white/30">
@@ -95,7 +105,7 @@ function AwaitingPeerOverlay({ currentPose }: { currentPose: number }) {
   );
 }
 
-function ComposingOverlay() {
+export function ComposingOverlay() {
   const t = useTranslations("captureStage");
   return (
     <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 rounded-2xl bg-black/60 px-6 text-center">
@@ -116,10 +126,13 @@ export function CaptureStage({
   countdownMs,
   awaitingPeer,
   cells,
+  mode,
+  currentSticker,
 }: CaptureStageProps) {
   const t = useTranslations("captureStage");
   const tLobby = useTranslations("lobby");
   const poseNumber = Math.min(currentPose + 1, poses);
+  const isChallenge = mode === "challenge";
 
   return (
     // pt-16 (pas pt-6) : même raison que Lobby.tsx (LanguageSwitcher fixe).
@@ -130,19 +143,25 @@ export function CaptureStage({
         </span>
         <span className="flex items-center gap-1.5 text-xs font-semibold text-[#fb5a46]">
           <span className="size-1.5 rounded-full bg-[#fb5a46]" />
-          {t("instruction")}
+          {isChallenge ? t("stickerInstruction") : t("instruction")}
         </span>
       </div>
 
-      <div className="relative mx-auto grid w-full max-w-2xl flex-1 grid-cols-2 gap-4">
+      <div
+        className={cn(
+          "relative mx-auto grid w-full max-w-2xl flex-1 gap-4",
+          isChallenge ? "grid-cols-3" : "grid-cols-2",
+        )}
+      >
         <CameraTile stream={localStream} label={tLobby("you")} state="ready" mirrored muted videoRef={localVideoRef} />
+        {isChallenge && currentSticker && <StickerTile sticker={currentSticker} />}
         <CameraTile stream={remoteStream} label={tLobby("partner")} state={remoteStream ? "ready" : "off"} />
         {status === "countdown" && <Countdown remainingMs={countdownMs} poseNumber={poseNumber} poses={poses} />}
         {status === "composing" && <ComposingOverlay />}
         {awaitingPeer && <AwaitingPeerOverlay currentPose={currentPose} />}
       </div>
 
-      <PoseProgress cells={cells} poses={poses} />
+      <PoseProgress cells={cells} poses={poses} mode={mode} />
     </div>
   );
 }

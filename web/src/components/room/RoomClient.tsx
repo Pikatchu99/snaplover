@@ -7,6 +7,7 @@ import { Lobby } from "@/components/room/Lobby";
 import { CaptureStage } from "@/components/room/CaptureStage";
 import { PhotoStrip } from "@/components/strip/PhotoStrip";
 import type { FrameId, StripStyle } from "@/types/frame";
+import type { ChallengeMode, StickerPackId } from "@/types/sticker";
 
 interface RoomClientProps {
   code: string;
@@ -16,6 +17,8 @@ interface RoomClientProps {
   poses: number;
   frameId: FrameId;
   style: StripStyle;
+  mode: ChallengeMode;
+  stickerPackId?: StickerPackId;
   // Prénom local à CE navigateur, saisi sur /create ou /join — jamais dans le
   // lien partagé. Toujours renseigné : app/r/[code]/page.tsx redirige vers
   // /join si absent (lien collé directement) plutôt que de retomber sur un
@@ -23,7 +26,7 @@ interface RoomClientProps {
   name: string;
 }
 
-export function RoomClient({ code, poses, frameId, style, name }: RoomClientProps) {
+export function RoomClient({ code, poses, frameId, style, mode, stickerPackId, name }: RoomClientProps) {
   const { localStream, remoteStream, status, dataChannel, isInitiator, retryCamera } = useRoomConnection(code);
   const localVideoRef = useRef<HTMLVideoElement>(null);
 
@@ -34,6 +37,10 @@ export function RoomClient({ code, poses, frameId, style, name }: RoomClientProp
     poses: effectivePoses,
     frameId: effectiveFrameId,
     style: effectiveStyle,
+    mode: effectiveMode,
+    stickerPackId: effectiveStickerPackId,
+    currentSticker,
+    stickerPreview,
     countdownMs,
     stripUrl,
     cells,
@@ -41,7 +48,17 @@ export function RoomClient({ code, poses, frameId, style, name }: RoomClientProp
     hostName,
     guestName,
     startSession,
-  } = useCaptureSession({ dataChannel, isInitiator, poses, frameId, style, myName: name, localVideoRef });
+  } = useCaptureSession({
+    dataChannel,
+    isInitiator,
+    poses,
+    frameId,
+    style,
+    mode,
+    stickerPackId,
+    myName: name,
+    localVideoRef,
+  });
 
   useEffect(() => {
     // Vie privée : une fois la bande composée, plus besoin de la caméra —
@@ -62,6 +79,7 @@ export function RoomClient({ code, poses, frameId, style, name }: RoomClientProp
         frameId={effectiveFrameId}
         style={effectiveStyle}
         names={{ host: hostName, guest: guestName }}
+        mode={effectiveMode}
       />
     );
   }
@@ -78,6 +96,8 @@ export function RoomClient({ code, poses, frameId, style, name }: RoomClientProp
         countdownMs={countdownMs}
         awaitingPeer={awaitingPeer}
         cells={cells}
+        mode={effectiveMode}
+        currentSticker={currentSticker}
       />
     );
   }
@@ -88,6 +108,9 @@ export function RoomClient({ code, poses, frameId, style, name }: RoomClientProp
       poses={effectivePoses}
       frameId={effectiveFrameId}
       style={effectiveStyle}
+      mode={effectiveMode}
+      stickerPackId={effectiveStickerPackId}
+      stickerPreview={stickerPreview}
       localStream={localStream}
       remoteStream={remoteStream}
       status={status}

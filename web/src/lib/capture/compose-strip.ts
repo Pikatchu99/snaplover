@@ -86,10 +86,11 @@ function drawCoverFiltered(
   ctx.drawImage(offscreen, x, y);
 }
 
-// Dessine un sticker (canvas carré, voir lib/stickers/paint.ts) centré dans
-// une cellule portrait, avec un fond carte discret — contrairement aux
-// photos capturées, un sticker n'est jamais recadré en "cover".
-function paintStickerCell(
+// Dessine un sticker (canvas carré, voir lib/stickers/sticker-registry.ts)
+// centré dans une cellule portrait, avec un fond carte discret —
+// contrairement aux photos capturées, un sticker n'est jamais recadré en
+// "cover". Asynchrone : le sticker charge son image sourcée avant de dessiner.
+async function paintStickerCell(
   ctx: CanvasRenderingContext2D,
   sticker: StickerDefinition,
   x: number,
@@ -106,7 +107,7 @@ function paintStickerCell(
   offscreen.height = size;
   const offCtx = offscreen.getContext("2d");
   if (!offCtx) throw new Error("2D canvas context unavailable");
-  sticker.paint(offCtx, size);
+  await sticker.paint(offCtx, size);
 
   ctx.drawImage(offscreen, x + (w - size) / 2, y + (h - size) / 2, size, size);
 }
@@ -141,7 +142,9 @@ export async function composeStrip(cells: StripCell[], options: ComposeOptions):
 
   frame.paint(ctx, canvas.width, canvas.height, margin);
 
-  loadedCells.forEach(({ left, right, sticker }, index) => {
+  // for...of (pas .forEach) : paintStickerCell est asynchrone, il faut
+  // attendre chaque sticker avant de finaliser le canvas (toDataURL) plus bas.
+  for (const [index, { left, right, sticker }] of loadedCells.entries()) {
     const col = index % columns;
     const row = Math.floor(index / columns);
     const x = margin + col * (poseWidth + gap);
@@ -150,12 +153,12 @@ export async function composeStrip(cells: StripCell[], options: ComposeOptions):
 
     if (challenge && sticker) {
       const stickerX = x + cellWidth + gap;
-      paintStickerCell(ctx, sticker, stickerX, y, stickerWidth, cellHeight);
+      await paintStickerCell(ctx, sticker, stickerX, y, stickerWidth, cellHeight);
       drawCoverFiltered(ctx, right, stickerX + stickerWidth + gap, y, cellWidth, cellHeight, filter);
     } else {
       drawCoverFiltered(ctx, right, x + cellWidth + gap, y, cellWidth, cellHeight, filter);
     }
-  });
+  }
 
   ctx.fillStyle = frame.footerTextColor;
   ctx.textAlign = "center";

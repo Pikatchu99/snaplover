@@ -40,7 +40,7 @@ function StickerThumb({ sticker }: { sticker: StickerDefinition }) {
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    sticker.paint(ctx, canvas.width);
+    sticker.paint(ctx, canvas.width).catch((error) => console.error("[sticker] échec de chargement:", error));
   }, [sticker]);
 
   return <canvas ref={canvasRef} width={40} height={40} className="h-full flex-1 bg-white/10 object-contain" />;

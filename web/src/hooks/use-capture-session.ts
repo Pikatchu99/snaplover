@@ -12,7 +12,7 @@ import { composeStrip, type StripCell } from "@/lib/capture/compose-strip";
 import { formatFooterDate } from "@/lib/capture/format-footer-date";
 import { playShutter } from "@/lib/audio/sound-effects";
 import { FRAMES } from "@/lib/frames/frame-registry";
-import { STICKERS } from "@/lib/stickers/sticker-registry";
+import { DEFAULT_PACK_ID, STICKERS } from "@/lib/stickers/sticker-registry";
 import { pickStickers } from "@/lib/stickers/pick-stickers";
 import { config } from "@/lib/config";
 import { trackChallengeCompleted, trackChallengeDuoStarted, trackChallengeStarted } from "@/lib/analytics";
@@ -154,7 +154,7 @@ export function useCaptureSession({
           // verraient réassigner un autre sticker que celui affiché pendant
           // la capture (même précaution que pendingPoseRef ci-dessus).
           if (mode === "challenge" && stickerIdsRef.current.length === 0) {
-            stickerIdsRef.current = pickStickers(stickerPackId ?? "couple", poses);
+            stickerIdsRef.current = pickStickers(stickerPackId ?? DEFAULT_PACK_ID, poses);
             setStickerIdsState(stickerIdsRef.current);
           }
           channel.send({

@@ -21,8 +21,8 @@ test("challenge duo : connexion → sticker affiché → bande composée", async
   // launchSession ci-dessous) — mode/pack doivent donc être posés sur les
   // deux pages, pas seulement A, sinon la session peut retomber en classique
   // si B se retrouve hôte.
-  await gotoRoom(a, room, { poses: 3, mode: "challenge", pack: "couple" });
-  await gotoRoom(b, room, { mode: "challenge", pack: "couple" });
+  await gotoRoom(a, room, { poses: 3, mode: "challenge", pack: "cats" });
+  await gotoRoom(b, room, { mode: "challenge", pack: "cats" });
 
   // Tuto "voici ce que vous allez faire" (aperçu des stickers de la séance) —
   // affiché aux deux pairs dès la connexion (remplace l'écran "2 connectés"

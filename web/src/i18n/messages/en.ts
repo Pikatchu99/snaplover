@@ -213,7 +213,7 @@ const en = {
     valentine: "Valentine",
   },
   stickerPacks: {
-    couple: "Couple",
+    cats: "Cats",
     drama: "Drama",
     cute: "Cute",
   },

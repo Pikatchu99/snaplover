@@ -215,7 +215,7 @@ const fr = {
     valentine: "Saint-Valentin",
   },
   stickerPacks: {
-    couple: "Couple",
+    cats: "Chats",
     drama: "Drama",
     cute: "Cute",
   },

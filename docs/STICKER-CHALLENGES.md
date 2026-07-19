@@ -235,6 +235,23 @@ Workflow envisage :
 6. Faire un second tri manuel par l'auteur.
 7. Ne garder dans le repo public que les stickers valides, propres et assumables.
 
+### Packs reels (MVP)
+
+Decision validee : le sourcing initial (voir `docs/STICKER-SOURCING.md`) n'a pas produit de poses
+"couple" a proprement parler, mais 21 categories d'expressions/reactions (visages, memes de chats)
+triees en 3 passes et validees droits par l'auteur. Le pack `couple` du MVP (stickers proceduraux
+placeholder) est donc remplace entierement par 3 packs bases sur le contenu reellement disponible :
+
+- `cats` (memes de chats — 7 categories, ~84 stickers) ;
+- `drama` (reactions dramatiques/tristes/choquees — 7 categories, ~68 stickers) ;
+- `cute` (reactions dröles/gênantes/étonnées — 7 categories, ~88 stickers).
+
+Toutes les images validees sont utilisees (pas de sous-selection curatee) — le tirage aleatoire par
+pose gere deja la variete/repetition. Les stickers sont des images reelles (JPEG) affichees en
+"contain" (jamais recadrees, contrairement aux photos capturees), pas des dessins proceduraux —
+`lib/stickers/paint.ts` (placeholders) a ete supprime au profit d'un registre genere depuis
+`sticker-sourcing/final-200-plus/manifest.json`.
+
 Point de vigilance : Pinterest doit servir d'outil d'inspiration et de sourcing de travail, pas de
 garantie de droits. Avant de mettre un asset dans le repo public, il faut soit le recreer, soit
 utiliser une source libre/licenciee, soit assumer qu'il reste uniquement local/non commite pendant la

@@ -2,7 +2,7 @@
 
 export type ChallengeMode = "classic" | "challenge";
 
-export type StickerPackId = "couple" | "drama" | "cute";
+export type StickerPackId = "cats" | "drama" | "cute";
 
 export type StickerId = string;
 
@@ -11,6 +11,7 @@ export type StickerId = string;
 export interface StickerDefinition {
   id: StickerId;
   packId: StickerPackId;
-  /** Dessine le sticker sur un canvas carré de côté `size`. */
-  paint: (ctx: CanvasRenderingContext2D, size: number) => void;
+  /** Dessine le sticker sur un canvas carré de côté `size`. Asynchrone :
+   * charge l'image sourcée avant de dessiner (voir lib/stickers/draw-sticker-image.ts). */
+  paint: (ctx: CanvasRenderingContext2D, size: number) => Promise<void>;
 }

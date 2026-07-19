@@ -21,7 +21,7 @@ export function StickerTile({ sticker }: StickerTileProps) {
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
     ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-    sticker.paint(ctx, CANVAS_SIZE);
+    sticker.paint(ctx, CANVAS_SIZE).catch((error) => console.error("[sticker] échec de chargement:", error));
   }, [sticker]);
 
   return (

@@ -14,6 +14,7 @@ import { RoomPreview } from "@/components/landing/RoomPreview";
 import {
   trackChallengePackSelected,
   trackChallengeRoomCreated,
+  trackRoomCreated,
 } from "@/lib/analytics";
 import type { FrameId, StripStyle } from "@/types/frame";
 import type { ChallengeMode, ChallengeType, StickerPackId } from "@/types/sticker";
@@ -94,6 +95,7 @@ function CreateRoomForm() {
     if (challengeType === "solo") {
       const soloParams = new URLSearchParams({ poses: String(poses), style, frame: frameId, mode, name: name.trim() });
       if (mode === "challenge") soloParams.set("pack", stickerPackId);
+      trackRoomCreated({ participants: "solo", mode });
       router.push(`/solo?${soloParams.toString()}`);
       return;
     }
@@ -117,6 +119,7 @@ function CreateRoomForm() {
     }
 
     if (mode === "challenge") trackChallengeRoomCreated();
+    trackRoomCreated({ participants: "duo", mode });
 
     const ownParams = new URLSearchParams(shareParams);
     ownParams.set("name", name.trim());

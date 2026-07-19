@@ -116,6 +116,8 @@ export function RoomClient({ code, poses, frameId, style, mode, stickerPackId, n
       status={status}
       localVideoRef={localVideoRef}
       isInitiator={isInitiator}
+      hostName={hostName}
+      guestName={guestName}
       onLaunch={startSession}
       onRetryCamera={retryCamera}
     />

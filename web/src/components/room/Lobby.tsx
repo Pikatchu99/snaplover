@@ -26,6 +26,9 @@ interface LobbyProps {
   status: RoomConnectionStatus;
   localVideoRef: RefObject<HTMLVideoElement | null>;
   isInitiator: boolean;
+  /** Connu dès l'échange hello/config, avant même le tutoriel challenge — voir use-capture-session.ts. */
+  hostName: string;
+  guestName: string;
   onLaunch: () => void;
   onRetryCamera: () => void;
 }
@@ -63,6 +66,8 @@ export function Lobby({
   status,
   localVideoRef,
   isInitiator,
+  hostName,
+  guestName,
   onLaunch,
   onRetryCamera,
 }: LobbyProps) {
@@ -74,7 +79,12 @@ export function Lobby({
   // docs/STICKER-CHALLENGES.md : utile pour se préparer aux stickers de
   // CETTE séance précise, pas juste apprendre le mécanisme une fois.
   const [tutorialDismissed, setTutorialDismissed] = useState(false);
+  // Un sticker à la fois (pas un mur de vignettes + un seul bouton) : un
+  // partenaire a cliqué "J'ai compris" par réflexe sans lire la fois où tout
+  // était affiché d'un coup — forcer un tap par sticker force à les regarder.
+  const [stickerStep, setStickerStep] = useState(0);
   const showTutorial = mode === "challenge" && status === "connected" && stickerPreview.length > 0 && !tutorialDismissed;
+  const partnerName = (isInitiator ? guestName : hostName) || t("partner");
 
   const STATUS_LABEL: Record<RoomConnectionStatus, string> = {
     "requesting-camera": t("status.requestingCamera"),
@@ -186,23 +196,46 @@ export function Lobby({
   }
 
   if (showTutorial) {
+    const sticker = stickerPreview[stickerStep];
+    const isLastStep = stickerStep === stickerPreview.length - 1;
+    const title = isInitiator
+      ? t("challengeTutorial.titleHost", { name: partnerName })
+      : t("challengeTutorial.titleGuest", { name: partnerName });
+
     return (
       <RoomShell>
-        <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6">
-          <h1 className="font-heading text-2xl font-bold text-white">{t("challengeTutorial.title")}</h1>
-          <p className="text-sm text-white/70">{t("challengeTutorial.intro", { n: stickerPreview.length })}</p>
+        <div className="mx-auto flex w-full max-w-sm flex-1 flex-col gap-6">
+          {/* Caméras toujours visibles pendant le tutoriel : sans ça, passer
+              de la salle d'attente (caméras visibles) à cet écran (stickers
+              seuls) donnait l'impression d'avoir perdu la connexion. */}
+          <div className="grid grid-cols-2 gap-3">
+            <CameraTile
+              stream={localStream}
+              label={t("you")}
+              state={localTileState(status)}
+              mirrored
+              muted
+              videoRef={localVideoRef}
+            />
+            <CameraTile stream={remoteStream} label={t("partner")} state={remoteTileState(status, Boolean(remoteStream))} />
+          </div>
+          <p className="text-center text-xs text-white/50">{STATUS_LABEL[status]}</p>
 
-          <div className="grid flex-1 grid-cols-2 gap-3 sm:grid-cols-4">
-            {stickerPreview.map((sticker) => (
-              <StickerTile key={sticker.id} sticker={sticker} />
-            ))}
+          <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
+            <h1 className="font-heading text-2xl font-bold text-white">{title}</h1>
+            <p className="text-sm text-white/50">
+              {t("challengeTutorial.stepCounter", { current: stickerStep + 1, total: stickerPreview.length })}
+            </p>
+            <div className="w-full max-w-55">
+              <StickerTile sticker={sticker} />
+            </div>
           </div>
 
           <button
-            onClick={() => setTutorialDismissed(true)}
+            onClick={() => (isLastStep ? setTutorialDismissed(true) : setStickerStep((step) => step + 1))}
             className="w-full rounded-2xl bg-linear-to-r from-[#fb5a46] to-[#ff7d54] px-6 py-3.5 font-medium text-white transition hover:opacity-90"
           >
-            {t("challengeTutorial.gotIt")}
+            {isLastStep ? t("challengeTutorial.gotIt") : t("challengeTutorial.next")}
           </button>
         </div>
       </RoomShell>

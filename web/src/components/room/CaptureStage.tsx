@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { useState, type RefObject } from "react";
 import { useTranslations } from "next-intl";
 import { Check, Link2 } from "lucide-react";
 import { CameraTile } from "@/components/room/CameraTile";
 import { Countdown } from "@/components/room/Countdown";
-import { StickerTile } from "@/components/room/StickerTile";
+import { StickerTile, StickerThumb } from "@/components/room/StickerTile";
 import { cn } from "@/lib/utils";
 import type { CaptureSessionStatus } from "@/hooks/use-capture-session";
 import type { StripCell } from "@/lib/capture/compose-strip";
@@ -30,22 +30,6 @@ interface CaptureStageProps {
   currentSticker?: StickerDefinition;
 }
 
-// Miniature d'un sticker dans la rangée de progression (voir PoseProgress) —
-// même principe que StickerTile mais sans le fond/label, échelle réduite.
-function StickerThumb({ sticker }: { sticker: StickerDefinition }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext("2d");
-    if (!canvas || !ctx) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    sticker.paint(ctx, canvas.width).catch((error) => console.error("[sticker] échec de chargement:", error));
-  }, [sticker]);
-
-  return <canvas ref={canvasRef} width={40} height={40} className="h-full flex-1 bg-white/10 object-contain" />;
-}
-
 // Rangée de vignettes montrant où on en est dans la séance (quelle pose
 // est déjà faite, laquelle reste) — un slot par pose prévue.
 function PoseProgress({ cells, poses, mode }: { cells: StripCell[]; poses: number; mode: ChallengeMode }) {
@@ -65,8 +49,11 @@ function PoseProgress({ cells, poses, mode }: { cells: StripCell[]; poses: numbe
                 {/* eslint-disable-next-line @next/next/no-img-element -- data URL, décoratif */}
                 <img src={cell.left} alt="" className="h-full flex-1 object-cover" />
                 {mode === "challenge" && cell.sticker && <StickerThumb sticker={cell.sticker} />}
-                {/* eslint-disable-next-line @next/next/no-img-element -- data URL, décoratif */}
-                <img src={cell.right} alt="" className="h-full flex-1 object-cover" />
+                {/* right toujours présent en duo/classique — cette page ne sert jamais le solo */}
+                {cell.right && (
+                  // eslint-disable-next-line @next/next/no-img-element -- data URL, décoratif
+                  <img src={cell.right} alt="" className="h-full flex-1 object-cover" />
+                )}
               </>
             ) : (
               <span className="flex flex-1 items-center justify-center text-[10px] font-semibold text-white/30">
@@ -118,7 +105,7 @@ function AwaitingPeerOverlay({ currentPose }: { currentPose: number }) {
   );
 }
 
-function ComposingOverlay() {
+export function ComposingOverlay() {
   const t = useTranslations("captureStage");
   return (
     <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 rounded-2xl bg-black/60 px-6 text-center">

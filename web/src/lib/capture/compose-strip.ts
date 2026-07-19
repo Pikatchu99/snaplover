@@ -1,12 +1,15 @@
 import type { FilterId, FrameDefinition, StripStyle } from "@/types/frame";
+import type { StickerDefinition } from "@/types/sticker";
 import { FILTER_PIXEL_OPS } from "@/lib/capture/filters";
 import { config } from "@/lib/config";
 
 export interface StripCell {
-  /** Moitié gauche = hôte (initiator). */
+  /** Moitié gauche = hôte (initiator), ou l'unique photo en challenge solo. */
   left: string;
-  /** Moitié droite = invité (peer). */
-  right: string;
+  /** Moitié droite = invité (peer) — absent en challenge solo (une seule personne). */
+  right?: string;
+  /** Sticker à afficher au centre de la pose — uniquement en mode challenge. */
+  sticker?: StickerDefinition;
 }
 
 export interface ComposeOptions {
@@ -18,6 +21,11 @@ export interface ComposeOptions {
    * lib/capture/format-footer-date.ts. Cette fonction ne connaît pas la
    * locale courante, donc jamais de i18n ici, seulement du dessin. */
   footerText: string;
+  /** "duo" (défaut) = 2 photos par pose (StripCell.right requis), "solo" = 1
+   * seule (StripCell.left uniquement) — indépendant du mode challenge. */
+  participants?: "duo" | "solo";
+  /** Présent uniquement en mode challenge — active la colonne sticker centrale. */
+  challenge?: { widthRatio: number };
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -99,23 +107,59 @@ function drawCoverFiltered(
   ctx.restore();
 }
 
+// Dessine un sticker (canvas carré, voir lib/stickers/sticker-registry.ts)
+// centré dans une cellule portrait, avec un fond carte discret —
+// contrairement aux photos capturées, un sticker n'est jamais recadré en
+// "cover". Asynchrone : le sticker charge son image sourcée avant de dessiner.
+async function paintStickerCell(
+  ctx: CanvasRenderingContext2D,
+  sticker: StickerDefinition,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+) {
+  ctx.fillStyle = "rgba(255,255,255,0.08)";
+  ctx.fillRect(x, y, w, h);
+
+  const size = Math.min(w, h);
+  const offscreen = document.createElement("canvas");
+  offscreen.width = size;
+  offscreen.height = size;
+  const offCtx = offscreen.getContext("2d");
+  if (!offCtx) throw new Error("2D canvas context unavailable");
+  await sticker.paint(offCtx, size);
+
+  ctx.drawImage(offscreen, x + (w - size) / 2, y + (h - size) / 2, size, size);
+}
+
 // Compose la bande complète, look rétro-cabine : chaque case = une pose,
-// hôte à gauche / invité à droite, marges et footer "SNAPROOM · DATE · À DEUX"
-// habillés par le cadre choisi. Voir SNAPROOM-SPEC.md §10, §13.
+// hôte à gauche / invité à droite (+ sticker au centre en mode challenge),
+// marges et footer habillés par le cadre choisi. Voir SNAPROOM-SPEC.md §10,
+// §13, et docs/STICKER-CHALLENGES.md pour le mode challenge.
 export async function composeStrip(cells: StripCell[], options: ComposeOptions): Promise<string> {
-  const { frame, filter, style = "vertical", footerText } = options;
+  const { frame, filter, style = "vertical", footerText, participants = "duo", challenge } = options;
   const { cellWidth, cellHeight, columns } = config.strip.layout[style];
   const { gap, margin, footerHeight } = config.strip;
+
+  const isSolo = participants === "solo";
 
   const loadedCells = await Promise.all(
     cells.map(async (cell) => ({
       left: await loadImage(cell.left),
-      right: await loadImage(cell.right),
+      right: cell.right ? await loadImage(cell.right) : undefined,
+      sticker: cell.sticker,
     })),
   );
 
   const rows = Math.ceil(loadedCells.length / columns);
-  const poseWidth = cellWidth * 2 + gap;
+  const photoCount = isSolo ? 1 : 2;
+  const stickerWidth = challenge ? cellWidth * challenge.widthRatio : 0;
+  // Nombre d'espaces internes à la pose = (nb de slots - 1) : 1 photo seule
+  // (solo classique) n'a besoin d'aucun gap, 2 photos (duo classique) en ont
+  // un, +1 de plus si un sticker s'intercale (mode challenge).
+  const slots = photoCount + (challenge ? 1 : 0);
+  const poseWidth = cellWidth * photoCount + stickerWidth + gap * (slots - 1);
 
   const canvas = document.createElement("canvas");
   canvas.width = margin * 2 + poseWidth * columns + gap * (columns - 1);
@@ -129,14 +173,23 @@ export async function composeStrip(cells: StripCell[], options: ComposeOptions):
   const columnBoundaries = Array.from({ length: columns - 1 }, (_, i) => margin + (i + 1) * poseWidth + i * gap + gap / 2);
   frame.paint(ctx, canvas.width, canvas.height, margin, { columnBoundaries });
 
-  loadedCells.forEach(({ left, right }, index) => {
+  // for...of (pas .forEach) : paintStickerCell est asynchrone, il faut
+  // attendre chaque sticker avant de finaliser le canvas (toDataURL) plus bas.
+  for (const [index, { left, right, sticker }] of loadedCells.entries()) {
     const col = index % columns;
     const row = Math.floor(index / columns);
     const x = margin + col * (poseWidth + gap);
     const y = margin + row * (cellHeight + gap);
     drawCoverFiltered(ctx, left, x, y, cellWidth, cellHeight, filter);
-    drawCoverFiltered(ctx, right, x + cellWidth + gap, y, cellWidth, cellHeight, filter);
-  });
+
+    if (challenge && sticker) {
+      const stickerX = x + cellWidth + gap;
+      await paintStickerCell(ctx, sticker, stickerX, y, stickerWidth, cellHeight);
+      if (right) drawCoverFiltered(ctx, right, stickerX + stickerWidth + gap, y, cellWidth, cellHeight, filter);
+    } else if (right) {
+      drawCoverFiltered(ctx, right, x + cellWidth + gap, y, cellWidth, cellHeight, filter);
+    }
+  }
 
   ctx.fillStyle = frame.footerTextColor;
   ctx.textAlign = "center";

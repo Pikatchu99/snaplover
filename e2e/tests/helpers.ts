@@ -20,6 +20,9 @@ interface RoomParams {
   poses?: 3 | 4;
   frame?: string;
   style?: "vertical" | "grid";
+  /** Mode Challenge stickers (voir docs/STICKER-CHALLENGES.md) — absent = classique. */
+  mode?: "classic" | "challenge";
+  pack?: string;
   /** Un prénom est obligatoire pour entrer (voir app/r/[code]/page.tsx) —
    * défaut fourni ici pour les tests qui n'exercent pas la saisie du prénom. */
   name?: string;
@@ -30,6 +33,8 @@ export async function gotoRoom(page: Page, code: string, params?: RoomParams) {
   if (params?.poses) query.set("poses", String(params.poses));
   if (params?.frame) query.set("frame", params.frame);
   if (params?.style) query.set("style", params.style);
+  if (params?.mode) query.set("mode", params.mode);
+  if (params?.pack) query.set("pack", params.pack);
   query.set("name", params?.name ?? "Testeur");
   await page.goto(`/r/${code}?${query.toString()}`);
 }

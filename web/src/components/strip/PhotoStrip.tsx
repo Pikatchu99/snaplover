@@ -8,29 +8,39 @@ import { composeStrip, type StripCell } from "@/lib/capture/compose-strip";
 import { formatFooterDate } from "@/lib/capture/format-footer-date";
 import { FILTER_IDS } from "@/lib/capture/filters";
 import { FRAMES } from "@/lib/frames/frame-registry";
-import { trackLike } from "@/lib/analytics";
+import { config } from "@/lib/config";
+import { trackChallengeDownloaded, trackChallengeShared, trackLike } from "@/lib/analytics";
 import { Link } from "@/i18n/navigation";
 import type { FilterId, FrameId, StripStyle } from "@/types/frame";
+import type { ChallengeMode } from "@/types/sticker";
 
 interface PhotoStripProps {
   cells: StripCell[];
   initialStripUrl: string;
   frameId: FrameId;
   style: StripStyle;
-  names: { host: string; guest: string };
+  /** Duo uniquement (RoomClient) — prénoms des deux participants. */
+  names?: { host: string; guest: string };
+  /** Solo uniquement (SoloClient) — signature du footer. */
+  soloName?: string;
+  mode: ChallengeMode;
 }
 
 // Résultat (E6) : bande composée, filtres, téléchargement, partage.
 // Fond clair (comme landing/create) — seuls lobby/séance sont en sombre.
 // Cadres/thèmes (§13) : voir lib/frames/frame-registry.ts — packs illustrés
 // pas encore disponibles (assets manquants).
-export function PhotoStrip({ cells, initialStripUrl, frameId, style, names }: PhotoStripProps) {
+export function PhotoStrip({ cells, initialStripUrl, frameId, style, names, soloName, mode }: PhotoStripProps) {
   const t = useTranslations("photoStrip");
   const tStrip = useTranslations("strip");
   const locale = useLocale();
   const [filter, setFilter] = useState<FilterId>("classic");
   const [stripUrl, setStripUrl] = useState(initialStripUrl);
   const [liked, setLiked] = useState(false);
+  const isChallenge = mode === "challenge";
+  // Absent aussi bien en challenge solo qu'en solo classique (docs/STICKER-CHALLENGES.md
+  // + extension solo classique) — une seule personne, aucun prénom de partenaire à afficher.
+  const isSolo = !names;
 
   function handleLike() {
     if (liked) return;
@@ -41,8 +51,21 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, names }: Ph
   useEffect(() => {
     let cancelled = false;
     const footerDate = formatFooterDate(new Date(), locale);
-    const footerText = tStrip("footerWithNames", { date: footerDate, host: names.host, guest: names.guest });
-    composeStrip(cells, { frame: FRAMES[frameId], filter, style, footerText }).then((url) => {
+    const footerText = isSolo
+      ? isChallenge
+        ? tStrip("footerChallengeSolo", { date: footerDate, name: soloName ?? "" })
+        : tStrip("footerSolo", { date: footerDate, name: soloName ?? "" })
+      : isChallenge
+        ? tStrip("footerChallenge", { date: footerDate, host: names?.host ?? "", guest: names?.guest ?? "" })
+        : tStrip("footerWithNames", { date: footerDate, host: names?.host ?? "", guest: names?.guest ?? "" });
+    composeStrip(cells, {
+      frame: FRAMES[frameId],
+      filter,
+      style,
+      footerText,
+      participants: isSolo ? "solo" : "duo",
+      challenge: isChallenge ? { widthRatio: config.challenge.stickerWidthRatio } : undefined,
+    }).then((url) => {
       if (!cancelled) setStripUrl(url);
     });
     return () => {
@@ -52,6 +75,7 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, names }: Ph
   }, [filter]);
 
   async function handleShare() {
+    if (isChallenge) trackChallengeShared();
     const blob = await (await fetch(stripUrl)).blob();
     const file = new File([blob], "snaplover.png", { type: "image/png" });
 
@@ -68,6 +92,10 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, names }: Ph
     a.href = stripUrl;
     a.download = "snaplover.png";
     a.click();
+  }
+
+  function handleDownloadClick() {
+    if (isChallenge) trackChallengeDownloaded();
   }
 
   return (
@@ -103,6 +131,7 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, names }: Ph
         <a
           href={stripUrl}
           download="snaplover.png"
+          onClick={handleDownloadClick}
           className="inline-flex items-center gap-2 rounded-2xl bg-linear-to-r from-[#fb5a46] to-[#ff7d54] px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
         >
           <Download className="size-4" />
@@ -135,6 +164,18 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, names }: Ph
         <Plus className="size-4" />
         {t("newSession")}
       </Link>
+
+      {/* Après une séance solo (classique ou challenge) : suggérer le format
+          duo équivalent, décision explicite du spec (docs/STICKER-CHALLENGES.md)
+          — pas pertinent une fois déjà en duo. */}
+      {isSolo && (
+        <Link
+          href={`/create?mode=${mode}&type=duo`}
+          className="text-sm text-[#8c8378] underline-offset-2 hover:text-[#1c1712] hover:underline"
+        >
+          {t("doItTogether")}
+        </Link>
+      )}
 
       <p className="max-w-md text-center text-xs text-[#8c8378]">{t("note")}</p>
     </div>

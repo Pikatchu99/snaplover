@@ -1,11 +1,16 @@
 import { FRAMES, DEFAULT_FRAME_ID } from "@/lib/frames/frame-registry";
+import { STICKER_PACKS, DEFAULT_PACK_ID } from "@/lib/stickers/sticker-registry";
 import { config } from "@/lib/config";
 import type { FrameId, StripStyle } from "@/types/frame";
+import type { ChallengeMode, StickerPackId } from "@/types/sticker";
 
 export interface RoomConfig {
   poses: number;
   frameId: FrameId;
   style: StripStyle;
+  mode: ChallengeMode;
+  /** Présent uniquement quand mode === "challenge". */
+  stickerPackId?: StickerPackId;
   /** Prénom local à CE navigateur (jamais dans le lien partagé) — voir app/create, app/join. */
   name?: string;
 }
@@ -27,9 +32,19 @@ export function parseRoomConfig(searchParams: SearchParams): RoomConfig {
   const frameRaw = firstValue(searchParams.frame);
   const frameId: FrameId = frameRaw && frameRaw in FRAMES ? (frameRaw as FrameId) : DEFAULT_FRAME_ID;
 
-  const style: StripStyle = firstValue(searchParams.style) === "grid" ? "grid" : "vertical";
+  const mode: ChallengeMode = firstValue(searchParams.mode) === "challenge" ? "challenge" : "classic";
+
+  // Le layout 3 colonnes du challenge (hôte | sticker | invité) n'est pensé
+  // que pour le vertical — on force plutôt que d'ajouter une variante
+  // grid+challenge hors scope du MVP (voir docs/STICKER-CHALLENGES.md).
+  const style: StripStyle =
+    mode === "challenge" ? "vertical" : firstValue(searchParams.style) === "grid" ? "grid" : "vertical";
+
+  const packRaw = firstValue(searchParams.pack);
+  const stickerPackId: StickerPackId | undefined =
+    mode === "challenge" ? (packRaw && packRaw in STICKER_PACKS ? (packRaw as StickerPackId) : DEFAULT_PACK_ID) : undefined;
 
   const name = firstValue(searchParams.name)?.slice(0, config.participant.nameMaxLength) || undefined;
 
-  return { poses, frameId, style, name };
+  return { poses, frameId, style, mode, stickerPackId, name };
 }

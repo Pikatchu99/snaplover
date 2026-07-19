@@ -38,6 +38,8 @@ export default async function RoomPage({ params, searchParams }: RoomPageProps) 
       poses={config.poses}
       frameId={config.frameId}
       style={config.style}
+      mode={config.mode}
+      stickerPackId={config.stickerPackId}
       // Vide seulement si le code est malformé (cf. garde ci-dessus) — dans
       // ce cas la room n'ira jamais jusqu'à l'échange de prénom (le pair
       // n'existe pas), la valeur n'est donc jamais montrée à l'utilisateur.

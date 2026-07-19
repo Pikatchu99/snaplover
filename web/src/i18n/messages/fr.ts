@@ -151,7 +151,7 @@ const fr = {
     turnUnavailableMessage:
       "Vos deux caméras n'arrivent pas à se parler directement, et le service gratuit qui sert de relais dans ce cas ne répond plus (son quota du mois est sûrement atteint). Je m'en occupe. Réessayez un peu plus tard, ou avec un autre réseau (le direct fonctionne parfois même sans lui).",
     challengeTutorial: {
-      titleHost: "{name} vient d'arriver — montre-lui comment on fait",
+      titleHost: "{name} est là — regarde les mèmes à reproduire",
       titleGuest: "{name} t'a invité·e à reproduire ces mèmes. Tu peux faire mieux ?",
       stepCounter: "{current} / {total}",
       next: "Suivant",

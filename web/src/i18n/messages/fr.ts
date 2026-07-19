@@ -128,6 +128,7 @@ const fr = {
     styleGrid: "Grille 2×2",
     frameLabel: "Cadre",
     submit: "Créer et copier le lien",
+    submitSolo: "Commencer ma séance",
     previewLabel: "APERÇU",
   },
   lobby: {

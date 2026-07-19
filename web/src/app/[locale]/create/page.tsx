@@ -288,7 +288,9 @@ function CreateRoomForm() {
             onClick={handleCreate}
             className="w-full rounded-2xl bg-linear-to-r from-[#fb5a46] to-[#ff7d54] px-6 py-3.5 font-medium text-white transition hover:opacity-90"
           >
-            {t("submit")}
+            {/* En solo, aucun lien n'est copié (personne à qui l'envoyer) —
+                le bouton ne doit pas laisser croire le contraire. */}
+            {challengeType === "solo" ? t("submitSolo") : t("submit")}
           </button>
         </div>
       </div>

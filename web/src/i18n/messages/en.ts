@@ -127,6 +127,7 @@ const en = {
     styleGrid: "2×2 grid",
     frameLabel: "Frame",
     submit: "Create and copy the link",
+    submitSolo: "Start my session",
     previewLabel: "PREVIEW",
   },
   lobby: {

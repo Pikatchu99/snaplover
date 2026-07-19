@@ -48,4 +48,9 @@ export const config = {
   participant: {
     nameMaxLength: 24,
   },
+  challenge: {
+    /** Largeur colonne sticker relative à cellWidth — voir docs/STICKER-CHALLENGES.md
+     * (décision produit : même taille que les photos, ou au maximum 25% plus petit). */
+    stickerWidthRatio: 1,
+  },
 } as const;

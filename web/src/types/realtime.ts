@@ -1,4 +1,5 @@
 import type { FrameId, StripStyle } from "@/types/frame";
+import type { ChallengeMode, StickerId, StickerPackId } from "@/types/sticker";
 
 // Protocole du data channel "ctrl" — clock-sync, déclenchement synchronisé,
 // échange d'image par chunks. Voir SNAPROOM-SPEC.md §9 et snaproom-spike/.
@@ -14,7 +15,17 @@ export type RealtimeMessage =
   // L'hôte diffuse sa config (poses/cadre/style) et son prénom en réponse à
   // "hello" : l'invité peut arriver via un code saisi (sans les query params
   // de l'hôte), donc c'est l'hôte qui fait autorité — voir SNAPROOM-SPEC.md §7.
-  | { t: "config"; poses: number; frameId: FrameId; style: StripStyle; hostName: string }
+  // mode/stickerPackId/stickerIds sont optionnels : absents en mode classic.
+  | {
+      t: "config";
+      poses: number;
+      frameId: FrameId;
+      style: StripStyle;
+      hostName: string;
+      mode: ChallengeMode;
+      stickerPackId?: StickerPackId;
+      stickerIds?: StickerId[];
+    }
   | { t: "capture"; pose: number; fireAtHost: number }
   | { t: "img-meta"; pose: number }
   | { t: "img"; part: string }

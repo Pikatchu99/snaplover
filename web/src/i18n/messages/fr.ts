@@ -246,8 +246,6 @@ const fr = {
     defaultGuest: "Invité",
   },
   siteCredit: {
-    credit: "Un projet open source de Yemalin",
-    contribute: "Envie de contribuer ou d'en discuter ? Le code est public.",
     likeExperience: "J'aime l'expérience",
     likeApp: "J'aime l'app",
   },

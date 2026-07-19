@@ -243,8 +243,6 @@ const en = {
     defaultGuest: "Guest",
   },
   siteCredit: {
-    credit: "An open source project by Yemalin",
-    contribute: "Want to contribute or chat about it? The code is public.",
     likeExperience: "I like the experience",
     likeApp: "I like the app",
   },

@@ -3,7 +3,7 @@
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { ChevronLeft, LayoutGrid, Rows3 } from "lucide-react";
+import { ChevronDown, ChevronLeft, LayoutGrid, Rows3 } from "lucide-react";
 import { generateRoomCode } from "@/lib/room-code";
 import { FRAME_IDS } from "@/lib/frames/frame-registry";
 import { PACK_IDS, DEFAULT_PACK_ID } from "@/lib/stickers/sticker-registry";
@@ -72,6 +72,10 @@ function CreateRoomForm() {
   // Aucun prénom requis en solo (une seule personne, pas de partenaire à
   // nommer dans le footer) — voir docs/STICKER-CHALLENGES.md.
   const requiresName = !(mode === "challenge" && challengeType === "solo");
+  // Poses/style/cadre repliés par défaut : trop d'options affichées d'un coup
+  // perdait les gens (retour utilisateur) — la valeur par défaut convient à
+  // la plupart, "Personnaliser" reste à un clic pour qui veut vraiment choisir.
+  const [customizeOpen, setCustomizeOpen] = useState(false);
 
   const STYLE_OPTIONS: { id: StripStyle; label: string; icon: typeof Rows3 }[] = [
     { id: "vertical", label: t("styleVertical"), icon: Rows3 },
@@ -164,37 +168,32 @@ function CreateRoomForm() {
             <legend className="mb-1 text-xs font-semibold tracking-widest text-[#8c8378] uppercase">
               {t("modeLabel")}
             </legend>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <button onClick={() => setMode("classic")} className={PILL_CLASS(mode === "classic")}>
-                {t("modeClassic")}
+                {t("modeOptionClassic")}
               </button>
               <button
                 onClick={() => {
                   setMode("challenge");
+                  setChallengeType("duo");
                   setStyle("vertical");
                 }}
-                className={PILL_CLASS(mode === "challenge")}
+                className={PILL_CLASS(mode === "challenge" && challengeType === "duo")}
               >
-                {t("modeChallenge")}
+                {t("modeOptionChallengeDuo")}
+              </button>
+              <button
+                onClick={() => {
+                  setMode("challenge");
+                  setChallengeType("solo");
+                  setStyle("vertical");
+                }}
+                className={PILL_CLASS(mode === "challenge" && challengeType === "solo")}
+              >
+                {t("modeOptionChallengeSolo")}
               </button>
             </div>
           </fieldset>
-
-          {mode === "challenge" && (
-            <fieldset className="flex flex-col gap-2">
-              <legend className="mb-1 text-xs font-semibold tracking-widest text-[#8c8378] uppercase">
-                {t("challengeTypeLabel")}
-              </legend>
-              <div className="flex gap-2">
-                <button onClick={() => setChallengeType("duo")} className={CARD_CLASS(challengeType === "duo")}>
-                  {t("challengeTypeDuo")}
-                </button>
-                <button onClick={() => setChallengeType("solo")} className={CARD_CLASS(challengeType === "solo")}>
-                  {t("challengeTypeSolo")}
-                </button>
-              </div>
-            </fieldset>
-          )}
 
           {mode === "challenge" && (
             <fieldset className="flex flex-col gap-2">
@@ -218,45 +217,69 @@ function CreateRoomForm() {
             </fieldset>
           )}
 
-          <fieldset className="flex flex-col gap-2">
-            <legend className="mb-1 text-xs font-semibold tracking-widest text-[#8c8378] uppercase">
-              {t("posesLabel")}
-            </legend>
-            <div className="flex gap-2">
-              {config.roomConfig.validPoses.map((n) => (
-                <button key={n} onClick={() => setPoses(n)} className={PILL_CLASS(poses === n)}>
-                  {t("posesOption", { n })}
-                </button>
-              ))}
-            </div>
-          </fieldset>
+          <div className="flex flex-col gap-4 border-t border-[#ece4d8] pt-4">
+            <button
+              onClick={() => setCustomizeOpen((open) => !open)}
+              className="flex items-center justify-between text-left text-sm font-medium text-[#1c1712]"
+              aria-expanded={customizeOpen}
+            >
+              <span className="flex flex-col">
+                <span>{t("customizeLabel")}</span>
+                {!customizeOpen && (
+                  <span className="text-xs font-normal text-[#8c8378]">
+                    {t("customizeSummary", { n: poses, frame: tFrames(frameId) })}
+                  </span>
+                )}
+              </span>
+              <ChevronDown className={cn("size-4 shrink-0 transition-transform", customizeOpen && "rotate-180")} />
+            </button>
 
-          <fieldset className="flex flex-col gap-2">
-            <legend className="mb-1 text-xs font-semibold tracking-widest text-[#8c8378] uppercase">
-              {t("styleLabel")}
-            </legend>
-            <div className="flex gap-2">
-              {STYLE_OPTIONS.filter((opt) => mode !== "challenge" || opt.id === "vertical").map((opt) => (
-                <button key={opt.id} onClick={() => setStyle(opt.id)} className={CARD_CLASS(style === opt.id)}>
-                  <opt.icon className="size-5" />
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </fieldset>
+            {customizeOpen && (
+              <div className="flex flex-col gap-8">
+                <fieldset className="flex flex-col gap-2">
+                  <legend className="mb-1 text-xs font-semibold tracking-widest text-[#8c8378] uppercase">
+                    {t("posesLabel")}
+                  </legend>
+                  <div className="flex gap-2">
+                    {config.roomConfig.validPoses.map((n) => (
+                      <button key={n} onClick={() => setPoses(n)} className={PILL_CLASS(poses === n)}>
+                        {t("posesOption", { n })}
+                      </button>
+                    ))}
+                  </div>
+                </fieldset>
 
-          <fieldset className="flex flex-col gap-2">
-            <legend className="mb-1 text-xs font-semibold tracking-widest text-[#8c8378] uppercase">
-              {t("frameLabel")}
-            </legend>
-            <div className="flex flex-wrap gap-2">
-              {FRAME_IDS.map((id) => (
-                <button key={id} onClick={() => setFrameId(id)} className={CHIP_CLASS(frameId === id)}>
-                  {tFrames(id)}
-                </button>
-              ))}
-            </div>
-          </fieldset>
+                {mode !== "challenge" && (
+                  <fieldset className="flex flex-col gap-2">
+                    <legend className="mb-1 text-xs font-semibold tracking-widest text-[#8c8378] uppercase">
+                      {t("styleLabel")}
+                    </legend>
+                    <div className="flex gap-2">
+                      {STYLE_OPTIONS.map((opt) => (
+                        <button key={opt.id} onClick={() => setStyle(opt.id)} className={CARD_CLASS(style === opt.id)}>
+                          <opt.icon className="size-5" />
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </fieldset>
+                )}
+
+                <fieldset className="flex flex-col gap-2">
+                  <legend className="mb-1 text-xs font-semibold tracking-widest text-[#8c8378] uppercase">
+                    {t("frameLabel")}
+                  </legend>
+                  <div className="flex flex-wrap gap-2">
+                    {FRAME_IDS.map((id) => (
+                      <button key={id} onClick={() => setFrameId(id)} className={CHIP_CLASS(frameId === id)}>
+                        {tFrames(id)}
+                      </button>
+                    ))}
+                  </div>
+                </fieldset>
+              </div>
+            )}
+          </div>
 
           <div className="flex-1 md:hidden" />
 

@@ -11,7 +11,13 @@ import { FRAMES } from "@/lib/frames/frame-registry";
 import { STICKERS } from "@/lib/stickers/sticker-registry";
 import { pickStickers } from "@/lib/stickers/pick-stickers";
 import { config } from "@/lib/config";
-import { trackChallengeCompleted, trackChallengeSoloStarted, trackChallengeStarted } from "@/lib/analytics";
+import {
+  trackChallengeCompleted,
+  trackChallengeSoloStarted,
+  trackChallengeStarted,
+  trackSessionCompleted,
+  trackSessionStarted,
+} from "@/lib/analytics";
 import type { CaptureSessionStatus } from "@/hooks/use-capture-session";
 import type { FrameId, StripStyle } from "@/types/frame";
 import type { ChallengeMode, StickerDefinition, StickerId, StickerPackId } from "@/types/sticker";
@@ -114,6 +120,7 @@ export function useSoloCaptureSession({
           setStripUrl(url);
           setStatus("done");
           if (isChallenge) trackChallengeCompleted();
+          trackSessionCompleted({ participants: "solo", mode });
         })
         .catch((error) => console.error("[capture] échec de composition de la bande:", error));
       return;
@@ -128,6 +135,7 @@ export function useSoloCaptureSession({
       trackChallengeSoloStarted();
       trackChallengeStarted();
     }
+    if (pose === 0) trackSessionStarted({ participants: "solo", mode });
     setHasStarted(true);
 
     if (isChallenge) {

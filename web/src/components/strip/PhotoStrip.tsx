@@ -9,7 +9,13 @@ import { formatFooterDate } from "@/lib/capture/format-footer-date";
 import { FILTER_IDS } from "@/lib/capture/filters";
 import { FRAMES } from "@/lib/frames/frame-registry";
 import { config } from "@/lib/config";
-import { trackChallengeDownloaded, trackChallengeShared, trackLike } from "@/lib/analytics";
+import {
+  trackChallengeDownloaded,
+  trackChallengeShared,
+  trackLike,
+  trackStripDownloaded,
+  trackStripShared,
+} from "@/lib/analytics";
 import { Link } from "@/i18n/navigation";
 import type { FilterId, FrameId, StripStyle } from "@/types/frame";
 import type { ChallengeMode } from "@/types/sticker";
@@ -76,6 +82,7 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, names, solo
 
   async function handleShare() {
     if (isChallenge) trackChallengeShared();
+    trackStripShared({ participants: isSolo ? "solo" : "duo", mode });
     const blob = await (await fetch(stripUrl)).blob();
     const file = new File([blob], "snaplover.png", { type: "image/png" });
 
@@ -96,6 +103,7 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, names, solo
 
   function handleDownloadClick() {
     if (isChallenge) trackChallengeDownloaded();
+    trackStripDownloaded({ participants: isSolo ? "solo" : "duo", mode });
   }
 
   return (

@@ -15,7 +15,13 @@ import { FRAMES } from "@/lib/frames/frame-registry";
 import { DEFAULT_PACK_ID, STICKERS } from "@/lib/stickers/sticker-registry";
 import { pickStickers } from "@/lib/stickers/pick-stickers";
 import { config } from "@/lib/config";
-import { trackChallengeCompleted, trackChallengeDuoStarted, trackChallengeStarted } from "@/lib/analytics";
+import {
+  trackChallengeCompleted,
+  trackChallengeDuoStarted,
+  trackChallengeStarted,
+  trackSessionCompleted,
+  trackSessionStarted,
+} from "@/lib/analytics";
 import type { FrameId, StripStyle } from "@/types/frame";
 import type { ChallengeMode, StickerDefinition, StickerId, StickerPackId } from "@/types/sticker";
 
@@ -324,6 +330,7 @@ export function useCaptureSession({
           setStripUrl(url);
           setStatus("done");
           if (isChallenge) trackChallengeCompleted();
+          trackSessionCompleted({ participants: "duo", mode: effectiveModeRef.current });
         })
         .catch((error) => console.error("[capture] échec de composition de la bande:", error));
       return;
@@ -348,6 +355,7 @@ export function useCaptureSession({
       trackChallengeDuoStarted();
       trackChallengeStarted();
     }
+    if (pose === 0) trackSessionStarted({ participants: "duo", mode });
 
     if (mode === "challenge") {
       // Phase de lecture/préparation : le sticker s'affiche seul, sans

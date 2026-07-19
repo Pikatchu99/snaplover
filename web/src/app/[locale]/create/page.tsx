@@ -5,11 +5,14 @@ import { useTranslations } from "next-intl";
 import { ChevronLeft, LayoutGrid, Rows3 } from "lucide-react";
 import { generateRoomCode } from "@/lib/room-code";
 import { FRAME_IDS } from "@/lib/frames/frame-registry";
+import { PACK_IDS, DEFAULT_PACK_ID } from "@/lib/stickers/sticker-registry";
 import { config } from "@/lib/config";
 import { cn } from "@/lib/utils";
 import { useRouter } from "@/i18n/navigation";
 import { RoomPreview } from "@/components/landing/RoomPreview";
+import { trackChallengePackSelected, trackChallengeRoomCreated } from "@/lib/analytics";
 import type { FrameId, StripStyle } from "@/types/frame";
+import type { ChallengeMode, StickerPackId } from "@/types/sticker";
 
 const PILL_CLASS = (active: boolean) =>
   cn(
@@ -37,9 +40,12 @@ export default function CreateRoomPage() {
   const router = useRouter();
   const t = useTranslations("create");
   const tFrames = useTranslations("frames");
+  const tStickerPacks = useTranslations("stickerPacks");
   const [poses, setPoses] = useState<number>(config.roomConfig.defaultPoses);
   const [style, setStyle] = useState<StripStyle>("vertical");
   const [frameId, setFrameId] = useState<FrameId>("classic");
+  const [mode, setMode] = useState<ChallengeMode>("classic");
+  const [stickerPackId, setStickerPackId] = useState<StickerPackId>(DEFAULT_PACK_ID);
   const [name, setName] = useState("");
   const [nameError, setNameError] = useState(false);
 
@@ -55,9 +61,15 @@ export default function CreateRoomPage() {
     }
 
     const code = generateRoomCode();
-    // Le lien partagé ne contient QUE la config de room (poses/style/cadre) —
-    // jamais le prénom de l'hôte, qui reste local à ce navigateur.
+    // Le lien partagé ne contient QUE la config de room (poses/style/cadre,
+    // + mode/pack en challenge) — jamais le prénom de l'hôte, qui reste local
+    // à ce navigateur. mode/pack omis en classique : URL inchangée par
+    // rapport à avant l'ajout du mode challenge.
     const shareParams = new URLSearchParams({ poses: String(poses), style, frame: frameId });
+    if (mode === "challenge") {
+      shareParams.set("mode", mode);
+      shareParams.set("pack", stickerPackId);
+    }
     const sharePath = `/r/${code}?${shareParams.toString()}`;
 
     try {
@@ -66,7 +78,10 @@ export default function CreateRoomPage() {
       // clipboard indisponible : on continue quand même vers la room
     }
 
-    const ownParams = new URLSearchParams({ poses: String(poses), style, frame: frameId, name: name.trim() });
+    if (mode === "challenge") trackChallengeRoomCreated();
+
+    const ownParams = new URLSearchParams(shareParams);
+    ownParams.set("name", name.trim());
     router.push(`/r/${code}?${ownParams.toString()}`);
   }
 
@@ -111,6 +126,67 @@ export default function CreateRoomPage() {
 
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-1 text-xs font-semibold tracking-widest text-[#8c8378] uppercase">
+              {t("modeLabel")}
+            </legend>
+            <div className="flex gap-2">
+              <button onClick={() => setMode("classic")} className={PILL_CLASS(mode === "classic")}>
+                {t("modeClassic")}
+              </button>
+              <button
+                onClick={() => {
+                  setMode("challenge");
+                  setStyle("vertical");
+                }}
+                className={PILL_CLASS(mode === "challenge")}
+              >
+                {t("modeChallenge")}
+              </button>
+            </div>
+          </fieldset>
+
+          {mode === "challenge" && (
+            <fieldset className="flex flex-col gap-2">
+              <legend className="mb-1 text-xs font-semibold tracking-widest text-[#8c8378] uppercase">
+                {t("challengeTypeLabel")}
+              </legend>
+              <div className="flex gap-2">
+                <button className={CARD_CLASS(true)} disabled>
+                  {t("challengeTypeDuo")}
+                </button>
+                <button className={cn(CARD_CLASS(false), "cursor-not-allowed opacity-50")} disabled>
+                  <span>{t("challengeTypeSolo")}</span>
+                  <span className="rounded-full bg-[#ece4d8] px-2 py-0.5 text-[10px] font-semibold text-[#8c8378]">
+                    {t("soonBadge")}
+                  </span>
+                </button>
+              </div>
+            </fieldset>
+          )}
+
+          {mode === "challenge" && (
+            <fieldset className="flex flex-col gap-2">
+              <legend className="mb-1 text-xs font-semibold tracking-widest text-[#8c8378] uppercase">
+                {t("packLabel")}
+              </legend>
+              <div className="flex flex-wrap gap-2">
+                {PACK_IDS.map((id) => (
+                  <button
+                    key={id}
+                    onClick={() => {
+                      setStickerPackId(id);
+                      trackChallengePackSelected(id);
+                    }}
+                    className={CHIP_CLASS(stickerPackId === id)}
+                  >
+                    {tStickerPacks(id)}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          )}
+
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-1 text-xs font-semibold tracking-widest text-[#8c8378] uppercase">
               {t("posesLabel")}
             </legend>
             <div className="flex gap-2">
@@ -127,7 +203,7 @@ export default function CreateRoomPage() {
               {t("styleLabel")}
             </legend>
             <div className="flex gap-2">
-              {STYLE_OPTIONS.map((opt) => (
+              {STYLE_OPTIONS.filter((opt) => mode !== "challenge" || opt.id === "vertical").map((opt) => (
                 <button key={opt.id} onClick={() => setStyle(opt.id)} className={CARD_CLASS(style === opt.id)}>
                   <opt.icon className="size-5" />
                   {opt.label}

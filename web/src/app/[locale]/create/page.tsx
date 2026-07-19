@@ -69,9 +69,6 @@ function CreateRoomForm() {
   const [stickerPackId, setStickerPackId] = useState<StickerPackId>(DEFAULT_PACK_ID);
   const [name, setName] = useState("");
   const [nameError, setNameError] = useState(false);
-  // Aucun prénom requis en solo (une seule personne, pas de partenaire à
-  // nommer dans le footer) — voir docs/STICKER-CHALLENGES.md.
-  const requiresName = !(mode === "challenge" && challengeType === "solo");
   // Poses/style/cadre repliés par défaut : trop d'options affichées d'un coup
   // perdait les gens (retour utilisateur) — la valeur par défaut convient à
   // la plupart, "Personnaliser" reste à un clic pour qui veut vraiment choisir.
@@ -83,17 +80,20 @@ function CreateRoomForm() {
   ];
 
   async function handleCreate() {
-    if (requiresName && !name.trim()) {
+    if (!name.trim()) {
       setNameError(true);
       return;
     }
 
-    // Challenge solo : pas de room, pas de code à partager, pas de prénom —
-    // on file droit vers l'écran de capture locale (voir docs/STICKER-CHALLENGES.md
-    // "pas besoin de room partagée"). L'event "démarré" part plus tard, au
-    // lancement réel de la séance (use-solo-capture-session.ts), pas ici.
-    if (mode === "challenge" && challengeType === "solo") {
-      const soloParams = new URLSearchParams({ poses: String(poses), frame: frameId, pack: stickerPackId });
+    // Solo (classique ou challenge) : pas de room, pas de code à partager —
+    // on file droit vers l'écran de capture locale (voir
+    // docs/STICKER-CHALLENGES.md "pas besoin de room partagée"), mais le
+    // prénom reste requis : c'est la signature du footer de la bande. L'event
+    // "démarré" part plus tard, au lancement réel de la séance
+    // (use-solo-capture-session.ts), pas ici.
+    if (challengeType === "solo") {
+      const soloParams = new URLSearchParams({ poses: String(poses), style, frame: frameId, mode, name: name.trim() });
+      if (mode === "challenge") soloParams.set("pack", stickerPackId);
       router.push(`/solo?${soloParams.toString()}`);
       return;
     }
@@ -142,55 +142,56 @@ function CreateRoomForm() {
         </div>
 
         <div className="flex flex-col gap-8">
-          {requiresName && (
-            <fieldset className="flex flex-col gap-2">
-              <legend className="mb-1 text-xs font-semibold tracking-widest text-[#8c8378] uppercase">
-                {t("nameLabel")}
-              </legend>
-              {/* text-base (16px), pas text-sm : sous ce seuil, Safari iOS
-                  zoome automatiquement toute la page au focus d'un champ. */}
-              <input
-                value={name}
-                onChange={(event) => {
-                  setName(event.target.value.slice(0, config.participant.nameMaxLength));
-                  setNameError(false);
-                }}
-                placeholder={t("namePlaceholder")}
-                maxLength={config.participant.nameMaxLength}
-                aria-label={t("nameLabel")}
-                className="rounded-2xl border border-[#ece4d8] bg-white px-4 py-3 text-base text-[#1c1712] placeholder:text-[#8c8378] focus:border-[#1c1712] focus:outline-none"
-              />
-              {nameError && <p className="text-sm text-red-600">{t("missingName")}</p>}
-            </fieldset>
-          )}
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-1 text-xs font-semibold tracking-widest text-[#8c8378] uppercase">
+              {t("nameLabel")}
+            </legend>
+            {/* text-base (16px), pas text-sm : sous ce seuil, Safari iOS
+                zoome automatiquement toute la page au focus d'un champ. */}
+            <input
+              value={name}
+              onChange={(event) => {
+                setName(event.target.value.slice(0, config.participant.nameMaxLength));
+                setNameError(false);
+              }}
+              placeholder={t("namePlaceholder")}
+              maxLength={config.participant.nameMaxLength}
+              aria-label={t("nameLabel")}
+              className="rounded-2xl border border-[#ece4d8] bg-white px-4 py-3 text-base text-[#1c1712] placeholder:text-[#8c8378] focus:border-[#1c1712] focus:outline-none"
+            />
+            {nameError && <p className="text-sm text-red-600">{t("missingName")}</p>}
+          </fieldset>
+
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-1 text-xs font-semibold tracking-widest text-[#8c8378] uppercase">
+              {t("participantsLabel")}
+            </legend>
+            <div className="grid grid-cols-2 gap-2">
+              <button onClick={() => setChallengeType("duo")} className={PILL_CLASS(challengeType === "duo")}>
+                {t("participantsDuo")}
+              </button>
+              <button onClick={() => setChallengeType("solo")} className={PILL_CLASS(challengeType === "solo")}>
+                {t("participantsSolo")}
+              </button>
+            </div>
+          </fieldset>
 
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-1 text-xs font-semibold tracking-widest text-[#8c8378] uppercase">
               {t("modeLabel")}
             </legend>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <button onClick={() => setMode("classic")} className={PILL_CLASS(mode === "classic")}>
                 {t("modeOptionClassic")}
               </button>
               <button
                 onClick={() => {
                   setMode("challenge");
-                  setChallengeType("duo");
                   setStyle("vertical");
                 }}
-                className={PILL_CLASS(mode === "challenge" && challengeType === "duo")}
+                className={PILL_CLASS(mode === "challenge")}
               >
-                {t("modeOptionChallengeDuo")}
-              </button>
-              <button
-                onClick={() => {
-                  setMode("challenge");
-                  setChallengeType("solo");
-                  setStyle("vertical");
-                }}
-                className={PILL_CLASS(mode === "challenge" && challengeType === "solo")}
-              >
-                {t("modeOptionChallengeSolo")}
+                {t("modeOptionChallenge")}
               </button>
             </div>
           </fieldset>

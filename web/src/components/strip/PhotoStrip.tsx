@@ -2,13 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Download, Heart, Plus, Share2 } from "lucide-react";
+import { Download, Heart, Plus, Share2, Smartphone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { composeStrip, type StripCell } from "@/lib/capture/compose-strip";
+import { composeStoryImage } from "@/lib/capture/compose-story";
 import { formatFooterDate } from "@/lib/capture/format-footer-date";
 import { FILTER_IDS } from "@/lib/capture/filters";
 import { FRAMES } from "@/lib/frames/frame-registry";
 import { config } from "@/lib/config";
+import { SITE_URL } from "@/lib/site";
 import {
   trackChallengeDownloaded,
   trackChallengeShared,
@@ -43,6 +45,7 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, names, solo
   const [filter, setFilter] = useState<FilterId>("classic");
   const [stripUrl, setStripUrl] = useState(initialStripUrl);
   const [liked, setLiked] = useState(false);
+  const [composingStory, setComposingStory] = useState(false);
   const isChallenge = mode === "challenge";
   // Absent aussi bien en challenge solo qu'en solo classique (docs/STICKER-CHALLENGES.md
   // + extension solo classique) — une seule personne, aucun prénom de partenaire à afficher.
@@ -80,15 +83,21 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, names, solo
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 
-  async function handleShare() {
-    if (isChallenge) trackChallengeShared();
-    trackStripShared({ participants: isSolo ? "solo" : "duo", mode });
-    const blob = await (await fetch(stripUrl)).blob();
-    const file = new File([blob], "snaplover.png", { type: "image/png" });
+  // SITE_URL est une valeur d'infra (lib/site.ts, jamais en dur) — absente en
+  // dev/preview sans NEXT_PUBLIC_SITE_URL configuré, auquel cas on omet
+  // silencieusement le lien plutôt que de glisser un texte tronqué/vide.
+  const shareText = SITE_URL ? `${t("shareText")}\n${SITE_URL}` : t("shareText");
+
+  // Partage-ou-télécharge un PNG déjà généré : Web Share API si dispo (mobile,
+  // la cible la plus probable pour ce genre de contenu), sinon téléchargement
+  // — même fallback pour le format classique et le format Story.
+  async function shareOrDownload(url: string, filename: string, text: string) {
+    const blob = await (await fetch(url)).blob();
+    const file = new File([blob], filename, { type: "image/png" });
 
     if (navigator.canShare?.({ files: [file] })) {
       try {
-        await navigator.share({ files: [file], title: "SnapLover" });
+        await navigator.share({ files: [file], title: "SnapLover", text });
         return;
       } catch {
         // annulé ou indisponible : on retombe sur le téléchargement
@@ -96,9 +105,27 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, names, solo
     }
 
     const a = document.createElement("a");
-    a.href = stripUrl;
-    a.download = "snaplover.png";
+    a.href = url;
+    a.download = filename;
     a.click();
+  }
+
+  async function handleShare() {
+    if (isChallenge) trackChallengeShared();
+    trackStripShared({ participants: isSolo ? "solo" : "duo", mode });
+    await shareOrDownload(stripUrl, "snaplover.png", shareText);
+  }
+
+  async function handleShareStory() {
+    if (isChallenge) trackChallengeShared();
+    trackStripShared({ participants: isSolo ? "solo" : "duo", mode, format: "story" });
+    setComposingStory(true);
+    try {
+      const storyUrl = await composeStoryImage(stripUrl, { tagline: t("storyTagline") });
+      await shareOrDownload(storyUrl, "snaplover-story.png", shareText);
+    } finally {
+      setComposingStory(false);
+    }
   }
 
   function handleDownloadClick() {
@@ -151,6 +178,17 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, names, solo
         >
           <Share2 className="size-4" />
           {t("share")}
+        </button>
+        {/* Format 9:16 dédié aux Stories (Instagram/TikTok/Snapchat) — la
+            bande brute n'est jamais au bon ratio pour ce canal de partage,
+            voir lib/capture/compose-story.ts. */}
+        <button
+          onClick={handleShareStory}
+          disabled={composingStory}
+          className="inline-flex items-center gap-2 rounded-2xl border border-[#ece4d8] px-5 py-2.5 text-sm font-medium text-[#1c1712] transition hover:bg-[#ece4d8]/40 disabled:opacity-60"
+        >
+          <Smartphone className="size-4" />
+          {composingStory ? t("preparingStory") : t("shareStory")}
         </button>
       </div>
 

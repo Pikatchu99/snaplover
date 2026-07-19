@@ -52,8 +52,11 @@ export function trackStripDownloaded({ participants, mode }: SessionDimensions) 
 
 // Bande partagée (Web Share API ou fallback téléchargement) — générique,
 // complète trackChallengeShared pour couvrir aussi le classique (duo et solo).
-export function trackStripShared({ participants, mode }: SessionDimensions) {
-  window.umami?.track("strip-shared", { participants, mode });
+// `format` distingue le partage classique du nouvel export Story (9:16, voir
+// lib/capture/compose-story.ts) — défaut "classic" pour ne pas casser les
+// données déjà collectées sur cet évènement avant l'ajout du format Story.
+export function trackStripShared({ participants, mode, format = "classic" }: SessionDimensions & { format?: "classic" | "story" }) {
+  window.umami?.track("strip-shared", { participants, mode, format });
 }
 
 // Proportion réelle de sessions qui passent par le relais TURN vs en direct

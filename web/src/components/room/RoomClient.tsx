@@ -38,7 +38,9 @@ export function RoomClient({ code, poses, frameId, style, mode, stickerPackId, n
     frameId: effectiveFrameId,
     style: effectiveStyle,
     mode: effectiveMode,
+    stickerPackId: effectiveStickerPackId,
     currentSticker,
+    stickerPreview,
     countdownMs,
     stripUrl,
     cells,
@@ -106,6 +108,9 @@ export function RoomClient({ code, poses, frameId, style, mode, stickerPackId, n
       poses={effectivePoses}
       frameId={effectiveFrameId}
       style={effectiveStyle}
+      mode={effectiveMode}
+      stickerPackId={effectiveStickerPackId}
+      stickerPreview={stickerPreview}
       localStream={localStream}
       remoteStream={remoteStream}
       status={status}

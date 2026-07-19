@@ -143,6 +143,12 @@ const en = {
     invalidRoomJoinCta: "Enter a code",
     turnUnavailableMessage:
       "Your two cameras can't reach each other directly, and the free relay service that usually helps in that case isn't responding (its monthly quota is probably used up). I'm on it. Try again a bit later, or from a different network (direct connections sometimes work even without it).",
+    challengeTutorial: {
+      title: "Here's what you'll do",
+      intro:
+        "You'll each take turns reproducing these {n} stickers on screen. Press the button to launch, a countdown starts right after.",
+      gotIt: "Got it",
+    },
     status: {
       requestingCamera: "Turning on your camera…",
       cameraDenied: "Camera blocked",

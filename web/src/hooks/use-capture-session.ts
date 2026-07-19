@@ -17,7 +17,7 @@ import { pickStickers } from "@/lib/stickers/pick-stickers";
 import { config } from "@/lib/config";
 import { trackChallengeCompleted, trackChallengeDuoStarted, trackChallengeStarted } from "@/lib/analytics";
 import type { FrameId, StripStyle } from "@/types/frame";
-import type { ChallengeMode, StickerId, StickerPackId } from "@/types/sticker";
+import type { ChallengeMode, StickerDefinition, StickerId, StickerPackId } from "@/types/sticker";
 
 // "reveal" : sticker affiché seul, sans décompte visible — phase de
 // préparation avant le 3·2·1, uniquement en mode challenge (voir
@@ -382,6 +382,10 @@ export function useCaptureSession({
   const { host: hostName, guest: guestName } = resolveNames();
   const currentStickerId = stickerIds[currentPose];
   const currentSticker = currentStickerId ? STICKERS[currentStickerId] : undefined;
+  // Liste complète des stickers de la séance (une fois connus) — permet
+  // d'afficher un aperçu dans le lobby avant de lancer, pas seulement le
+  // sticker de la pose courante (voir docs/STICKER-CHALLENGES.md).
+  const stickerPreview = stickerIds.map((id) => STICKERS[id]).filter((sticker): sticker is StickerDefinition => Boolean(sticker));
 
   return {
     status,
@@ -393,6 +397,7 @@ export function useCaptureSession({
     mode: effectiveMode,
     stickerPackId: effectiveStickerPackId,
     currentSticker,
+    stickerPreview,
     countdownMs,
     stripUrl,
     cells,

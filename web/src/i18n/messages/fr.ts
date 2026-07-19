@@ -145,6 +145,12 @@ const fr = {
     invalidRoomJoinCta: "Saisir un code",
     turnUnavailableMessage:
       "Vos deux caméras n'arrivent pas à se parler directement, et le service gratuit qui sert de relais dans ce cas ne répond plus (son quota du mois est sûrement atteint). Je m'en occupe. Réessayez un peu plus tard, ou avec un autre réseau (le direct fonctionne parfois même sans lui).",
+    challengeTutorial: {
+      title: "Voici ce que vous allez faire",
+      intro:
+        "Vous allez reproduire ces {n} stickers, chacun votre tour à l'écran. Appuyez sur le bouton pour lancer, un compte à rebours démarre juste après.",
+      gotIt: "J'ai compris",
+    },
     status: {
       requestingCamera: "Activation de votre caméra…",
       cameraDenied: "Caméra bloquée",

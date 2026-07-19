@@ -4,9 +4,11 @@ import { useState, type RefObject } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Check, Copy } from "lucide-react";
 import { CameraTile, type CameraTileState } from "@/components/room/CameraTile";
+import { StickerTile } from "@/components/room/StickerTile";
 import type { RoomConnectionStatus } from "@/hooks/use-room-connection";
 import { Link, getPathname } from "@/i18n/navigation";
 import type { FrameId, StripStyle } from "@/types/frame";
+import type { ChallengeMode, StickerDefinition, StickerPackId } from "@/types/sticker";
 
 interface LobbyProps {
   roomCode: string;
@@ -15,6 +17,10 @@ interface LobbyProps {
   poses: number;
   frameId: FrameId;
   style: StripStyle;
+  mode: ChallengeMode;
+  stickerPackId?: StickerPackId;
+  /** Stickers de toute la séance, une fois connus des deux côtés — vide tant que non reçus. */
+  stickerPreview: StickerDefinition[];
   localStream: MediaStream | null;
   remoteStream: MediaStream | null;
   status: RoomConnectionStatus;
@@ -49,6 +55,9 @@ export function Lobby({
   poses,
   frameId,
   style,
+  mode,
+  stickerPackId,
+  stickerPreview,
   localStream,
   remoteStream,
   status,
@@ -61,6 +70,11 @@ export function Lobby({
   const tCommon = useTranslations("common");
   const locale = useLocale();
   const [copied, setCopied] = useState(false);
+  // "À chaque séance" (pas mémorisé en local) — voir décision produit dans
+  // docs/STICKER-CHALLENGES.md : utile pour se préparer aux stickers de
+  // CETTE séance précise, pas juste apprendre le mécanisme une fois.
+  const [tutorialDismissed, setTutorialDismissed] = useState(false);
+  const showTutorial = mode === "challenge" && status === "connected" && stickerPreview.length > 0 && !tutorialDismissed;
 
   const STATUS_LABEL: Record<RoomConnectionStatus, string> = {
     "requesting-camera": t("status.requestingCamera"),
@@ -78,8 +92,14 @@ export function Lobby({
     // Le lien copié ici doit être directement partageable — jamais juste le
     // code brut, qui seul ne permet pas de rejoindre avec la bonne config —
     // et dans la langue courante, pour que le partenaire invité arrive dans
-    // la même langue que celle utilisée pour créer la room.
+    // la même langue que celle utilisée pour créer la room. mode/pack inclus
+    // sinon un lien re-copié depuis le lobby d'une séance challenge renverrait
+    // vers une séance classique.
     const params = new URLSearchParams({ poses: String(poses), style, frame: frameId });
+    if (mode === "challenge" && stickerPackId) {
+      params.set("mode", mode);
+      params.set("pack", stickerPackId);
+    }
     const path = getPathname({ href: `/r/${roomCode}`, locale });
     await navigator.clipboard.writeText(`${window.location.origin}${path}?${params.toString()}`);
     setCopied(true);
@@ -160,6 +180,30 @@ export function Lobby({
           <Link href="/" className="text-sm text-white/50 underline-offset-2 hover:text-white/80 hover:underline">
             {tCommon("backToHome")}
           </Link>
+        </div>
+      </RoomShell>
+    );
+  }
+
+  if (showTutorial) {
+    return (
+      <RoomShell>
+        <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6">
+          <h1 className="font-heading text-2xl font-bold text-white">{t("challengeTutorial.title")}</h1>
+          <p className="text-sm text-white/70">{t("challengeTutorial.intro", { n: stickerPreview.length })}</p>
+
+          <div className="grid flex-1 grid-cols-2 gap-3 sm:grid-cols-4">
+            {stickerPreview.map((sticker) => (
+              <StickerTile key={sticker.id} sticker={sticker} />
+            ))}
+          </div>
+
+          <button
+            onClick={() => setTutorialDismissed(true)}
+            className="w-full rounded-2xl bg-linear-to-r from-[#fb5a46] to-[#ff7d54] px-6 py-3.5 font-medium text-white transition hover:opacity-90"
+          >
+            {t("challengeTutorial.gotIt")}
+          </button>
         </div>
       </RoomShell>
     );

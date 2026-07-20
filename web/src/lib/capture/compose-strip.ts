@@ -28,7 +28,9 @@ export interface ComposeOptions {
   challenge?: { widthRatio: number };
 }
 
-function loadImage(src: string): Promise<HTMLImageElement> {
+// Exportées : réutilisées telles quelles par lib/capture/compose-story.ts
+// pour incruster la bande déjà composée dans le cadre Story.
+export function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
@@ -37,7 +39,7 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-function clipRoundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+export function clipRoundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
   ctx.arcTo(x + w, y, x + w, y + h, r);
@@ -48,7 +50,7 @@ function clipRoundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: n
   ctx.clip();
 }
 
-function drawCover(ctx: CanvasRenderingContext2D, img: HTMLImageElement, x: number, y: number, w: number, h: number) {
+export function drawCover(ctx: CanvasRenderingContext2D, img: HTMLImageElement, x: number, y: number, w: number, h: number) {
   const imageRatio = img.width / img.height;
   const targetRatio = w / h;
   let sw: number, sh: number, sx: number, sy: number;

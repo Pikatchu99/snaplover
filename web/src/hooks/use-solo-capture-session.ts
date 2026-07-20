@@ -29,6 +29,9 @@ interface UseSoloCaptureSessionOptions {
   mode: ChallengeMode;
   /** Présent uniquement quand mode === "challenge". */
   stickerPackId?: StickerPackId;
+  /** Stickers imposés (ex. CTA "Pack du jour") — utilisés tels quels si leur
+   * longueur correspond à `poses`, sinon tirage aléatoire habituel. */
+  pinnedStickerIds?: StickerId[];
   /** Signature du footer de la bande — requis même en solo. */
   myName: string;
   localVideoRef: RefObject<HTMLVideoElement | null>;
@@ -46,6 +49,7 @@ export function useSoloCaptureSession({
   style,
   mode,
   stickerPackId,
+  pinnedStickerIds,
   myName,
   localVideoRef,
 }: UseSoloCaptureSessionOptions) {
@@ -56,12 +60,40 @@ export function useSoloCaptureSession({
   const [hasStarted, setHasStarted] = useState(false);
   const [currentPose, setCurrentPose] = useState(0);
   const [countdownMs, setCountdownMs] = useState(0);
+  const [revealMs, setRevealMs] = useState(0);
   const [stripUrl, setStripUrl] = useState<string | null>(null);
   const [cells, setCells] = useState<StripCell[]>([]);
   // Tiré une seule fois au montage — pas besoin d'attendre un pair pour
   // connaître la séquence de stickers, contrairement au duo. Vide en classique.
-  const [stickerIds] = useState<StickerId[]>(() => (isChallenge && stickerPackId ? pickStickers(stickerPackId, poses) : []));
+  // Stickers imposés (pinnedStickerIds, ex. CTA "Pack du jour") prioritaires
+  // sur le tirage aléatoire s'ils correspondent bien au nombre de poses.
+  const [stickerIds] = useState<StickerId[]>(() =>
+    isChallenge && stickerPackId
+      ? pinnedStickerIds && pinnedStickerIds.length === poses
+        ? pinnedStickerIds
+        : pickStickers(stickerPackId, poses)
+      : [],
+  );
   const cellsRef = useRef<StripCell[]>([]);
+
+  // Phase de lecture/préparation (sticker affiché seul) — tick affiché comme
+  // pour scheduleCapture ci-dessous, pour que l'UI puisse expliquer "le vrai
+  // décompte démarre dans Xs" au lieu d'une pause silencieuse.
+  function startReveal(pose: number) {
+    setStatus("reveal");
+    const delay = config.challenge.revealMs;
+    setRevealMs(delay);
+
+    const start = Date.now();
+    function tick() {
+      const remain = delay - (Date.now() - start);
+      setRevealMs(Math.max(0, remain));
+      if (remain > 0) requestAnimationFrame(tick);
+    }
+    tick();
+
+    setTimeout(() => scheduleCapture(pose), delay);
+  }
 
   function scheduleCapture(pose: number) {
     setStatus("countdown");
@@ -141,8 +173,7 @@ export function useSoloCaptureSession({
     if (isChallenge) {
       // Phase de lecture/préparation — même mécanisme qu'en duo (voir
       // use-capture-session.ts), utile aussi en solo pour attraper un accessoire.
-      setStatus("reveal");
-      setTimeout(() => scheduleCapture(pose), config.challenge.revealMs);
+      startReveal(pose);
       return;
     }
 
@@ -161,6 +192,7 @@ export function useSoloCaptureSession({
     currentPose,
     poses,
     countdownMs,
+    revealMs,
     stripUrl,
     cells,
     currentSticker,

@@ -95,6 +95,12 @@ const en = {
         },
       ],
     },
+    dailyPack: {
+      title: "Today's pack",
+      headline: "Redo these 3 faces.",
+      subtitle: "Solo or as a duo. SnapLover gives you the stickers, you strike the poses, CopyThat keeps the strip.",
+      cta: "Dare to redo it",
+    },
   },
   join: {
     eyebrow: "Someone invited you?",
@@ -178,6 +184,8 @@ const en = {
     instruction: "Look at the camera…",
     stickerLabel: "Model",
     stickerInstruction: "Copy the sticker…",
+    revealInstruction: "Look at the sticker to copy",
+    revealCountdown: "The real countdown starts in {seconds}s",
     awaitingPeerTitle: "Waiting for Partner…",
     awaitingPeerSubtitle: "The 3·2·1 only starts once you're both ready.",
     partnerDisconnectedTitle: "Partner disconnected",
@@ -231,8 +239,8 @@ const en = {
   strip: {
     footerWithNames: "SNAPLOVER · {date} · {host} & {guest}",
     footerGeneric: "SNAPLOVER · {date} · TOGETHER",
-    footerChallenge: "SNAPLOVER CHALLENGE · {date} · {host} & {guest}",
-    footerChallengeSolo: "SNAPLOVER CHALLENGE · {date} · {name}",
+    footerChallenge: "SNAPLOVER COPYTHAT · {date} · {host} & {guest}",
+    footerChallengeSolo: "SNAPLOVER COPYTHAT · {date} · {name}",
     footerSolo: "SNAPLOVER · {date} · {name}",
   },
   solo: {

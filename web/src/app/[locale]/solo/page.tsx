@@ -31,6 +31,7 @@ export default async function SoloPage({ params, searchParams }: SoloPageProps) 
       style={config.style}
       mode={config.mode}
       stickerPackId={config.stickerPackId}
+      stickerIds={config.stickerIds}
       name={config.name ?? ""}
     />
   );

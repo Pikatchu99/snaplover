@@ -3,8 +3,10 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Logo } from "@/components/landing/Logo";
 import { HeroStrips } from "@/components/landing/HeroStrips";
 import { InlineJoinField } from "@/components/landing/InlineJoinField";
+import { PackOfTheDay } from "@/components/landing/PackOfTheDay";
 import { Link } from "@/i18n/navigation";
 import { SITE_URL } from "@/lib/site";
+import { getDailyChallenge } from "@/lib/stickers/daily-pack";
 
 // Photos de démo (chats/chiens, pas de vrais visages — voir CLAUDE.md).
 // 6 par bande décorative : images[i*2]/[i*2+1] = paire par case.
@@ -55,6 +57,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
 
   const steps = t.raw("landing.howItWorks.steps") as Step[];
   const faqItems = t.raw("landing.faq.items") as FaqItem[];
+  const dailyChallenge = getDailyChallenge();
 
   return (
     <>
@@ -99,6 +102,8 @@ export default async function LandingPage({ params }: LandingPageProps) {
           />
         </div>
       </main>
+
+      <PackOfTheDay packId={dailyChallenge.packId} stickerIds={dailyChallenge.stickerIds} />
 
       <section className="bg-[#fbf7f1] px-6 py-16 md:px-16">
         <div className="mx-auto flex max-w-5xl flex-col gap-10">

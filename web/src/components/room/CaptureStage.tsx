@@ -18,6 +18,8 @@ interface CaptureStageProps {
   currentPose: number;
   poses: number;
   countdownMs: number;
+  /** Temps restant de la phase "reveal" (sticker seul avant le 3·2·1). */
+  revealMs: number;
   // Une pose est en attente de déclenchement mais le partenaire n'est pas
   // (ou plus) joignable — countdown suspendu si aucune pose n'est encore
   // faite, "partenaire déconnecté" sinon (voir SNAPROOM-SPEC.md §12, états 3/4).
@@ -115,6 +117,20 @@ export function ComposingOverlay() {
   );
 }
 
+// Bandeau affiché pendant la phase "reveal" (sticker seul, sans 3·2·1
+// visible, voir docs/STICKER-CHALLENGES.md) — en flux, pas en overlay
+// couvrant : le but est justement de bien voir le sticker à reproduire.
+export function RevealBanner({ remainingMs }: { remainingMs: number }) {
+  const t = useTranslations("captureStage");
+  const seconds = Math.max(1, Math.ceil(remainingMs / 1000));
+  return (
+    <div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-1 rounded-2xl border border-[#fb5a46]/30 bg-[#fb5a46]/10 px-4 py-3 text-center">
+      <span className="font-heading text-sm font-bold text-white">{t("revealInstruction")}</span>
+      <span className="text-xs text-white/70">{t("revealCountdown", { seconds })}</span>
+    </div>
+  );
+}
+
 // Écran de séance (compte à rebours 3·2·1 synchrone) — SNAPROOM-SPEC.md §12 (E5).
 export function CaptureStage({
   localStream,
@@ -124,6 +140,7 @@ export function CaptureStage({
   currentPose,
   poses,
   countdownMs,
+  revealMs,
   awaitingPeer,
   cells,
   mode,
@@ -146,6 +163,8 @@ export function CaptureStage({
           {isChallenge ? t("stickerInstruction") : t("instruction")}
         </span>
       </div>
+
+      {status === "reveal" && <RevealBanner remainingMs={revealMs} />}
 
       <div
         className={cn(

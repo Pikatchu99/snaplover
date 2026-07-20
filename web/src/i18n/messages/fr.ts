@@ -96,6 +96,13 @@ const fr = {
         },
       ],
     },
+    dailyPack: {
+      title: "Pack du jour",
+      headline: "Refais ces 3 têtes.",
+      subtitle:
+        "Solo ou à deux. SnapLover te donne les stickers, tu fais les poses, CopyThat garde la bande photo.",
+      cta: "Ose refaire ça",
+    },
   },
   join: {
     eyebrow: "Quelqu'un vous a invité ?",
@@ -180,6 +187,8 @@ const fr = {
     instruction: "Regardez l'objectif…",
     stickerLabel: "Modèle",
     stickerInstruction: "Reproduisez le sticker…",
+    revealInstruction: "Observe le sticker à reproduire",
+    revealCountdown: "Le vrai décompte démarre dans {seconds}s",
     awaitingPeerTitle: "On attend Partenaire…",
     awaitingPeerSubtitle: "Le 3·2·1 ne se déclenche que si vous êtes prêts tous les deux.",
     partnerDisconnectedTitle: "Partenaire s'est déconnecté·e",
@@ -234,8 +243,8 @@ const fr = {
     /** Footer imprimé sur la bande composée (canvas), pas du JSX. */
     footerWithNames: "SNAPLOVER · {date} · {host} & {guest}",
     footerGeneric: "SNAPLOVER · {date} · À DEUX",
-    footerChallenge: "SNAPLOVER CHALLENGE · {date} · {host} & {guest}",
-    footerChallengeSolo: "SNAPLOVER CHALLENGE · {date} · {name}",
+    footerChallenge: "SNAPLOVER COPYTHAT · {date} · {host} & {guest}",
+    footerChallengeSolo: "SNAPLOVER COPYTHAT · {date} · {name}",
     footerSolo: "SNAPLOVER · {date} · {name}",
   },
   solo: {

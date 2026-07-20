@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { ChevronDown, ChevronLeft, LayoutGrid, Rows3 } from "lucide-react";
 import { generateRoomCode } from "@/lib/room-code";
 import { FRAME_IDS } from "@/lib/frames/frame-registry";
-import { PACK_IDS, DEFAULT_PACK_ID } from "@/lib/stickers/sticker-registry";
+import { PACK_IDS, DEFAULT_PACK_ID, STICKERS } from "@/lib/stickers/sticker-registry";
 import { config } from "@/lib/config";
 import { cn } from "@/lib/utils";
 import { useRouter } from "@/i18n/navigation";
@@ -67,7 +67,21 @@ function CreateRoomForm() {
   const [challengeType, setChallengeType] = useState<ChallengeType>(() =>
     searchParams.get("type") === "solo" ? "solo" : "duo",
   );
-  const [stickerPackId, setStickerPackId] = useState<StickerPackId>(DEFAULT_PACK_ID);
+  // Préremplis depuis le CTA "Pack du jour" de la landing (?pack=...&stickers=...) :
+  // pack + stickers imposés, tant que l'utilisateur ne change ni le pack ni le
+  // nombre de poses ci-dessous (sinon incohérent, on abandonne le pin).
+  const [stickerPackId, setStickerPackId] = useState<StickerPackId>(() => {
+    const packRaw = searchParams.get("pack");
+    return packRaw && (PACK_IDS as string[]).includes(packRaw) ? (packRaw as StickerPackId) : DEFAULT_PACK_ID;
+  });
+  const [pinnedStickerIds, setPinnedStickerIds] = useState<string[] | null>(() => {
+    const packRaw = searchParams.get("pack");
+    const stickersRaw = searchParams.get("stickers");
+    if (!packRaw || !stickersRaw) return null;
+    const ids = stickersRaw.split(",").filter(Boolean);
+    if (ids.length !== config.roomConfig.defaultPoses) return null;
+    return ids.every((id) => STICKERS[id]?.packId === packRaw) ? ids : null;
+  });
   const [name, setName] = useState("");
   const [nameError, setNameError] = useState(false);
   // Poses/style/cadre repliés par défaut : trop d'options affichées d'un coup
@@ -94,7 +108,10 @@ function CreateRoomForm() {
     // (use-solo-capture-session.ts), pas ici.
     if (challengeType === "solo") {
       const soloParams = new URLSearchParams({ poses: String(poses), style, frame: frameId, mode, name: name.trim() });
-      if (mode === "challenge") soloParams.set("pack", stickerPackId);
+      if (mode === "challenge") {
+        soloParams.set("pack", stickerPackId);
+        if (pinnedStickerIds) soloParams.set("stickers", pinnedStickerIds.join(","));
+      }
       trackRoomCreated({ participants: "solo", mode });
       router.push(`/solo?${soloParams.toString()}`);
       return;
@@ -109,6 +126,7 @@ function CreateRoomForm() {
     if (mode === "challenge") {
       shareParams.set("mode", mode);
       shareParams.set("pack", stickerPackId);
+      if (pinnedStickerIds) shareParams.set("stickers", pinnedStickerIds.join(","));
     }
     const sharePath = `/r/${code}?${shareParams.toString()}`;
 
@@ -210,6 +228,7 @@ function CreateRoomForm() {
                     key={id}
                     onClick={() => {
                       setStickerPackId(id);
+                      setPinnedStickerIds(null);
                       trackChallengePackSelected(id);
                     }}
                     className={CHIP_CLASS(stickerPackId === id)}
@@ -246,7 +265,14 @@ function CreateRoomForm() {
                   </legend>
                   <div className="flex gap-2">
                     {config.roomConfig.validPoses.map((n) => (
-                      <button key={n} onClick={() => setPoses(n)} className={PILL_CLASS(poses === n)}>
+                      <button
+                        key={n}
+                        onClick={() => {
+                          setPoses(n);
+                          setPinnedStickerIds(null);
+                        }}
+                        className={PILL_CLASS(poses === n)}
+                      >
                         {t("posesOption", { n })}
                       </button>
                     ))}

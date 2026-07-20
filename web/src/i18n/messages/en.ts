@@ -200,7 +200,7 @@ const en = {
     shareStory: "Share as a story",
     preparingStory: "Preparing…",
     shareText: "We just made a photo strip with SnapLover!",
-    storyTagline: "Make your own, wherever you are",
+    storyTagline: "Create a photo strip together, wherever you are",
     newSession: "Create my own SnapLover session",
     doItTogether: "Do it together",
     note: "You each have your own copy. The full-resolution strip is saved on each device.",

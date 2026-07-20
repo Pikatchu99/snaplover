@@ -121,7 +121,7 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, names, solo
     trackStripShared({ participants: isSolo ? "solo" : "duo", mode, format: "story" });
     setComposingStory(true);
     try {
-      const storyUrl = await composeStoryImage(stripUrl, { tagline: t("storyTagline") });
+      const storyUrl = await composeStoryImage(stripUrl, { tagline: t("storyTagline"), siteUrl: SITE_URL });
       await shareOrDownload(storyUrl, "snaplover-story.png", shareText);
     } finally {
       setComposingStory(false);

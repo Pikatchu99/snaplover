@@ -202,7 +202,7 @@ const fr = {
     shareStory: "Partager en story",
     preparingStory: "Préparation…",
     shareText: "On vient de faire une bande photo avec SnapLover !",
-    storyTagline: "Faites la vôtre, même à distance",
+    storyTagline: "Faites une bande photo ensemble, même à distance",
     newSession: "Créer ma propre séance SnapLover",
     doItTogether: "Le faire à deux",
     note: "Vous avez chacun votre copie. La bande pleine résolution est enregistrée sur chaque appareil.",

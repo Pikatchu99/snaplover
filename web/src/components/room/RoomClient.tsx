@@ -7,7 +7,7 @@ import { Lobby } from "@/components/room/Lobby";
 import { CaptureStage } from "@/components/room/CaptureStage";
 import { PhotoStrip } from "@/components/strip/PhotoStrip";
 import type { FrameId, StripStyle } from "@/types/frame";
-import type { ChallengeMode, StickerPackId } from "@/types/sticker";
+import type { ChallengeMode, StickerId, StickerPackId } from "@/types/sticker";
 
 interface RoomClientProps {
   code: string;
@@ -19,6 +19,8 @@ interface RoomClientProps {
   style: StripStyle;
   mode: ChallengeMode;
   stickerPackId?: StickerPackId;
+  // Stickers imposés (ex. CTA "Pack du jour" de la landing) — voir room-config.ts.
+  stickerIds?: StickerId[];
   // Prénom local à CE navigateur, saisi sur /create ou /join — jamais dans le
   // lien partagé. Toujours renseigné : app/r/[code]/page.tsx redirige vers
   // /join si absent (lien collé directement) plutôt que de retomber sur un
@@ -26,7 +28,7 @@ interface RoomClientProps {
   name: string;
 }
 
-export function RoomClient({ code, poses, frameId, style, mode, stickerPackId, name }: RoomClientProps) {
+export function RoomClient({ code, poses, frameId, style, mode, stickerPackId, stickerIds, name }: RoomClientProps) {
   const { localStream, remoteStream, status, dataChannel, isInitiator, retryCamera } = useRoomConnection(code);
   const localVideoRef = useRef<HTMLVideoElement>(null);
 
@@ -42,6 +44,7 @@ export function RoomClient({ code, poses, frameId, style, mode, stickerPackId, n
     currentSticker,
     stickerPreview,
     countdownMs,
+    revealMs,
     stripUrl,
     cells,
     awaitingPeer,
@@ -56,6 +59,7 @@ export function RoomClient({ code, poses, frameId, style, mode, stickerPackId, n
     style,
     mode,
     stickerPackId,
+    pinnedStickerIds: stickerIds,
     myName: name,
     localVideoRef,
   });
@@ -94,6 +98,7 @@ export function RoomClient({ code, poses, frameId, style, mode, stickerPackId, n
         currentPose={currentPose}
         poses={effectivePoses}
         countdownMs={countdownMs}
+        revealMs={revealMs}
         awaitingPeer={awaitingPeer}
         cells={cells}
         mode={effectiveMode}

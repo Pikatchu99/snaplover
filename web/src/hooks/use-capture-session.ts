@@ -39,6 +39,9 @@ interface UseCaptureSessionOptions {
   mode: ChallengeMode;
   /** Présent uniquement quand mode === "challenge". */
   stickerPackId?: StickerPackId;
+  /** Stickers imposés (ex. CTA "Pack du jour") — utilisés tels quels si leur
+   * longueur correspond à `poses`, sinon tirage aléatoire habituel. */
+  pinnedStickerIds?: StickerId[];
   /** Prénom local (résolu avec fallback avant d'arriver ici — voir RoomClient). */
   myName: string;
   localVideoRef: RefObject<HTMLVideoElement | null>;
@@ -55,6 +58,7 @@ export function useCaptureSession({
   style,
   mode,
   stickerPackId,
+  pinnedStickerIds,
   myName,
   localVideoRef,
 }: UseCaptureSessionOptions) {
@@ -65,6 +69,7 @@ export function useCaptureSession({
   const [hasStarted, setHasStarted] = useState(false);
   const [currentPose, setCurrentPose] = useState(0);
   const [countdownMs, setCountdownMs] = useState(0);
+  const [revealMs, setRevealMs] = useState(0);
   const [stripUrl, setStripUrl] = useState<string | null>(null);
   const [cells, setCells] = useState<StripCell[]>([]);
   const [captureDeltasMs, setCaptureDeltasMs] = useState<number[]>([]);
@@ -159,8 +164,14 @@ export function useCaptureSession({
           // second "hello" (reconnexion) — sinon les poses déjà jouées se
           // verraient réassigner un autre sticker que celui affiché pendant
           // la capture (même précaution que pendingPoseRef ci-dessus).
+          // Stickers imposés (pinnedStickerIds, ex. CTA "Pack du jour")
+          // prioritaires sur le tirage aléatoire s'ils correspondent bien au
+          // nombre de poses.
           if (mode === "challenge" && stickerIdsRef.current.length === 0) {
-            stickerIdsRef.current = pickStickers(stickerPackId ?? DEFAULT_PACK_ID, poses);
+            stickerIdsRef.current =
+              pinnedStickerIds && pinnedStickerIds.length === poses
+                ? pinnedStickerIds
+                : pickStickers(stickerPackId ?? DEFAULT_PACK_ID, poses);
             setStickerIdsState(stickerIdsRef.current);
           }
           channel.send({
@@ -181,6 +192,7 @@ export function useCaptureSession({
       } else if (message.t === "reveal") {
         setHasStarted(true);
         setStatus("reveal");
+        startRevealTick(message.durationMs);
       } else if (message.t === "capture") scheduleCapture(message.pose, message.fireAtHost);
       else receiveImage(message);
     });
@@ -230,6 +242,22 @@ export function useCaptureSession({
       setAwaitingPeer(true);
     }
   }, [dataChannel]);
+
+  // Phase de lecture/préparation (sticker affiché seul) — tick local à
+  // chaque pair (hôte comme invité, voir handler "reveal" plus haut) pour que
+  // l'UI puisse expliquer "le vrai décompte démarre dans Xs" au lieu d'une
+  // pause silencieuse. Ce tick ne sert qu'à l'affichage : le vrai 3·2·1 reste
+  // déclenché par le message "capture" (fireAtHost), pas par ce timer local.
+  function startRevealTick(durationMs: number) {
+    setRevealMs(durationMs);
+    const start = Date.now();
+    function tick() {
+      const remain = durationMs - (Date.now() - start);
+      setRevealMs(Math.max(0, remain));
+      if (remain > 0) requestAnimationFrame(tick);
+    }
+    tick();
+  }
 
   function scheduleCapture(pose: number, fireAtHost: number) {
     setHasStarted(true);
@@ -365,6 +393,7 @@ export function useCaptureSession({
       setHasStarted(true);
       setStatus("reveal");
       channelRef.current.send({ t: "reveal", pose, durationMs: config.challenge.revealMs });
+      startRevealTick(config.challenge.revealMs);
       setTimeout(() => startCountdown(pose), config.challenge.revealMs);
       return;
     }
@@ -407,6 +436,7 @@ export function useCaptureSession({
     currentSticker,
     stickerPreview,
     countdownMs,
+    revealMs,
     stripUrl,
     cells,
     captureDeltasMs,

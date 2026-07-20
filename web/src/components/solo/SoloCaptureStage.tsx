@@ -2,7 +2,7 @@ import { type RefObject } from "react";
 import { useTranslations } from "next-intl";
 import { CameraTile } from "@/components/room/CameraTile";
 import { Countdown } from "@/components/room/Countdown";
-import { ComposingOverlay } from "@/components/room/CaptureStage";
+import { ComposingOverlay, RevealBanner } from "@/components/room/CaptureStage";
 import { StickerTile, StickerThumb } from "@/components/room/StickerTile";
 import { cn } from "@/lib/utils";
 import type { CaptureSessionStatus } from "@/hooks/use-capture-session";
@@ -16,6 +16,8 @@ interface SoloCaptureStageProps {
   currentPose: number;
   poses: number;
   countdownMs: number;
+  /** Temps restant de la phase "reveal" (sticker seul avant le 3·2·1). */
+  revealMs: number;
   cells: StripCell[];
   mode: ChallengeMode;
   /** Uniquement en mode challenge. */
@@ -64,6 +66,7 @@ export function SoloCaptureStage({
   currentPose,
   poses,
   countdownMs,
+  revealMs,
   cells,
   mode,
   currentSticker,
@@ -85,6 +88,8 @@ export function SoloCaptureStage({
           {isChallenge ? t("stickerInstruction") : t("instruction")}
         </span>
       </div>
+
+      {status === "reveal" && <RevealBanner remainingMs={revealMs} />}
 
       {/* Sans sticker (solo classique), une seule tuile caméra — pas la
           peine d'occuper toute la largeur comme pour la grille à 2 cases. */}

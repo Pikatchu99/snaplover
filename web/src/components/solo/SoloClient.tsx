@@ -7,7 +7,7 @@ import { SoloPrep } from "@/components/solo/SoloPrep";
 import { SoloCaptureStage } from "@/components/solo/SoloCaptureStage";
 import { PhotoStrip } from "@/components/strip/PhotoStrip";
 import type { FrameId, StripStyle } from "@/types/frame";
-import type { ChallengeMode, StickerPackId } from "@/types/sticker";
+import type { ChallengeMode, StickerId, StickerPackId } from "@/types/sticker";
 
 interface SoloClientProps {
   poses: number;
@@ -16,6 +16,8 @@ interface SoloClientProps {
   mode: ChallengeMode;
   /** Présent uniquement quand mode === "challenge". */
   stickerPackId?: StickerPackId;
+  /** Stickers imposés (ex. CTA "Pack du jour" de la landing) — voir solo-config.ts. */
+  stickerIds?: StickerId[];
   /** Prénom local à ce navigateur — signature du footer, requis même en solo. */
   name: string;
 }
@@ -23,16 +25,17 @@ interface SoloClientProps {
 // Équivalent de RoomClient.tsx pour le solo (classique ou challenge) : pas de
 // useRoomConnection (pas de room, pas de WebRTC) — juste la caméra locale et
 // l'orchestration de séance. Voir docs/STICKER-CHALLENGES.md.
-export function SoloClient({ poses, frameId, style, mode, stickerPackId, name }: SoloClientProps) {
+export function SoloClient({ poses, frameId, style, mode, stickerPackId, stickerIds, name }: SoloClientProps) {
   const { stream: localStream, status: mediaStatus, retry: retryCamera } = useUserMedia();
   const localVideoRef = useRef<HTMLVideoElement>(null);
 
-  const { status, hasStarted, currentPose, countdownMs, stripUrl, cells, currentSticker, startSession } = useSoloCaptureSession({
+  const { status, hasStarted, currentPose, countdownMs, revealMs, stripUrl, cells, currentSticker, startSession } = useSoloCaptureSession({
     poses,
     frameId,
     style,
     mode,
     stickerPackId,
+    pinnedStickerIds: stickerIds,
     myName: name,
     localVideoRef,
   });
@@ -58,6 +61,7 @@ export function SoloClient({ poses, frameId, style, mode, stickerPackId, name }:
         currentPose={currentPose}
         poses={poses}
         countdownMs={countdownMs}
+        revealMs={revealMs}
         cells={cells}
         mode={mode}
         currentSticker={currentSticker}

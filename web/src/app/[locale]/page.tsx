@@ -27,6 +27,15 @@ interface LandingPageProps {
   params: Promise<{ locale: string }>;
 }
 
+// Page pré-générée en HTML statique au build (voir generateStaticParams dans
+// layout.tsx) — sans revalidation, getDailyChallenge() ne s'exécuterait
+// qu'une seule fois au build/déploiement et le "Pack du jour" resterait figé
+// indéfiniment au lieu de changer chaque jour UTC. ISR (revalidation par
+// intervalle, pas de webhook/rebuild nécessaire) régénère la page en
+// arrière-plan au plus une fois par heure — délai négligeable pour une
+// feature ludique, pas une donnée critique.
+export const revalidate = 3600;
+
 // Landing (E1) — SNAPROOM-SPEC.md §12. Fond clair ; hero split avec panneau
 // sombre décoratif sur desktop, voir docs/design/snaproom-hifi.dc.html.
 // Sections éditoriales (comment ça marche / pourquoi / pour qui / FAQ) ajoutées

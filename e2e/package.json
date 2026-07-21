@@ -6,7 +6,8 @@
   "scripts": {
     "test": "playwright test",
     "test:headed": "playwright test --headed",
-    "test:ui": "playwright test --ui"
+    "test:ui": "playwright test --ui",
+    "stickers:catalog": "node scripts/stickers/build-production-catalog.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.0"

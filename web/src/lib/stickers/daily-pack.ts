@@ -1,5 +1,5 @@
-import { PACK_IDS, DEFAULT_PACK_ID, STICKER_PACKS, STICKERS } from "@/lib/stickers/sticker-registry";
-import { FEATURED_STICKER_IDS } from "@/lib/stickers/featured-stickers";
+import { PACK_IDS, STICKER_PACKS, STICKERS } from "@/lib/stickers/sticker-registry";
+import { DAILY_ROTATION_PACK_IDS, FEATURED_STICKER_IDS } from "@/lib/stickers/featured-stickers";
 import { DAILY_PACK_OVERRIDES } from "@/lib/stickers/daily-pack-overrides";
 import type { StickerId, StickerPackId } from "@/types/sticker";
 
@@ -74,8 +74,11 @@ export function getDailyChallenge(date: Date = new Date()): DailyChallenge {
   }
 
   const random = mulberry32(hashString(dayKey));
-  let packId = PACK_IDS[Math.floor(random() * PACK_IDS.length)];
-  if (STICKER_PACKS[packId].stickerIds.length < 3) packId = DEFAULT_PACK_ID;
+  // Rotation restreinte (DAILY_ROTATION_PACK_IDS) si configurée, sinon tous
+  // les packs — vide = pas de casse silencieuse.
+  const rotationPool = DAILY_ROTATION_PACK_IDS.length > 0 ? DAILY_ROTATION_PACK_IDS : PACK_IDS;
+  let packId = rotationPool[Math.floor(random() * rotationPool.length)];
+  if (STICKER_PACKS[packId].stickerIds.length < 3) packId = rotationPool[0];
 
   // Pool curé (featured-stickers.ts) en priorité s'il a au moins 3 entrées
   // valides pour ce pack, sinon pack complet (comportement d'avant la

@@ -1,5 +1,11 @@
 import type { StickerId, StickerPackId } from "@/types/sticker";
 
+// Packs éligibles à la rotation du "Pack du jour" — retiré ici, un pack reste
+// utilisable normalement en séance (sélecteur de pack sur /create), juste
+// jamais tiré automatiquement pour la landing. Vide = retombe sur tous les
+// packs (PACK_IDS), jamais de casse silencieuse.
+export const DAILY_ROTATION_PACK_IDS: StickerPackId[] = ["drama", "cute"];
+
 // Sous-ensemble de stickers jugés "landing-worthy" par pack — le tirage
 // quotidien (daily-pack.ts) pioche en priorité dedans, pour ne jamais
 // retomber sur un sticker fade/mauvais en "Pack du jour". Vide par pack =

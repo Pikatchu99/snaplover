@@ -1,3 +1,4 @@
+import type { DoodlePoint } from "@/types/doodle";
 import type { FrameId, StripStyle } from "@/types/frame";
 import type { ChallengeMode, StickerId, StickerPackId } from "@/types/sticker";
 
@@ -33,4 +34,12 @@ export type RealtimeMessage =
   | { t: "capture"; pose: number; fireAtHost: number }
   | { t: "img-meta"; pose: number }
   | { t: "img"; part: string }
-  | { t: "img-end"; pose: number; hostTime: number };
+  | { t: "img-end"; pose: number; hostTime: number }
+  // Dessin collaboratif en direct (voir hooks/use-doodle.ts) — un seul type de
+  // message porte à la fois la création d'un trait (le partenaire ne connaît
+  // pas encore strokeId) et son prolongement (points ajoutés au fil du
+  // glissé) : le receveur crée le trait à la première occurrence de
+  // strokeId, l'étend sinon. "color" est redondant sur les messages suivants
+  // du même trait, mais un seul type de message garde le protocole simple.
+  | { t: "doodle-points"; strokeId: string; color: string; points: DoodlePoint[] }
+  | { t: "doodle-clear" };

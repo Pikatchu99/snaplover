@@ -198,6 +198,11 @@ const fr = {
     composingTitle: "On assemble votre bande…",
     composingSubtitle: "On récupère la moitié pleine résolution de chacun.",
   },
+  doodle: {
+    toggle: "Dessiner",
+    colorLabel: "Couleur du trait",
+    clear: "Effacer",
+  },
   countdown: {
     ready: "PRÊT·E ?",
     prepareFor: "Préparez-vous · Photo {current} / {total}",

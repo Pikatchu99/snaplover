@@ -3,6 +3,12 @@ import { config } from "@/lib/config";
 interface CaptureFrameOptions {
   /** Dé-miroir la capture si l'aperçu vidéo est affiché en scaleX(-1). */
   mirrored?: boolean;
+  /** Canvas de dessin collaboratif (voir hooks/use-doodle.ts) à incruster sur
+   * la frame. Même repère que la vidéo brute (DoodleCanvas corrige déjà le
+   * miroir CSS au moment de convertir la position du pointeur) : on peut
+   * donc le dessiner sous la même transformation que la vidéo ci-dessous,
+   * sans logique de miroir séparée. */
+  overlayCanvas?: HTMLCanvasElement | null;
 }
 
 // Capture la frame locale (<video> → <canvas>) en JPEG. Résolution moyenne
@@ -28,6 +34,11 @@ export function captureFrame(video: HTMLVideoElement, options: CaptureFrameOptio
     ctx.scale(-1, 1);
   }
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  const overlay = options.overlayCanvas;
+  if (overlay && overlay.width > 0 && overlay.height > 0) {
+    ctx.drawImage(overlay, 0, 0, canvas.width, canvas.height);
+  }
 
   return canvas.toDataURL("image/jpeg", config.capture.jpegQuality);
 }

@@ -195,6 +195,11 @@ const en = {
     composingTitle: "Putting your strip together…",
     composingSubtitle: "Fetching each other's full-resolution half.",
   },
+  doodle: {
+    toggle: "Draw",
+    colorLabel: "Stroke color",
+    clear: "Clear",
+  },
   countdown: {
     ready: "READY?",
     prepareFor: "Get ready · Photo {current} / {total}",

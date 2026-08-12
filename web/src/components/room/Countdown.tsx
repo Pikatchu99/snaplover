@@ -20,7 +20,11 @@ export function Countdown({ remainingMs, poseNumber, poses }: CountdownProps) {
   }, [seconds]);
 
   return (
-    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 rounded-2xl bg-black/40">
+    // pointer-events-none : purement décoratif (aucun élément interactif), et
+    // ne doit pas bloquer le dessin collaboratif sur les caméras en dessous —
+    // dessiner juste avant le déclic (ex. un cœur sur le "1") doit rester
+    // possible pendant le 3·2·1 (voir DoodleCanvas.tsx).
+    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 rounded-2xl bg-black/40 pointer-events-none">
       <span className="text-xs font-semibold tracking-widest text-white/80 uppercase">
         {t("prepareFor", { current: poseNumber, total: poses })}
       </span>

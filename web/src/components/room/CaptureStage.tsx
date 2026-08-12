@@ -4,8 +4,11 @@ import { Check, Link2 } from "lucide-react";
 import { CameraTile } from "@/components/room/CameraTile";
 import { Countdown } from "@/components/room/Countdown";
 import { StickerTile, StickerThumb } from "@/components/room/StickerTile";
+import { DoodleCanvas } from "@/components/room/DoodleCanvas";
+import { DoodleToolbar } from "@/components/room/DoodleToolbar";
 import { cn } from "@/lib/utils";
 import type { CaptureSessionStatus } from "@/hooks/use-capture-session";
+import type { UseDoodleReturn } from "@/hooks/use-doodle";
 import type { StripCell } from "@/lib/capture/compose-strip";
 import type { ChallengeMode, StickerDefinition } from "@/types/sticker";
 import { Link } from "@/i18n/navigation";
@@ -30,6 +33,8 @@ interface CaptureStageProps {
   mode: ChallengeMode;
   /** Sticker de la pose courante — uniquement en mode challenge. */
   currentSticker?: StickerDefinition;
+  /** Dessin collaboratif en direct — voir hooks/use-doodle.ts. */
+  doodle: UseDoodleReturn;
 }
 
 // Rangée de vignettes montrant où on en est dans la séance (quelle pose
@@ -145,6 +150,7 @@ export function CaptureStage({
   cells,
   mode,
   currentSticker,
+  doodle,
 }: CaptureStageProps) {
   const t = useTranslations("captureStage");
   const tLobby = useTranslations("lobby");
@@ -172,13 +178,37 @@ export function CaptureStage({
           isChallenge ? "grid-cols-3" : "grid-cols-2",
         )}
       >
-        <CameraTile stream={localStream} label={tLobby("you")} state="ready" mirrored muted videoRef={localVideoRef} />
+        <div className="relative">
+          <CameraTile stream={localStream} label={tLobby("you")} state="ready" mirrored muted videoRef={localVideoRef} />
+          <DoodleCanvas
+            canvasRef={doodle.myCanvasRef}
+            strokes={doodle.myStrokes}
+            owner="mine"
+            mirrored
+            interactive={doodle.isDrawing}
+            onPointerDown={doodle.handlePointerDown}
+            onPointerMove={doodle.handlePointerMove}
+            onPointerUp={doodle.handlePointerUp}
+          />
+        </div>
         {isChallenge && currentSticker && <StickerTile sticker={currentSticker} />}
-        <CameraTile stream={remoteStream} label={tLobby("partner")} state={remoteStream ? "ready" : "off"} />
+        <div className="relative">
+          <CameraTile stream={remoteStream} label={tLobby("partner")} state={remoteStream ? "ready" : "off"} />
+          <DoodleCanvas canvasRef={doodle.peerCanvasRef} strokes={doodle.peerStrokes} owner="peer" />
+        </div>
         {status === "countdown" && <Countdown remainingMs={countdownMs} poseNumber={poseNumber} poses={poses} />}
         {status === "composing" && <ComposingOverlay />}
         {awaitingPeer && <AwaitingPeerOverlay currentPose={currentPose} />}
       </div>
+
+      <DoodleToolbar
+        active={doodle.isDrawing}
+        onToggle={() => doodle.setIsDrawing((prev) => !prev)}
+        color={doodle.color}
+        onColorChange={doodle.setColor}
+        onClear={doodle.clear}
+        hasStrokes={doodle.myStrokes.length > 0}
+      />
 
       <PoseProgress cells={cells} poses={poses} mode={mode} />
     </div>

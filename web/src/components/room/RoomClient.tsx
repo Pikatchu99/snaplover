@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useRoomConnection } from "@/hooks/use-room-connection";
 import { useCaptureSession } from "@/hooks/use-capture-session";
+import { useDoodle } from "@/hooks/use-doodle";
 import { Lobby } from "@/components/room/Lobby";
 import { CaptureStage } from "@/components/room/CaptureStage";
 import { PhotoStrip } from "@/components/strip/PhotoStrip";
@@ -31,6 +32,7 @@ interface RoomClientProps {
 export function RoomClient({ code, poses, frameId, style, mode, stickerPackId, stickerIds, name }: RoomClientProps) {
   const { localStream, remoteStream, status, dataChannel, isInitiator, retryCamera } = useRoomConnection(code);
   const localVideoRef = useRef<HTMLVideoElement>(null);
+  const doodle = useDoodle({ dataChannel });
 
   const {
     status: captureStatus,
@@ -62,7 +64,17 @@ export function RoomClient({ code, poses, frameId, style, mode, stickerPackId, s
     pinnedStickerIds: stickerIds,
     myName: name,
     localVideoRef,
+    doodleCanvasRef: doodle.myCanvasRef,
   });
+
+  useEffect(() => {
+    // Chaque pose repart d'un canvas de dessin vierge — voir
+    // hooks/use-doodle.ts (resetForNewPose). Effet dédié (pas dans
+    // useCaptureSession, qui ne connaît pas le dessin) : currentPose change
+    // exactement une fois par pose composée, y compris la première.
+    doodle.resetForNewPose();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPose]);
 
   useEffect(() => {
     // Vie privée : une fois la bande composée, plus besoin de la caméra —
@@ -103,6 +115,7 @@ export function RoomClient({ code, poses, frameId, style, mode, stickerPackId, s
         cells={cells}
         mode={effectiveMode}
         currentSticker={currentSticker}
+        doodle={doodle}
       />
     );
   }

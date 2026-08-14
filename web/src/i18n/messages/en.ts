@@ -291,6 +291,8 @@ const en = {
     title: "Waiting room",
     you: "You",
     partner: "Partner",
+    rulesTitle: "How it works",
+    rulesText: "A secret word, taking turns: one of you draws, the other guesses by typing. 3 rounds, roles swap each time.",
     launch: "Start the duel",
     cameraDeniedMessage: "Camera blocked. Allow camera access in your browser settings, then reload the page.",
     retry: "Retry",
@@ -314,6 +316,8 @@ const en = {
     },
   },
   duelRound: {
+    you: "You",
+    partner: "Partner",
     roundLabel: "Round {current} / {total}",
     yourTurnTitle: "It's your turn to draw!",
     seeWord: "See my word",

@@ -295,6 +295,9 @@ const fr = {
     title: "Salle d'attente",
     you: "Toi",
     partner: "Partenaire",
+    rulesTitle: "Comment ça marche",
+    rulesText:
+      "Un mot secret, tour à tour : l'un·e dessine, l'autre devine en tapant ses essais. 3 manches, les rôles s'inversent à chaque fois.",
     launch: "Lancer le duel",
     cameraDeniedMessage:
       "Caméra bloquée. Autorisez l'accès à votre caméra dans les réglages de votre navigateur, puis rechargez la page.",
@@ -319,6 +322,8 @@ const fr = {
     },
   },
   duelRound: {
+    you: "Toi",
+    partner: "Partenaire",
     roundLabel: "Manche {current} / {total}",
     yourTurnTitle: "C'est ton tour de dessiner !",
     seeWord: "Voir mon mot",

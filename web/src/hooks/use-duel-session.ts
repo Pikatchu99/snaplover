@@ -249,6 +249,13 @@ export function useDuelSession({ dataChannel, isInitiator, locale }: UseDuelSess
       setPhase("recap");
       return;
     }
+    // Repart d'un état vierge des DEUX côtés (dessinateur·rice ET
+    // deveneur·euse à venir) — sinon la personne qui redevient
+    // dessinateur·rice plus tard dans la partie retrouvait son propre trait
+    // de la manche où elle avait dessiné pour la dernière fois (bug réel
+    // trouvé en testant : resetRoundState n'était appelé que par
+    // startDrawerPrep, jamais côté deveneur·euse à ce point de transition).
+    resetRoundState();
     setRoundIndex((prev) => prev + 1);
     setWord(null);
     setPhase("lobby");

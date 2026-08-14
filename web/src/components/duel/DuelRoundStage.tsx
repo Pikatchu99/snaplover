@@ -54,7 +54,7 @@ export function DuelRoundStage({ duel }: DuelRoundStageProps) {
             <h2 className="font-heading text-xl font-bold text-white">{t("yourTurnTitle")}</h2>
             <button
               onClick={duel.startDrawerPrep}
-              className="rounded-2xl bg-linear-to-r from-[#6a48f4] to-[#fb5a46] px-6 py-3 font-medium text-white transition hover:opacity-90"
+              className="rounded-2xl bg-linear-to-r from-[#fb5a46] to-[#ff7d54] px-6 py-3 font-medium text-white transition hover:opacity-90"
             >
               {t("seeWord")}
             </button>
@@ -74,7 +74,7 @@ export function DuelRoundStage({ duel }: DuelRoundStageProps) {
         <h2 className="font-heading text-4xl font-extrabold text-white">{duel.word}</h2>
         <button
           onClick={duel.confirmStartDrawing}
-          className="mt-2 rounded-2xl bg-linear-to-r from-[#6a48f4] to-[#fb5a46] px-6 py-3 font-medium text-white transition hover:opacity-90"
+          className="mt-2 rounded-2xl bg-linear-to-r from-[#fb5a46] to-[#ff7d54] px-6 py-3 font-medium text-white transition hover:opacity-90"
         >
           {t("startDrawing")}
         </button>
@@ -130,7 +130,7 @@ export function DuelRoundStage({ duel }: DuelRoundStageProps) {
               />
               <button
                 type="submit"
-                className="rounded-2xl bg-linear-to-r from-[#6a48f4] to-[#fb5a46] px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
+                className="rounded-2xl bg-linear-to-r from-[#fb5a46] to-[#ff7d54] px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
               >
                 {t("guessSubmit")}
               </button>
@@ -155,7 +155,7 @@ export function DuelRoundStage({ duel }: DuelRoundStageProps) {
         </p>
         <button
           onClick={duel.goToNextRound}
-          className="rounded-2xl bg-linear-to-r from-[#6a48f4] to-[#fb5a46] px-6 py-3 font-medium text-white transition hover:opacity-90"
+          className="rounded-2xl bg-linear-to-r from-[#fb5a46] to-[#ff7d54] px-6 py-3 font-medium text-white transition hover:opacity-90"
         >
           {duel.isLastRound ? t("seeRecap") : t("nextRound")}
         </button>

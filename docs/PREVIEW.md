@@ -93,7 +93,7 @@ pwd   # vérifie AVANT de continuer : doit finir par /snaplover/preview
 cat > docker-compose.yml <<'EOF'
 services:
   traefik:
-    image: traefik:v3.2
+    image: traefik:v3.7.10
     container_name: snaplover-preview-traefik
     restart: unless-stopped
     command:
@@ -199,6 +199,13 @@ curl http://localhost:3999/
 # doit répondre "404 page not found" — normal, aucune preview n'est encore déployée,
 # ça prouve juste que Traefik répond.
 ```
+
+Vérifie aussi qu'il n'y a pas d'erreur `client version ... is too old` dans ses logs
+(`docker logs snaplover-preview-traefik --tail 20`) — un souci de compatibilité entre le client
+Docker embarqué dans certaines versions de Traefik et un daemon Docker récent, déjà rencontré sur ce
+VPS et réglé en figeant l'image sur `v3.7.10` (voir le commentaire dans le fichier ci-dessus) — si
+ça revient un jour avec une image plus récente, c'est le même genre de souci, pas une régression de
+ta config.
 
 ## Étape 3 — VPS : ajouter la règle wildcard au tunnel
 

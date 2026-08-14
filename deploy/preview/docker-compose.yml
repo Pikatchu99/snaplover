@@ -13,16 +13,15 @@
 # conteneur de PR individuel.
 services:
   traefik:
-    image: traefik:v3.2
+    # v3.2 (première version essayée) échoue sur ce VPS : son client Docker
+    # interne négocie une API bien trop ancienne ("client version 1.24 is
+    # too old", alors que le daemon annonce 1.54) — testé en conditions
+    # réelles, pas une supposition. Ni un DOCKER_API_VERSION forcé en env ni
+    # aucune autre option Traefik n'a corrigé ça ; seule une version plus
+    # récente du client Docker embarqué dans l'image résout le problème.
+    image: traefik:v3.7.10
     container_name: snaplover-preview-traefik
     restart: unless-stopped
-    # DOCKER_API_VERSION : sans ça, le client Docker interne de Traefik tente
-    # de négocier une API bien plus ancienne (1.24) que ce que le daemon
-    # accepte au minimum — "client version 1.24 is too old" (bug connu du
-    # provider Docker de Traefik, testé en conditions réelles sur ce VPS, pas
-    # juste en théorie). 1.41 est compatible avec tout daemon Docker récent.
-    environment:
-      DOCKER_API_VERSION: "1.41"
     command:
       - --providers.docker=true
       # Jamais exposer un conteneur par défaut : seuls ceux explicitement

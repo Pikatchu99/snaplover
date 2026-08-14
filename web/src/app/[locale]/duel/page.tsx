@@ -13,7 +13,7 @@ export default function CreateDuelPage() {
   const t = useTranslations("duelCreate");
 
   function handleCreate() {
-    const code = generateRoomCode();
+    const code = generateRoomCode("duel");
     router.push(`/duel/r/${code}`);
   }
 

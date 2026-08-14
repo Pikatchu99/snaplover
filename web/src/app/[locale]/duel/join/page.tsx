@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Palette } from "lucide-react";
-import { isValidRoomCode } from "@/lib/room-code";
+import { isValidRoomCode, roomKindFromCode } from "@/lib/room-code";
 import { config } from "@/lib/config";
 import { Link, useRouter } from "@/i18n/navigation";
 
@@ -19,7 +19,9 @@ export default function JoinDuelPage() {
 
   function handleSubmit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!isValidRoomCode(code)) {
+    // roomKindFromCode (pas juste isValidRoomCode) : sans ça, un code photo
+    // collé ici redirigeait vers un duel inexistant (voir lib/room-code.ts).
+    if (!isValidRoomCode(code) || roomKindFromCode(code) !== "duel") {
       setError(true);
       return;
     }

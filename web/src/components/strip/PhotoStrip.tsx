@@ -8,9 +8,13 @@ import { composeStrip, type StripCell } from "@/lib/capture/compose-strip";
 import { composeStoryImage } from "@/lib/capture/compose-story";
 import { formatFooterDate } from "@/lib/capture/format-footer-date";
 import { FILTER_IDS } from "@/lib/capture/filters";
+import { flattenDoodle } from "@/lib/capture/doodle";
 import { FRAMES } from "@/lib/frames/frame-registry";
 import { config } from "@/lib/config";
 import { SITE_URL } from "@/lib/site";
+import { useDoodle } from "@/hooks/use-doodle";
+import { DoodleCanvas } from "@/components/strip/DoodleCanvas";
+import { DoodleToolbar } from "@/components/strip/DoodleToolbar";
 import {
   trackChallengeDownloaded,
   trackChallengeShared,
@@ -32,13 +36,16 @@ interface PhotoStripProps {
   /** Solo uniquement (SoloClient) — signature du footer. */
   soloName?: string;
   mode: ChallengeMode;
+  /** Duo uniquement — sert à synchroniser le dessin collaboratif (voir
+   * hooks/use-doodle.ts) avec le partenaire ; absent en solo (pas de pair). */
+  dataChannel?: RTCDataChannel | null;
 }
 
 // Résultat (E6) : bande composée, filtres, téléchargement, partage.
 // Fond clair (comme landing/create) — seuls lobby/séance sont en sombre.
 // Cadres/thèmes (§13) : voir lib/frames/frame-registry.ts — packs illustrés
 // pas encore disponibles (assets manquants).
-export function PhotoStrip({ cells, initialStripUrl, frameId, style, names, soloName, mode }: PhotoStripProps) {
+export function PhotoStrip({ cells, initialStripUrl, frameId, style, names, soloName, mode, dataChannel }: PhotoStripProps) {
   const t = useTranslations("photoStrip");
   const tStrip = useTranslations("strip");
   const locale = useLocale();
@@ -50,6 +57,11 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, names, solo
   // Absent aussi bien en challenge solo qu'en solo classique (docs/STICKER-CHALLENGES.md
   // + extension solo classique) — une seule personne, aucun prénom de partenaire à afficher.
   const isSolo = !names;
+  // Dessin collaboratif en direct sur la bande déjà composée — voir
+  // hooks/use-doodle.ts. Duo uniquement (pas de pair à qui synchroniser en
+  // solo) : le hook lui-même tolère un dataChannel absent/null sans effet.
+  const doodle = useDoodle({ dataChannel });
+  const canDoodle = !isSolo;
 
   function handleLike() {
     if (liked) return;
@@ -113,7 +125,8 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, names, solo
   async function handleShare() {
     if (isChallenge) trackChallengeShared();
     trackStripShared({ participants: isSolo ? "solo" : "duo", mode });
-    await shareOrDownload(stripUrl, "snaplover.png", shareText);
+    const finalUrl = await flattenDoodle(stripUrl, doodle.strokes);
+    await shareOrDownload(finalUrl, "snaplover.png", shareText);
   }
 
   async function handleShareStory() {
@@ -121,16 +134,22 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, names, solo
     trackStripShared({ participants: isSolo ? "solo" : "duo", mode, format: "story" });
     setComposingStory(true);
     try {
-      const storyUrl = await composeStoryImage(stripUrl, { tagline: t("storyTagline"), siteUrl: SITE_URL });
+      const finalUrl = await flattenDoodle(stripUrl, doodle.strokes);
+      const storyUrl = await composeStoryImage(finalUrl, { tagline: t("storyTagline"), siteUrl: SITE_URL });
       await shareOrDownload(storyUrl, "snaplover-story.png", shareText);
     } finally {
       setComposingStory(false);
     }
   }
 
-  function handleDownloadClick() {
+  async function handleDownloadClick() {
     if (isChallenge) trackChallengeDownloaded();
     trackStripDownloaded({ participants: isSolo ? "solo" : "duo", mode });
+    const finalUrl = await flattenDoodle(stripUrl, doodle.strokes);
+    const a = document.createElement("a");
+    a.href = finalUrl;
+    a.download = "snaplover.png";
+    a.click();
   }
 
   return (
@@ -140,8 +159,34 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, names, solo
         <h1 className="font-heading text-2xl font-bold text-[#1c1712]">{t("title")}</h1>
       </div>
 
-      {/* eslint-disable-next-line @next/next/no-img-element -- data URL générée côté client, next/image ne s'applique pas */}
-      <img src={stripUrl} alt={t("imageAlt")} className="max-h-[50vh] rounded-lg border border-[#ece4d8] shadow-sm" />
+      <div className="relative inline-block">
+        {/* eslint-disable-next-line @next/next/no-img-element -- data URL générée côté client, next/image ne s'applique pas */}
+        <img src={stripUrl} alt={t("imageAlt")} className="max-h-[50vh] rounded-lg border border-[#ece4d8] shadow-sm" />
+        {canDoodle && (
+          <DoodleCanvas
+            canvasRef={doodle.canvasRef}
+            strokes={doodle.strokes}
+            interactive={doodle.isDrawing}
+            onPointerDown={doodle.handlePointerDown}
+            onPointerMove={doodle.handlePointerMove}
+            onPointerUp={doodle.handlePointerUp}
+          />
+        )}
+      </div>
+
+      {canDoodle && (
+        <div className="flex flex-col items-center gap-2">
+          <p className="text-xs text-[#8c8378]">{t("doodleHint")}</p>
+          <DoodleToolbar
+            active={doodle.isDrawing}
+            onToggle={() => doodle.setIsDrawing((prev) => !prev)}
+            color={doodle.color}
+            onColorChange={doodle.setColor}
+            onClear={doodle.clear}
+            hasStrokes={doodle.strokes.length > 0}
+          />
+        </div>
+      )}
 
       {/* Avant le téléchargement : pour que les gens voient/essaient les
           filtres avant de partir avec la version "classic" par défaut. */}
@@ -163,15 +208,13 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, names, solo
       </div>
 
       <div className="flex flex-wrap items-center justify-center gap-3">
-        <a
-          href={stripUrl}
-          download="snaplover.png"
+        <button
           onClick={handleDownloadClick}
           className="inline-flex items-center gap-2 rounded-2xl bg-linear-to-r from-[#fb5a46] to-[#ff7d54] px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
         >
           <Download className="size-4" />
           {t("download")}
-        </a>
+        </button>
         <button
           onClick={handleShare}
           className="inline-flex items-center gap-2 rounded-2xl border border-[#ece4d8] px-5 py-2.5 text-sm font-medium text-[#1c1712] transition hover:bg-[#ece4d8]/40"

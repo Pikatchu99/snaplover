@@ -216,6 +216,7 @@ const en = {
     storyTagline: "Create a photo strip together, wherever you are",
     newSession: "Create my own SnapLover session",
     doItTogether: "Do it together",
+    doodleHint: "Draw together on the strip before you share it",
     note: "You each have your own copy. The full-resolution strip is saved on each device.",
     likePrompt: "Do you like the app?",
     filters: {

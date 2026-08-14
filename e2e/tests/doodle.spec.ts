@@ -1,12 +1,11 @@
-import { test, expect, type Locator } from "@playwright/test";
+import { test, expect, type Locator, type Page } from "@playwright/test";
 import { randomRoomCode, gotoRoom, launchSession } from "./helpers";
 
-// Vérifie la couche de synchro temps réel du dessin collaboratif (voir
-// hooks/use-doodle.ts) : ce qu'un pair dessine sur SA PROPRE caméra doit
-// apparaître, en direct, sur le canvas "peer" de l'autre pair. L'incrustation
-// dans la photo finale (capture-frame.ts) est vérifiée séparément à l'œil
-// (canvas API pure, risque de régression bien plus faible que le protocole
-// réseau ci-dessous).
+// Dessin collaboratif en direct — voir hooks/use-doodle.ts. Repositionné sur
+// l'écran de résultat (bande déjà composée) après un premier essai en direct
+// pendant la séance (3·2·1 chronométré, bien trop court pour dessiner —
+// retour utilisateur réel). Aucune pression de temps ici : on vérifie juste
+// la synchro live entre les deux pairs et l'effacement partagé.
 async function hasInk(locator: Locator): Promise<boolean> {
   return locator.evaluate((canvas: HTMLCanvasElement) => {
     if (canvas.width === 0 || canvas.height === 0) return false;
@@ -18,7 +17,7 @@ async function hasInk(locator: Locator): Promise<boolean> {
   });
 }
 
-async function drawStroke(page: import("@playwright/test").Page, canvas: Locator) {
+async function drawStroke(page: Page, canvas: Locator) {
   const box = await canvas.boundingBox();
   if (!box) throw new Error("canvas sans boîte visible");
   await page.mouse.move(box.x + box.width * 0.3, box.y + box.height * 0.3);
@@ -29,9 +28,7 @@ async function drawStroke(page: import("@playwright/test").Page, canvas: Locator
   await page.mouse.up();
 }
 
-test("dessin collaboratif : armé sur sa propre caméra → synchronisé en direct chez le partenaire → effacement propagé", async ({
-  browser,
-}) => {
+test("dessin collaboratif sur le résultat : synchronisé en direct chez le partenaire, effacement partagé", async ({ browser }) => {
   const room = randomRoomCode();
   const contextA = await browser.newContext();
   const contextB = await browser.newContext();
@@ -46,28 +43,33 @@ test("dessin collaboratif : armé sur sa propre caméra → synchronisé en dire
 
   await launchSession(a, b);
 
-  const toggleA = a.getByRole("button", { name: "Dessiner" });
-  await expect(toggleA).toBeVisible({ timeout: 5_000 });
+  await expect(a.getByText("bande est prête")).toBeVisible({ timeout: 25_000 });
+  await expect(b.getByText("bande est prête")).toBeVisible({ timeout: 25_000 });
 
-  const myCanvasA = a.locator('canvas[data-doodle-canvas="mine"]');
-  const peerCanvasB = b.locator('canvas[data-doodle-canvas="peer"]');
+  const toggleA = a.getByRole("button", { name: "Dessiner" });
+  await expect(toggleA).toBeVisible();
+
+  const canvasA = a.locator('canvas[data-doodle-canvas="shared"]');
+  const canvasB = b.locator('canvas[data-doodle-canvas="shared"]');
 
   // Avant armement : dessiner ne doit rien laisser (canvas non interactif).
-  await drawStroke(a, myCanvasA);
-  expect(await hasInk(myCanvasA)).toBe(false);
+  await drawStroke(a, canvasA);
+  expect(await hasInk(canvasA)).toBe(false);
 
   await toggleA.click();
   await expect(toggleA).toHaveAttribute("aria-pressed", "true");
 
-  await drawStroke(a, myCanvasA);
-  expect(await hasInk(myCanvasA)).toBe(true);
+  await drawStroke(a, canvasA);
+  expect(await hasInk(canvasA)).toBe(true);
 
-  // Synchronisé en direct sur le canvas "peer" de B, sans action de B.
-  await expect.poll(() => hasInk(peerCanvasB), { timeout: 5_000 }).toBe(true);
+  // Synchronisé en direct chez B, sans que B n'ait rien à faire.
+  await expect.poll(() => hasInk(canvasB), { timeout: 5_000 }).toBe(true);
 
+  // "Effacer" vide le calque partagé pour les deux, pas seulement pour celui
+  // qui a cliqué (voir hooks/use-doodle.ts).
   await a.getByRole("button", { name: "Effacer" }).click();
-  expect(await hasInk(myCanvasA)).toBe(false);
-  await expect.poll(() => hasInk(peerCanvasB), { timeout: 5_000 }).toBe(false);
+  expect(await hasInk(canvasA)).toBe(false);
+  await expect.poll(() => hasInk(canvasB), { timeout: 5_000 }).toBe(false);
 
   await contextA.close();
   await contextB.close();

@@ -8,14 +8,21 @@
 # Complètement séparé de la prod (deploy/docker-compose.yml, ports 3002/8080,
 # jamais touché ici) : réseau Docker dédié, aucun port publié sur l'hôte à
 # part Traefik (127.0.0.1 uniquement — voir CLAUDE.md "Aucune valeur d'infra
-# en dur"). cloudflared route *.snaplover-preview.hbdwall.xyz vers ce port
-# (voir deploy/cloudflared/config.yml.example), jamais directement vers un
+# en dur"). cloudflared route *.hbdwall.xyz vers ce port (voir
+# deploy/cloudflared/config.yml.example), jamais directement vers un
 # conteneur de PR individuel.
 services:
   traefik:
     image: traefik:v3.2
     container_name: snaplover-preview-traefik
     restart: unless-stopped
+    # DOCKER_API_VERSION : sans ça, le client Docker interne de Traefik tente
+    # de négocier une API bien plus ancienne (1.24) que ce que le daemon
+    # accepte au minimum — "client version 1.24 is too old" (bug connu du
+    # provider Docker de Traefik, testé en conditions réelles sur ce VPS, pas
+    # juste en théorie). 1.41 est compatible avec tout daemon Docker récent.
+    environment:
+      DOCKER_API_VERSION: "1.41"
     command:
       - --providers.docker=true
       # Jamais exposer un conteneur par défaut : seuls ceux explicitement

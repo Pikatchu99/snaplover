@@ -14,22 +14,21 @@ interface DoodleToolbarProps {
   hasStrokes: boolean;
 }
 
-// Barre discrète : le pinceau arme/désarme le dessin sur SA propre caméra
-// (évite qu'un doigt qui traîne sur l'écran laisse un trait involontaire —
-// opt-in explicite plutôt qu'un canvas toujours interactif). Couleurs et
-// effacer n'apparaissent qu'une fois armé.
+// Barre discrète sous la bande composée (voir PhotoStrip.tsx) : le pinceau
+// arme/désarme le dessin (opt-in explicite, évite un trait involontaire au
+// premier tap sur l'image). Couleurs et effacer n'apparaissent qu'une fois armé.
 export function DoodleToolbar({ active, onToggle, color, onColorChange, onClear, hasStrokes }: DoodleToolbarProps) {
   const t = useTranslations("doodle");
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-wrap items-center justify-center gap-2">
+    <div className="flex flex-wrap items-center justify-center gap-2">
       <button
         type="button"
         onClick={onToggle}
         aria-pressed={active}
         className={cn(
-          "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition",
-          active ? "bg-[#fb5a46] text-white" : "bg-white/10 text-white/80 hover:bg-white/15",
+          "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition",
+          active ? "bg-[#1c1712] text-white" : "border border-[#ece4d8] text-[#1c1712] hover:bg-[#ece4d8]/40",
         )}
       >
         <Pencil className="size-3.5" />
@@ -38,7 +37,7 @@ export function DoodleToolbar({ active, onToggle, color, onColorChange, onClear,
 
       {active && (
         <>
-          <div className="flex items-center gap-1.5 rounded-full bg-white/10 px-2 py-1.5">
+          <div className="flex items-center gap-1.5 rounded-full border border-[#ece4d8] px-2 py-1.5">
             {DOODLE_COLORS.map((swatch) => (
               <button
                 key={swatch}
@@ -47,8 +46,8 @@ export function DoodleToolbar({ active, onToggle, color, onColorChange, onClear,
                 aria-pressed={color === swatch}
                 onClick={() => onColorChange(swatch)}
                 className={cn(
-                  "size-5 rounded-full ring-2 ring-offset-1 ring-offset-[#161319] transition",
-                  color === swatch ? "ring-white" : "ring-transparent",
+                  "size-5 rounded-full ring-2 ring-offset-1 ring-offset-[#fbf7f1] transition",
+                  color === swatch ? "ring-[#1c1712]" : "ring-transparent",
                 )}
                 style={{ backgroundColor: swatch }}
               />
@@ -58,7 +57,7 @@ export function DoodleToolbar({ active, onToggle, color, onColorChange, onClear,
             type="button"
             onClick={onClear}
             disabled={!hasStrokes}
-            className="flex items-center gap-1 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-white/80 transition hover:bg-white/15 disabled:opacity-30"
+            className="flex items-center gap-1 rounded-full border border-[#ece4d8] px-3 py-1.5 text-sm font-medium text-[#8c8378] transition hover:bg-[#ece4d8]/40 disabled:opacity-30"
           >
             <Trash2 className="size-3.5" />
             {t("clear")}

@@ -8,24 +8,17 @@ import type { DoodleStroke } from "@/types/doodle";
 interface DoodleCanvasProps {
   canvasRef: RefObject<HTMLCanvasElement | null>;
   strokes: DoodleStroke[];
-  /** Superposé à SA PROPRE caméra ("mine", mirroré comme la vidéo — voir
-   * CameraTile) ou à celle du partenaire ("peer", lecture seule) — purement
-   * structurel, indépendant de l'armement du dessin (voir `interactive`). */
-  owner: "mine" | "peer";
-  /** Mirroré via CSS pour matcher l'aperçu selfie — uniquement sur SA PROPRE
-   * caméra (voir CameraTile : la caméra du partenaire n'est jamais mirrorée). */
-  mirrored?: boolean;
   interactive?: boolean;
   onPointerDown?: (event: PointerEvent<HTMLCanvasElement>) => void;
   onPointerMove?: (event: PointerEvent<HTMLCanvasElement>) => void;
   onPointerUp?: (event: PointerEvent<HTMLCanvasElement>) => void;
 }
 
-// Canvas transparent superposé à une CameraTile (mien = interactif, celui du
-// partenaire = lecture seule) — voir hooks/use-doodle.ts pour l'état et le
-// protocole réseau. rounded-[18px] : même gabarit que CameraTile, un
-// border-radius sur un canvas clippe bien son propre rendu (élément replaced).
-export function DoodleCanvas({ canvasRef, strokes, owner, mirrored, interactive, onPointerDown, onPointerMove, onPointerUp }: DoodleCanvasProps) {
+// Canvas transparent superposé à la bande composée déjà finie (voir
+// PhotoStrip.tsx) — un seul calque partagé, pas de miroir (ce n'est plus une
+// vidéo de caméra) : les deux partenaires dessinent dessus, chacun voit les
+// traits de l'autre en direct — voir hooks/use-doodle.ts.
+export function DoodleCanvas({ canvasRef, strokes, interactive, onPointerDown, onPointerMove, onPointerUp }: DoodleCanvasProps) {
   const strokesRef = useRef(strokes);
 
   useEffect(() => {
@@ -62,10 +55,9 @@ export function DoodleCanvas({ canvasRef, strokes, owner, mirrored, interactive,
   return (
     <canvas
       ref={canvasRef}
-      data-doodle-canvas={owner}
+      data-doodle-canvas="shared"
       className={cn(
-        "absolute inset-0 h-full w-full touch-none rounded-[18px]",
-        mirrored && "-scale-x-100",
+        "absolute inset-0 h-full w-full touch-none rounded-lg",
         interactive ? "pointer-events-auto cursor-crosshair" : "pointer-events-none",
       )}
       onPointerDown={interactive ? onPointerDown : undefined}

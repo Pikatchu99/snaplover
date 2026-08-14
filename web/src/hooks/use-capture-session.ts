@@ -45,9 +45,6 @@ interface UseCaptureSessionOptions {
   /** Prénom local (résolu avec fallback avant d'arriver ici — voir RoomClient). */
   myName: string;
   localVideoRef: RefObject<HTMLVideoElement | null>;
-  /** Canvas de dessin collaboratif (voir hooks/use-doodle.ts) à incruster sur
-   * chaque capture — optionnel, absent tant que le dessin n'a jamais servi. */
-  doodleCanvasRef?: RefObject<HTMLCanvasElement | null>;
 }
 
 // Orchestration d'une séance : clock-sync, déclenchement synchronisé
@@ -64,7 +61,6 @@ export function useCaptureSession({
   pinnedStickerIds,
   myName,
   localVideoRef,
-  doodleCanvasRef,
 }: UseCaptureSessionOptions) {
   const tParticipant = useTranslations("participant");
   const tStrip = useTranslations("strip");
@@ -289,7 +285,7 @@ export function useCaptureSession({
 
     let dataUrl: string;
     try {
-      dataUrl = captureFrame(video, { mirrored: isInitiator, overlayCanvas: doodleCanvasRef?.current });
+      dataUrl = captureFrame(video, { mirrored: isInitiator });
     } catch (error) {
       console.error(`[capture] pose ${pose} échec de capture:`, error);
       return;

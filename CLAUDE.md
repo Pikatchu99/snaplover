@@ -439,24 +439,28 @@ Voir docs/SNAPROOM-SPEC.md §17 pour les jalons J1–J6.
     sur téléphone dépendait du navigateur/appareil (pas fiable, parfois la caméra arrière). Fix :
     `facingMode: { ideal: "user" }` (frontale préférée, souple — pas `exact`, qui ferait échouer
     `getUserMedia` sur un laptop/desktop à caméra unique) dans `use-user-media.ts`.
-  - **Duo Doodle** : dessin collaboratif en direct pendant la séance — chaque pair dessine sur SA
-    PROPRE caméra (opt-in via un bouton crayon dans `CaptureStage.tsx`, désarmé par défaut pour
-    éviter un trait involontaire) et voit en direct ce que l'autre dessine sur la sienne, puis le
-    trait est **incrusté dans la photo finale** (pas un gadget purement visuel). Protocole réseau
-    minimal, 2 messages (`doodle-points`/`doodle-clear`, voir `types/realtime.ts`) : `hooks/use-doodle.ts`
-    écoute/envoie en `dataChannel.addEventListener("message", …)` plutôt que via `RealtimeChannel`
-    (qui s'assigne sur `dc.onmessage` — un second wrapper la remplacerait ; les deux mécanismes DOM
-    coexistent sans conflit sur le même canal). Points normalisés `[0,1]×[0,1]` dans le repère brut
-    de la caméra (`pointFromPointerEvent` dans `lib/capture/doodle.ts` corrige le miroir CSS du
-    canvas au moment de convertir la position du pointeur) : `capture-frame.ts` peut donc incruster
-    ce même canvas sous la même transformation que la vidéo, sans logique de miroir séparée — voir
-    le commentaire dans `capture-frame.ts`. Chaque pose repart d'un canvas vierge (`resetForNewPose`,
-    effet dédié dans `RoomClient.tsx` sur `currentPose`, purement local, pas de message réseau).
-    **Bug réel trouvé en écrivant le test e2e** : l'overlay `Countdown.tsx` (3·2·1) couvrait toute la
-    grille et interceptait les événements pointeur, rendant le dessin impossible pendant tout le
-    décompte — fix : `pointer-events-none` sur cet overlay (purement décoratif, aucun élément
-    interactif). Vérifié bout en bout : `e2e/tests/doodle.spec.ts` (synchro live + effacement propagé)
-    et export PNG inspecté à l'œil (trait bien présent sur la bonne moitié de chaque pose, jamais sur
-    celle du partenaire, jamais reporté d'une pose à l'autre).
+  - **Duo Doodle** : dessin collaboratif en direct, **sur l'écran de résultat** (`PhotoStrip.tsx`) —
+    un calque unique partagé par-dessus la bande déjà composée, opt-in via un bouton crayon (désarmé
+    par défaut), les deux pairs dessinent dessus et voient les traits de l'autre en direct, puis le
+    trait est **incrusté dans le PNG téléchargé/partagé** (`lib/capture/doodle.ts` `flattenDoodle`,
+    appelé à la demande au clic Télécharger/Partager, pas en continu — recomposer un PNG plein format
+    à chaque point tracé serait coûteux et inutile tant que personne n'exporte). **Repositionné après
+    un premier essai raté** : la toute première version dessinait en direct pendant la séance
+    elle-même (sur chaque CameraTile, incrusté à l'instant du déclic) — retour utilisateur réel après
+    déploiement : le 3·2·1 chronométré (`config.capture.leadMs` = 3.2s) ne laisse quasiment aucun
+    temps pour dessiner quoi que ce soit d'utile. Déplacé sur l'écran de résultat : zéro pression de
+    temps, c'est une retouche à deux après coup plutôt qu'un geste "en direct pendant la prise".
+    Protocole réseau minimal, 2 messages (`doodle-points`/`doodle-clear`, voir `types/realtime.ts`) :
+    `hooks/use-doodle.ts` écoute/envoie en `dataChannel.addEventListener("message", …)` plutôt que via
+    `RealtimeChannel` (qui s'assigne sur `dc.onmessage` — un second wrapper la remplacerait ; les deux
+    mécanismes DOM coexistent sans conflit sur le même canal), toujours vivant sur l'écran de résultat
+    tant que le partenaire n'a pas quitté (`dataChannel` passé de `RoomClient.tsx` à `PhotoStrip.tsx`,
+    absent en solo — pas de pair). "Effacer" vide le calque entier pour les deux pairs (pas seulement
+    les traits de celui qui clique), sinon les deux calques finiraient désynchronisés. Points
+    normalisés `[0,1]×[0,1]` (plus de correction de miroir : ce n'est plus une vidéo de caméra, juste
+    une image) — `flattenDoodle` les remet à l'échelle de la résolution native de la bande, pas celle,
+    réduite, du canvas affiché à l'écran. Vérifié bout en bout : `e2e/tests/doodle.spec.ts` (synchro
+    live + effacement partagé) et export PNG téléchargé inspecté à l'œil (trait présent sur toute la
+    largeur de la bande, à pleine résolution).
 - Prochaine étape : **J6** — voir docs/SNAPROOM-SPEC.md §17 (purge complète des rooms orphelines
   déjà en place côté signaling depuis J1 ; reste à confirmer le périmètre exact de J6 avec l'auteur).

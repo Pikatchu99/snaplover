@@ -6,13 +6,16 @@ import type { DoodlePoint, DoodleStroke } from "@/types/doodle";
 import type { RealtimeMessage } from "@/types/realtime";
 
 interface UseDoodleOptions {
-  dataChannel: RTCDataChannel | null;
+  dataChannel: RTCDataChannel | null | undefined;
 }
 
-// Dessin collaboratif en direct par-dessus le protocole "ctrl" existant (voir
-// types/realtime.ts) : chaque partenaire dessine sur sa PROPRE caméra
-// (myStrokes, interactif) et voit en direct ce que l'autre dessine sur la
-// sienne (peerStrokes, lecture seule) — voir CaptureStage.tsx.
+// Dessin collaboratif en direct sur la bande déjà composée (voir
+// PhotoStrip.tsx) : un seul calque partagé — les deux partenaires dessinent
+// dessus et voient les traits de l'autre apparaître en direct. myStrokes/
+// peerStrokes restent deux états séparés en interne (savoir quel trait est
+// activement en train d'être dessiné localement), mais `strokes` les
+// fusionne pour le rendu : le consommateur (PhotoStrip) ne voit qu'un seul
+// calque, pas la distinction "qui a dessiné quoi".
 //
 // Écoute en addEventListener plutôt que via RealtimeChannel : le data
 // channel n'a qu'un seul canal "ctrl", et useCaptureSession possède déjà
@@ -27,8 +30,7 @@ export function useDoodle({ dataChannel }: UseDoodleOptions) {
   const [color, setColor] = useState<string>(DOODLE_COLORS[0]);
   const [isDrawing, setIsDrawing] = useState(false);
 
-  const myCanvasRef = useRef<HTMLCanvasElement>(null);
-  const peerCanvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const activeStrokeIdRef = useRef<string | null>(null);
   const pendingPointsRef = useRef<DoodlePoint[]>([]);
   const rafRef = useRef<number | null>(null);
@@ -53,6 +55,10 @@ export function useDoodle({ dataChannel }: UseDoodleOptions) {
           return [...prev, { id: message.strokeId, color: message.color, points: [...message.points] }];
         });
       } else if (message.t === "doodle-clear") {
+        // "Effacer" vide tout le calque partagé, pas seulement les traits de
+        // celui qui a cliqué — sinon les deux pairs finiraient avec des
+        // calques désynchronisés (voir clear() ci-dessous).
+        setMyStrokes([]);
         setPeerStrokes([]);
       }
     }
@@ -79,7 +85,7 @@ export function useDoodle({ dataChannel }: UseDoodleOptions) {
   }
 
   function handlePointerDown(event: PointerEvent<HTMLCanvasElement>) {
-    const canvas = myCanvasRef.current;
+    const canvas = canvasRef.current;
     if (!canvas) return;
     canvas.setPointerCapture(event.pointerId);
 
@@ -92,7 +98,7 @@ export function useDoodle({ dataChannel }: UseDoodleOptions) {
 
   function handlePointerMove(event: PointerEvent<HTMLCanvasElement>) {
     const id = activeStrokeIdRef.current;
-    const canvas = myCanvasRef.current;
+    const canvas = canvasRef.current;
     if (!id || !canvas) return;
 
     const point = pointFromPointerEvent(canvas, event.clientX, event.clientY);
@@ -110,31 +116,18 @@ export function useDoodle({ dataChannel }: UseDoodleOptions) {
 
   function clear() {
     setMyStrokes([]);
+    setPeerStrokes([]);
     send({ t: "doodle-clear" });
   }
 
-  // Appelé à chaque changement de pose (voir RoomClient.tsx) : chaque bande
-  // repart d'un canvas vierge, pas d'un dessin qui traînerait de la pose
-  // précédente. Purement local — pas de message réseau, chaque côté se
-  // réinitialise indépendamment au même point logique de la séance.
-  function resetForNewPose() {
-    activeStrokeIdRef.current = null;
-    pendingPointsRef.current = [];
-    setMyStrokes([]);
-    setPeerStrokes([]);
-  }
-
   return {
-    myCanvasRef,
-    peerCanvasRef,
-    myStrokes,
-    peerStrokes,
+    canvasRef,
+    strokes: [...myStrokes, ...peerStrokes],
     color,
     setColor,
     isDrawing,
     setIsDrawing,
     clear,
-    resetForNewPose,
     handlePointerDown,
     handlePointerMove,
     handlePointerUp,

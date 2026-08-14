@@ -219,6 +219,7 @@ const fr = {
     storyTagline: "Faites une bande photo ensemble, même à distance",
     newSession: "Créer ma propre séance SnapLover",
     doItTogether: "Le faire à deux",
+    doodleHint: "Dessinez ensemble sur la bande avant de la partager",
     note: "Vous avez chacun votre copie. La bande pleine résolution est enregistrée sur chaque appareil.",
     likePrompt: "Vous aimez l'application ?",
     filters: {

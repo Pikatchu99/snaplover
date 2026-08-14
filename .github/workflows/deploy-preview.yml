@@ -72,8 +72,8 @@ jobs:
           file: web/Dockerfile
           push: true
           build-args: |
-            NEXT_PUBLIC_SITE_URL=https://pr-${{ github.event.pull_request.number }}.${{ secrets.PREVIEW_DOMAIN }}
-            NEXT_PUBLIC_SIGNALING_URL=wss://pr-${{ github.event.pull_request.number }}-ws.${{ secrets.PREVIEW_DOMAIN }}
+            NEXT_PUBLIC_SITE_URL=https://pr-${{ github.event.pull_request.number }}-preview.${{ secrets.PREVIEW_DOMAIN }}
+            NEXT_PUBLIC_SIGNALING_URL=wss://pr-${{ github.event.pull_request.number }}-preview-ws.${{ secrets.PREVIEW_DOMAIN }}
           tags: |
             ${{ steps.meta.outputs.image_web }}:pr-${{ github.event.pull_request.number }}
             ${{ steps.meta.outputs.image_web }}:pr-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
@@ -128,4 +128,4 @@ jobs:
             --repo ${{ github.repository }} \
             --edit-last \
             --create-if-none \
-            --body "**Preview** : https://pr-${{ github.event.pull_request.number }}.${{ secrets.PREVIEW_DOMAIN }}"
+            --body "**Preview** : https://pr-${{ github.event.pull_request.number }}-preview.${{ secrets.PREVIEW_DOMAIN }}"

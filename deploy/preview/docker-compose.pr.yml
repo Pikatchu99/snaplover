@@ -22,7 +22,7 @@ services:
     mem_limit: 512m
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.pr-${PR_NUMBER}-web.rule=Host(`pr-${PR_NUMBER}.${PREVIEW_DOMAIN}`)"
+      - "traefik.http.routers.pr-${PR_NUMBER}-web.rule=Host(`pr-${PR_NUMBER}-preview.${PREVIEW_DOMAIN}`)"
       - "traefik.http.services.pr-${PR_NUMBER}-web.loadbalancer.server.port=3000"
     networks:
       - preview-net
@@ -43,11 +43,11 @@ services:
     environment:
       PORT: "8080"
       MAX_ROOMS: "20"
-      ALLOWED_ORIGIN: "https://pr-${PR_NUMBER}.${PREVIEW_DOMAIN}"
+      ALLOWED_ORIGIN: "https://pr-${PR_NUMBER}-preview.${PREVIEW_DOMAIN}"
     mem_limit: 256m
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.pr-${PR_NUMBER}-ws.rule=Host(`pr-${PR_NUMBER}-ws.${PREVIEW_DOMAIN}`)"
+      - "traefik.http.routers.pr-${PR_NUMBER}-ws.rule=Host(`pr-${PR_NUMBER}-preview-ws.${PREVIEW_DOMAIN}`)"
       - "traefik.http.services.pr-${PR_NUMBER}-ws.loadbalancer.server.port=8080"
     networks:
       - preview-net

@@ -6,14 +6,31 @@ prod — pour pouvoir vérifier une feature avant de merger, sans être obligé 
 
 Complètement séparé de la prod (`deploy/docker-compose.yml`, jamais touché ici) : un couple de
 conteneurs web+signaling par PR, routés via un proxy inverse (**Traefik**) derrière un sous-domaine
-wildcard dédié — `pr-<N>.snaplover-preview.hbdwall.xyz`. À la fermeture de la PR (mergée ou pas),
-les conteneurs sont détruits automatiquement.
+wildcard — `pr-<N>-preview.hbdwall.xyz`. À la fermeture de la PR (mergée ou pas), les conteneurs
+sont détruits automatiquement.
 
 **Prérequis** : le bootstrap de `docs/DEPLOY.md` déjà fait (VPS, tunnel Cloudflare, utilisateur
 `deploy`, secrets GitHub) — ce document ne fait qu'ajouter la partie preview par-dessus.
 
 **Tout ce qui suit (étapes 1 à 5) est à faire une seule fois.** Après ça, chaque PR obtient sa
 preview automatiquement, plus aucune manip manuelle.
+
+## Wildcard racine, pas scopé — pourquoi
+
+Une première version de ce guide scopait le wildcard sous `*.snaplover-preview.hbdwall.xyz` (deux
+niveaux sous `hbdwall.xyz`) pour ne surtout pas affecter les autres projets hébergés sur ce même
+domaine. **Testé en conditions réelles, ça échoue** : le certificat TLS gratuit automatique de
+Cloudflare ("Universal SSL") ne couvre qu'**un seul niveau** de sous-domaine — un hostname à deux
+niveaux comme `pr-0.snaplover-preview.hbdwall.xyz` répond en échec de handshake TLS, jamais en 404,
+avant même d'atteindre le tunnel.
+
+Le wildcard est donc à la racine — `*.hbdwall.xyz`, le même niveau que `snaplover.hbdwall.xyz`
+aujourd'hui (déjà couvert par le certificat gratuit existant, rien de nouveau à activer). Risque
+réel mais limité : en DNS, un enregistrement explicite existant passe toujours avant un wildcard —
+ça ne casse **rien** de ce qui existe déjà sur la zone. Le vrai impact : si tu (ou quelqu'un
+d'autre) crées un **nouveau** sous-domaine `hbdwall.xyz` pour un projet différent plus tard, il
+faudra lui donner son propre enregistrement DNS explicite dès sa création — sinon il passerait par
+erreur dans ce tunnel et recevrait un 404 de Traefik au lieu de son vrai contenu.
 
 ## Qui fait quoi
 
@@ -46,23 +63,11 @@ ssh root@TON_VPS_IP
 Puis, une fois connecté :
 
 ```bash
-cloudflared tunnel route dns snaplover '*.snaplover-preview.hbdwall.xyz'
+cloudflared tunnel route dns snaplover '*.hbdwall.xyz'
 ```
 
 Si cette commande répond une erreur d'authentification, refais `cloudflared tunnel login` avec ce
 même compte avant de réessayer (voir DEPLOY.md étape 5).
-
-Volontairement scopé sous `snaplover-preview.hbdwall.xyz` (pas un wildcard sur tout `hbdwall.xyz`) :
-ce VPS héberge d'autres projets sur ce même domaine — un wildcard racine capturerait leurs
-sous-domaines aussi. Un seul enregistrement couvre à la fois `pr-<N>.snaplover-preview.hbdwall.xyz`
-(web) et `pr-<N>-ws.snaplover-preview.hbdwall.xyz` (signaling), les deux étant un seul niveau sous
-`snaplover-preview.hbdwall.xyz`.
-
-**Point à vérifier avant d'aller plus loin** (pas garanti à 100% sans test réel) : Cloudflare
-provisionne normalement un certificat TLS automatiquement pour tout hostname routé vers un tunnel,
-wildcard ou pas — mais si un hostname de test comme `pr-0.snaplover-preview.hbdwall.xyz` répond en
-erreur de certificat plutôt qu'en 404 une fois l'étape 3 faite, c'est ce point précis qui coince
-(souvent réglable en activant "Total TLS" sur la zone, dans le dashboard Cloudflare).
 
 ## Étape 2 — VPS : réseau partagé + Traefik
 
@@ -73,11 +78,13 @@ ensuite, les fichiers doivent être dans SON dossier personnel) :
 ssh -i ~/.ssh/snaplover_deploy deploy@TON_VPS_IP
 ```
 
-Une fois connecté en tant que `deploy`, crée le dossier et colle directement le contenu des 3
-fichiers ci-dessous (pas besoin d'aller chercher quoi que ce soit dans le repo — tout est ici) :
+Une fois connecté en tant que `deploy`, **vérifie où tu es avant chaque fichier créé ci-dessous**
+(`pwd` doit afficher `/home/deploy/snaplover/preview`, jamais `/home/deploy/snaplover` tout court —
+une confusion ici écraserait le `docker-compose.yml` de la PROD, pas celui de la preview) :
 
 ```bash
 mkdir -p ~/snaplover/preview && cd ~/snaplover/preview
+pwd   # vérifie AVANT de continuer : doit finir par /snaplover/preview
 ```
 
 **Fichier 1/3** — colle ce bloc entier (du `cat` au `EOF` final) et appuie sur Entrée :
@@ -126,7 +133,7 @@ services:
     mem_limit: 512m
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.pr-${PR_NUMBER}-web.rule=Host(`pr-${PR_NUMBER}.${PREVIEW_DOMAIN}`)"
+      - "traefik.http.routers.pr-${PR_NUMBER}-web.rule=Host(`pr-${PR_NUMBER}-preview.${PREVIEW_DOMAIN}`)"
       - "traefik.http.services.pr-${PR_NUMBER}-web.loadbalancer.server.port=3000"
     networks:
       - preview-net
@@ -143,11 +150,11 @@ services:
     environment:
       PORT: "8080"
       MAX_ROOMS: "20"
-      ALLOWED_ORIGIN: "https://pr-${PR_NUMBER}.${PREVIEW_DOMAIN}"
+      ALLOWED_ORIGIN: "https://pr-${PR_NUMBER}-preview.${PREVIEW_DOMAIN}"
     mem_limit: 256m
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.pr-${PR_NUMBER}-ws.rule=Host(`pr-${PR_NUMBER}-ws.${PREVIEW_DOMAIN}`)"
+      - "traefik.http.routers.pr-${PR_NUMBER}-ws.rule=Host(`pr-${PR_NUMBER}-preview-ws.${PREVIEW_DOMAIN}`)"
       - "traefik.http.services.pr-${PR_NUMBER}-ws.loadbalancer.server.port=8080"
     networks:
       - preview-net
@@ -201,23 +208,43 @@ curl http://localhost:3999/
 ssh root@TON_VPS_IP
 ```
 
-Ouvre `/etc/cloudflared/config.yml` (déjà en place depuis DEPLOY.md étape 6) avec l'éditeur de ton
-choix (`nano /etc/cloudflared/config.yml`) et ajoute ces 2 lignes **avant** la ligne
-`- service: http_status:404` qui doit rester la toute dernière :
+Remplace le fichier entier d'un coup (plus sûr qu'éditer une ligne précise à la main dans `nano` —
+c'est une erreur d'ordre des règles qui a fait planter le tunnel la première fois) :
 
-```yaml
-  - hostname: "*.snaplover-preview.hbdwall.xyz"
+```bash
+cat > /etc/cloudflared/config.yml <<'EOF'
+tunnel: snaplover
+credentials-file: /root/.cloudflared/<TUNNEL_ID>.json
+
+ingress:
+  - hostname: snaplover.hbdwall.xyz
+    service: http://localhost:3002
+  - hostname: snaplover-signaling.hbdwall.xyz
+    service: http://localhost:8080
+  - hostname: "*.hbdwall.xyz"
     service: http://localhost:3999
+  - service: http_status:404
+EOF
 ```
 
-Le fichier complet doit ressembler à `deploy/cloudflared/config.yml.example` de ce repo (avec ton
-vrai `<TUNNEL_ID>` déjà en place depuis DEPLOY.md). Sauvegarde, puis :
+Remplace `<TUNNEL_ID>` par ton vrai UUID (visible dans `journalctl -xeu cloudflared.service`, champ
+`tunnelID=`, ou déjà présent dans le fichier actuel : `cat /etc/cloudflared/config.yml` avant de le
+remplacer si tu veux le récupérer). **La dernière ligne (`http_status:404`) doit rester la toute
+dernière** — c'est exactement l'ordre qui a fait échouer le tunnel la première fois.
 
 ```bash
 systemctl restart cloudflared
 systemctl status cloudflared
-# doit afficher "active (running)" — si ça affiche "failed", relis le fichier
-# que tu viens d'éditer, une erreur d'indentation YAML est la cause la plus probable.
+# doit afficher "active (running)" — si ça affiche "activating (auto-restart)",
+# lance `journalctl -xeu cloudflared.service -n 30 --no-pager` pour voir l'erreur exacte.
+```
+
+Vérifie que la prod répond toujours (priorité absolue avant de continuer) :
+
+```bash
+curl -sI https://snaplover.hbdwall.xyz/ | head -1
+curl -sI https://snaplover-signaling.hbdwall.xyz/health | head -1
+# les deux doivent répondre 200
 ```
 
 ## Étape 4 — GitHub : secret du repo
@@ -227,15 +254,15 @@ repository secret. Un seul secret en plus de ceux de DEPLOY.md étape 7 :
 
 | Secret | Valeur |
 |---|---|
-| `PREVIEW_DOMAIN` | `snaplover-preview.hbdwall.xyz` |
+| `PREVIEW_DOMAIN` | `hbdwall.xyz` |
 
 ## Étape 5 — Vérifier l'automatisation
 
 Ouvre une PR qui touche `web/**` (une modif triviale suffit), regarde l'onglet Actions du repo
 GitHub : le workflow **Deploy preview** doit builder, pousser sur GHCR, déployer par SSH, puis
-poster un commentaire sur la PR avec l'URL (`https://pr-<N>.snaplover-preview.hbdwall.xyz`). Ouvre
-ce lien, vérifie que la page se charge. Ferme la PR, vérifie que **Teardown preview** tourne et
-que (reconnecté en `deploy`, voir étape 2) `docker ps` ne montre plus les conteneurs
+poster un commentaire sur la PR avec l'URL (`https://pr-<N>-preview.hbdwall.xyz`). Ouvre ce lien,
+vérifie que la page se charge. Ferme la PR, vérifie que **Teardown preview** tourne et que
+(reconnecté en `deploy`, voir étape 2) `docker ps` ne montre plus les conteneurs
 `snaplover-pr-<N>-*`.
 
 ---
@@ -252,5 +279,8 @@ que (reconnecté en `deploy`, voir étape 2) `docker ps` ne montre plus les cont
   surveiller si plusieurs PR restent ouvertes longtemps en parallèle sur un VPS déjà partagé avec
   d'autres projets.
 - **`ALLOWED_ORIGIN` par preview** : chaque signaling de preview n'autorise que l'origine de SA
-  propre PR (`https://pr-<N>.snaplover-preview.hbdwall.xyz`) — cohérent avec la même logique que la
-  prod (voir CLAUDE.md checklist OWASP §4), pas une simplification côté sécurité.
+  propre PR (`https://pr-<N>-preview.hbdwall.xyz`) — cohérent avec la même logique que la prod (voir
+  CLAUDE.md checklist OWASP §4), pas une simplification côté sécurité.
+- **Wildcard racine `*.hbdwall.xyz`** : voir "Wildcard racine, pas scopé — pourquoi" plus haut — tout
+  nouveau sous-domaine `hbdwall.xyz` créé pour un projet différent de snaplover doit avoir son propre
+  enregistrement DNS explicite dès sa création.

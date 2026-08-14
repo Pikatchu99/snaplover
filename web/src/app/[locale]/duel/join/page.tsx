@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Palette } from "lucide-react";
-import { isValidRoomCode } from "@/lib/room-code";
+import { isValidRoomCode, roomKindFromCode } from "@/lib/room-code";
 import { config } from "@/lib/config";
 import { Link, useRouter } from "@/i18n/navigation";
 
@@ -19,7 +19,9 @@ export default function JoinDuelPage() {
 
   function handleSubmit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!isValidRoomCode(code)) {
+    // roomKindFromCode (pas juste isValidRoomCode) : sans ça, un code photo
+    // collé ici redirigeait vers un duel inexistant (voir lib/room-code.ts).
+    if (!isValidRoomCode(code) || roomKindFromCode(code) !== "duel") {
       setError(true);
       return;
     }
@@ -28,7 +30,7 @@ export default function JoinDuelPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-8 bg-[#fbf7f1] px-6 pt-16 pb-24 text-center">
-      <div className="flex size-16 items-center justify-center rounded-3xl bg-linear-to-br from-[#6a48f4] to-[#fb5a46] text-white">
+      <div className="flex size-16 items-center justify-center rounded-3xl bg-[#6a48f4] text-white">
         <Palette className="size-8" />
       </div>
 
@@ -55,7 +57,7 @@ export default function JoinDuelPage() {
 
         <button
           type="submit"
-          className="rounded-2xl bg-linear-to-r from-[#6a48f4] to-[#fb5a46] px-6 py-3 font-medium text-white transition hover:opacity-90"
+          className="rounded-2xl bg-[#6a48f4] px-6 py-3 font-medium text-white transition hover:opacity-90"
         >
           {t("submit")}
         </button>

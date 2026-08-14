@@ -1,11 +1,12 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useLocale } from "next-intl";
 import { useRoomConnection } from "@/hooks/use-room-connection";
 import { useDuelSession } from "@/hooks/use-duel-session";
 import { DuelLobby } from "@/components/duel/DuelLobby";
 import { DuelRoundStage } from "@/components/duel/DuelRoundStage";
+import { DuelFaceBubbles } from "@/components/duel/DuelFaceBubbles";
 import { DuelRecap } from "@/components/duel/DuelRecap";
 
 interface DuelClientProps {
@@ -23,12 +24,22 @@ export function DuelClient({ code }: DuelClientProps) {
 
   const duel = useDuelSession({ dataChannel, isInitiator, locale });
 
+  useEffect(() => {
+    // Vie privée : une fois la partie terminée, plus besoin de la caméra —
+    // on coupe le flux (stop, pas juste enabled=false) pour éteindre
+    // vraiment le voyant caméra, même précaution que RoomClient.tsx côté photo.
+    if (duel.phase === "recap" && localStream) {
+      for (const track of localStream.getTracks()) track.stop();
+    }
+  }, [duel.phase, localStream]);
+
   if (duel.hasStarted) {
     if (duel.phase === "recap") {
       return <DuelRecap rounds={duel.rounds} onReplay={duel.replay} />;
     }
     return (
       <div className="flex min-h-screen flex-col gap-6 bg-[#161319] px-5 pt-16 pb-16">
+        <DuelFaceBubbles localStream={localStream} remoteStream={remoteStream} />
         <DuelRoundStage duel={duel} />
       </div>
     );

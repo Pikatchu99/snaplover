@@ -82,7 +82,7 @@ export function DuelLobby({
           <p className="max-w-sm text-white">{t("cameraDeniedMessage")}</p>
           <button
             onClick={onRetryCamera}
-            className="rounded-2xl bg-linear-to-r from-[#6a48f4] to-[#fb5a46] px-6 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
+            className="rounded-2xl bg-linear-to-r from-[#fb5a46] to-[#ff7d54] px-6 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
           >
             {t("retry")}
           </button>
@@ -114,7 +114,7 @@ export function DuelLobby({
           <p className="max-w-sm text-white">{t("turnUnavailableMessage")}</p>
           <button
             onClick={() => window.location.reload()}
-            className="rounded-2xl bg-linear-to-r from-[#6a48f4] to-[#fb5a46] px-6 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
+            className="rounded-2xl bg-linear-to-r from-[#fb5a46] to-[#ff7d54] px-6 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
           >
             {t("retry")}
           </button>
@@ -131,7 +131,7 @@ export function DuelLobby({
           <div className="flex flex-wrap items-center justify-center gap-3">
             <Link
               href="/duel"
-              className="inline-flex items-center justify-center rounded-2xl bg-linear-to-r from-[#6a48f4] to-[#fb5a46] px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
+              className="inline-flex items-center justify-center rounded-2xl bg-linear-to-r from-[#fb5a46] to-[#ff7d54] px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
             >
               {t("invalidRoomCreateCta")}
             </Link>
@@ -165,11 +165,16 @@ export function DuelLobby({
           <CameraTile stream={remoteStream} label={t("partner")} state={remoteTileState(status, Boolean(remoteStream))} />
         </div>
 
+        <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+          <p className="text-xs font-semibold tracking-widest text-white/50 uppercase">{t("rulesTitle")}</p>
+          <p className="mt-1 text-sm text-white/80">{t("rulesText")}</p>
+        </div>
+
         {isInitiator && (
           <button
             onClick={onLaunch}
             disabled={status !== "connected"}
-            className="w-full rounded-2xl bg-linear-to-r from-[#6a48f4] to-[#fb5a46] px-6 py-3.5 font-medium text-white transition hover:opacity-90 disabled:from-white/15 disabled:to-white/15 disabled:text-white/50"
+            className="w-full rounded-2xl bg-linear-to-r from-[#fb5a46] to-[#ff7d54] px-6 py-3.5 font-medium text-white transition hover:opacity-90 disabled:from-white/15 disabled:to-white/15 disabled:text-white/50"
           >
             {t("launch")}
           </button>

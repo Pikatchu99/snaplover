@@ -60,6 +60,13 @@ export function useDuelSession({ dataChannel, isInitiator, locale }: UseDuelSess
   const pendingPointsRef = useRef<DoodlePoint[]>([]);
   const rafRef = useRef<number | null>(null);
   const roundEndedRef = useRef(false);
+  // Garde contre le double-avancement : sans elle, un clic en double sur
+  // "Manche suivante" (ou les deux pairs qui cliquent chacun sur leur écran
+  // à quelques centaines de ms d'écart) désynchronisait complètement les
+  // deux côtés — l'un avançait de deux manches, l'autre d'une seule (bug réel
+  // observé en testant : "manche 2/3" d'un côté, "3/3" de l'autre). Remise à
+  // false à chaque nouvelle manche qui se termine (voir finalizeRound).
+  const roundAdvancedRef = useRef(false);
   const roundTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const roundStartAtRef = useRef(0);
   const roundDurationRef = useRef<number>(config.duel.roundDurationMs);
@@ -101,6 +108,7 @@ export function useDuelSession({ dataChannel, isInitiator, locale }: UseDuelSess
   function finalizeRound(finalWord: string, guessed: boolean, timeMs: number, strokes: DoodleStroke[]) {
     if (roundTimeoutRef.current) clearTimeout(roundTimeoutRef.current);
     roundEndedRef.current = true;
+    roundAdvancedRef.current = false;
     const result: DuelRoundResult = {
       round: roundIndexRef.current,
       word: finalWord,
@@ -118,6 +126,33 @@ export function useDuelSession({ dataChannel, isInitiator, locale }: UseDuelSess
     const remain = roundDurationRef.current - (Date.now() - roundStartAtRef.current);
     setRemainingMs(Math.max(0, remain));
     if (remain > 0 && !roundEndedRef.current) requestAnimationFrame(tickCountdown);
+  }
+
+  // Applique le passage à la manche suivante (ou au récap) — appelé soit
+  // directement par un clic local (goToNextRound), soit à la réception du
+  // message réseau envoyé par l'AUTRE pair : quel que soit le déclencheur,
+  // les deux côtés doivent obtenir exactement le même résultat. Lit
+  // roundIndexRef (jamais `isLastRound`/`roundIndex` fermés par une closure
+  // potentiellement obsolète côté listener réseau — même précaution que le
+  // reste de ce fichier).
+  function applyNextRound() {
+    if (roundAdvancedRef.current) return;
+    roundAdvancedRef.current = true;
+    const isLast = roundIndexRef.current >= totalRounds - 1;
+    if (isLast) {
+      setPhase("recap");
+      return;
+    }
+    // Repart d'un état vierge des DEUX côtés (dessinateur·rice ET
+    // deveneur·euse à venir) — sinon la personne qui redevient
+    // dessinateur·rice plus tard dans la partie retrouvait son propre trait
+    // de la manche où elle avait dessiné pour la dernière fois (bug réel
+    // trouvé en testant : resetRoundState n'était appelé que par
+    // startDrawerPrep, jamais côté deveneur·euse à ce point de transition).
+    resetRoundState();
+    setRoundIndex((prev) => prev + 1);
+    setWord(null);
+    setPhase("lobby");
   }
 
   useEffect(() => {
@@ -177,6 +212,13 @@ export function useDuelSession({ dataChannel, isInitiator, locale }: UseDuelSess
         // conserver pour le récap est celui reçu du·de la dessinateur·rice
         // (peerStrokesRef), jamais le mien (vide, je n'ai pas dessiné).
         finalizeRound(message.word, message.guessed, message.timeMs, peerStrokesRef.current);
+      } else if (message.t === "duel-next-round") {
+        // Ignore un message pour une manche déjà quittée (l'autre pair a
+        // cliqué "Manche suivante" à peu près au même moment que moi) —
+        // roundAdvancedRef protège aussi contre ça, mais vérifier le numéro
+        // de manche rend l'intention explicite plutôt que de compter
+        // uniquement sur l'effet de bord du guard.
+        if (message.round === roundIndexRef.current) applyNextRound();
       }
     }
 
@@ -244,14 +286,16 @@ export function useDuelSession({ dataChannel, isInitiator, locale }: UseDuelSess
   // après la révélation, indépendamment par chaque côté (pas de message
   // réseau : round+1 et son dessinateur·rice sont déductibles identiquement
   // des deux côtés).
+  // Appelé par un clic sur "Manche suivante"/"Voir le récap" — la première
+  // personne qui clique fait avancer les DEUX écrans (message réseau), au
+  // lieu de laisser chaque côté avancer isolément de son côté. Avant ce
+  // message, cliquer deux fois par erreur sur un seul écran (ou les deux
+  // pairs qui cliquent chacun sur le leur, sans se synchroniser) désynchro-
+  // nisait complètement la partie — vu en conditions réelles ("manche 2/3"
+  // d'un côté, "3/3" de l'autre pour la même partie).
   function goToNextRound() {
-    if (isLastRound) {
-      setPhase("recap");
-      return;
-    }
-    setRoundIndex((prev) => prev + 1);
-    setWord(null);
-    setPhase("lobby");
+    send({ t: "duel-next-round", round: roundIndexRef.current });
+    applyNextRound();
   }
 
   // "Rejouer" (voir DuelRecap.tsx) — repart pour une partie fraîche sur la

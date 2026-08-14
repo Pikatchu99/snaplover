@@ -2,15 +2,26 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { isValidRoomCode } from "@/lib/room-code";
+import { roomKindFromCode, type RoomKind } from "@/lib/room-code";
 import { useRouter } from "@/i18n/navigation";
 
 interface InlineJoinFieldProps {
   dark?: boolean;
 }
 
+// Un seul chemin de room par type, jamais deviné ailleurs — voir
+// lib/room-code.ts (préfixe de code) pour pourquoi cette table existe.
+const ROOM_PATH: Record<RoomKind, string> = {
+  photo: "/r",
+  duel: "/duel/r",
+  mindmatch: "/mindmatch/r",
+};
+
 // Champ "coller le lien / code" de la landing (E1) — accepte un lien complet
-// (/r/CODE...) ou un code brut, et redirige vers la room.
+// (/r/CODE..., /duel/r/CODE..., /mindmatch/r/CODE...) ou un code brut, et
+// redirige vers la bonne room. Avant le préfixe de code par type (voir
+// lib/room-code.ts), ce champ redirigeait toujours vers /r/ — un code de
+// duel collé ici atterrissait sur une room photo inexistante.
 export function InlineJoinField({ dark }: InlineJoinFieldProps) {
   const router = useRouter();
   const tLanding = useTranslations("landing");
@@ -21,8 +32,9 @@ export function InlineJoinField({ dark }: InlineJoinFieldProps) {
     event.preventDefault();
     const match = value.match(/([A-Z0-9]{4,8})(?:\?.*)?$/i);
     const code = (match ? match[1] : value).trim().toUpperCase();
-    if (!isValidRoomCode(code)) return;
-    router.push(`/r/${code}`);
+    const kind = roomKindFromCode(code);
+    if (!kind) return;
+    router.push(`${ROOM_PATH[kind]}/${code}`);
   }
 
   return (

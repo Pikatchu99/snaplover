@@ -4,7 +4,7 @@ import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Logo } from "@/components/landing/Logo";
-import { isValidRoomCode } from "@/lib/room-code";
+import { isValidRoomCode, roomKindFromCode } from "@/lib/room-code";
 import { config } from "@/lib/config";
 import { Link, useRouter } from "@/i18n/navigation";
 
@@ -25,7 +25,10 @@ function JoinForm() {
 
   function handleSubmit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
-    const codeValid = isValidRoomCode(code);
+    // roomKindFromCode (pas juste isValidRoomCode) : sans ça, un code de duel
+    // collé ici passait le format générique et redirigeait vers une room
+    // photo inexistante (voir lib/room-code.ts).
+    const codeValid = isValidRoomCode(code) && roomKindFromCode(code) === "photo";
     const nameValid = Boolean(name.trim());
     setError(!codeValid);
     setNameError(!nameValid);

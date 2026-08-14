@@ -1,9 +1,10 @@
-import { ArrowRight, Palette } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Logo } from "@/components/landing/Logo";
 import { HeroStrips } from "@/components/landing/HeroStrips";
 import { InlineJoinField } from "@/components/landing/InlineJoinField";
 import { PackOfTheDay } from "@/components/landing/PackOfTheDay";
+import { DoodleDuelPromo } from "@/components/landing/DoodleDuelPromo";
 import { Link } from "@/i18n/navigation";
 import { SITE_URL } from "@/lib/site";
 import { getDailyChallenge } from "@/lib/stickers/daily-pack";
@@ -99,14 +100,6 @@ export default async function LandingPage({ params }: LandingPageProps) {
           </div>
 
           <p className="text-xs text-[#8c8378]">{t("landing.noAccount")}</p>
-
-          <Link
-            href="/duel"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-[#6a48f4] underline-offset-2 hover:underline"
-          >
-            <Palette className="size-4" />
-            {t("landing.doodleDuelCta")}
-          </Link>
         </div>
 
         <div className="relative hidden flex-1 items-center justify-center overflow-hidden bg-[#161319] md:flex">
@@ -121,6 +114,8 @@ export default async function LandingPage({ params }: LandingPageProps) {
       </main>
 
       <PackOfTheDay packId={dailyChallenge.packId} stickerIds={dailyChallenge.stickerIds} />
+
+      <DoodleDuelPromo />
 
       <section className="bg-[#fbf7f1] px-6 py-16 md:px-16">
         <div className="mx-auto flex max-w-5xl flex-col gap-10">

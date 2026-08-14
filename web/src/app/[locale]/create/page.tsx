@@ -117,7 +117,7 @@ function CreateRoomForm() {
       return;
     }
 
-    const code = generateRoomCode();
+    const code = generateRoomCode("photo");
     // Le lien partagé ne contient QUE la config de room (poses/style/cadre,
     // + mode/pack en challenge) — jamais le prénom de l'hôte, qui reste local
     // à ce navigateur. mode/pack omis en classique : URL inchangée par

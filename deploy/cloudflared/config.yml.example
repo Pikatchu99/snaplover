@@ -14,4 +14,20 @@ ingress:
     service: http://localhost:3002
   - hostname: snaplover-signaling.hbdwall.xyz
     service: http://localhost:8080
+  # Previews par PR (voir docs/PREVIEW.md) — UN SEUL wildcard couvre à la
+  # fois pr-<N>-preview.hbdwall.xyz (web) et pr-<N>-preview-ws.hbdwall.xyz
+  # (signaling), puisque les deux sont un seul niveau sous hbdwall.xyz.
+  # Wildcard RACINE (pas *.snaplover-preview.hbdwall.xyz, essayé d'abord et
+  # abandonné) : le certificat TLS gratuit automatique de Cloudflare
+  # ("Universal SSL") ne couvre qu'un seul niveau de sous-domaine — un
+  # wildcard à deux niveaux échoue le handshake TLS (testé en conditions
+  # réelles, pas juste en théorie). Ce VPS héberge d'autres projets sur ce
+  # même domaine, mais un enregistrement DNS explicite existant passe
+  # toujours avant un wildcard — ça ne casse rien de ce qui existe déjà ;
+  # tout NOUVEAU sous-domaine futur pour un autre projet devra avoir son
+  # propre enregistrement DNS explicite pour ne pas passer par erreur dans
+  # ce tunnel. Route vers Traefik (port 3999), jamais directement vers un
+  # conteneur de PR — voir deploy/preview/docker-compose.yml.
+  - hostname: "*.hbdwall.xyz"
+    service: http://localhost:3999
   - service: http_status:404

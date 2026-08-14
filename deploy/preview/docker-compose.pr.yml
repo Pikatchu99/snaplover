@@ -1,0 +1,63 @@
+# Un couple web+signaling par PR ouverte — voir docs/PREVIEW.md et
+# .github/workflows/deploy-preview.yml, qui lance ce fichier avec
+# `docker compose -p snaplover-pr-<N> -f docker-compose.pr.yml up -d` (et
+# `down` à la fermeture de la PR, voir teardown-preview.yml). Variables
+# ${PR_NUMBER}/${WEB_IMAGE_TAG}/${SIGNALING_IMAGE_TAG}/${PREVIEW_DOMAIN}
+# injectées par le workflow, jamais en dur ici (voir CLAUDE.md "Aucune
+# valeur d'infra en dur").
+#
+# Aucun port publié sur l'hôte : seul Traefik (docker-compose.yml, déjà
+# tournant) atteint ces conteneurs, via le réseau externe partagé
+# snaplover-preview-net (créé une fois au bootstrap, voir docs/PREVIEW.md).
+services:
+  web:
+    image: ghcr.io/pikatchu99/snaplover/web:${WEB_IMAGE_TAG}
+    container_name: snaplover-pr-${PR_NUMBER}-web
+    restart: unless-stopped
+    # STUN/TURN uniquement (les mêmes creds que la prod, réutilisées — voir
+    # docs/PREVIEW.md) : ALLOWED_ORIGIN n'existe pas côté web, pas besoin
+    # d'un fichier par PR pour celui-ci.
+    env_file:
+      - shared.env
+    mem_limit: 512m
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pr-${PR_NUMBER}-web.rule=Host(`pr-${PR_NUMBER}-preview.${PREVIEW_DOMAIN}`)"
+      - "traefik.http.services.pr-${PR_NUMBER}-web.loadbalancer.server.port=3000"
+    networks:
+      - preview-net
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  signaling:
+    image: ghcr.io/pikatchu99/snaplover/signaling:${SIGNALING_IMAGE_TAG}
+    container_name: snaplover-pr-${PR_NUMBER}-signaling
+    restart: unless-stopped
+    # ALLOWED_ORIGIN dépend du numéro de PR — jamais partagé avec les autres
+    # previews, contrairement à shared.env côté web (voir plus haut).
+    # MAX_ROOMS volontairement bas : une preview est un bac à sable de test,
+    # jamais un vrai trafic à absorber.
+    environment:
+      PORT: "8080"
+      MAX_ROOMS: "20"
+      ALLOWED_ORIGIN: "https://pr-${PR_NUMBER}-preview.${PREVIEW_DOMAIN}"
+    mem_limit: 256m
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pr-${PR_NUMBER}-ws.rule=Host(`pr-${PR_NUMBER}-preview-ws.${PREVIEW_DOMAIN}`)"
+      - "traefik.http.services.pr-${PR_NUMBER}-ws.loadbalancer.server.port=8080"
+    networks:
+      - preview-net
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+networks:
+  preview-net:
+    name: snaplover-preview-net
+    external: true

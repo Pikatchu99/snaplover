@@ -12,6 +12,7 @@ import { flattenDoodle } from "@/lib/capture/doodle";
 import { FRAMES } from "@/lib/frames/frame-registry";
 import { config } from "@/lib/config";
 import { SITE_URL } from "@/lib/site";
+import { shareOrDownload } from "@/lib/share-or-download";
 import { useDoodle } from "@/hooks/use-doodle";
 import { DoodleCanvas } from "@/components/strip/DoodleCanvas";
 import { DoodleToolbar } from "@/components/strip/DoodleToolbar";
@@ -99,28 +100,6 @@ export function PhotoStrip({ cells, initialStripUrl, frameId, style, names, solo
   // dev/preview sans NEXT_PUBLIC_SITE_URL configuré, auquel cas on omet
   // silencieusement le lien plutôt que de glisser un texte tronqué/vide.
   const shareText = SITE_URL ? `${t("shareText")}\n${SITE_URL}` : t("shareText");
-
-  // Partage-ou-télécharge un PNG déjà généré : Web Share API si dispo (mobile,
-  // la cible la plus probable pour ce genre de contenu), sinon téléchargement
-  // — même fallback pour le format classique et le format Story.
-  async function shareOrDownload(url: string, filename: string, text: string) {
-    const blob = await (await fetch(url)).blob();
-    const file = new File([blob], filename, { type: "image/png" });
-
-    if (navigator.canShare?.({ files: [file] })) {
-      try {
-        await navigator.share({ files: [file], title: "SnapLover", text });
-        return;
-      } catch {
-        // annulé ou indisponible : on retombe sur le téléchargement
-      }
-    }
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    a.click();
-  }
 
   async function handleShare() {
     if (isChallenge) trackChallengeShared();

@@ -232,8 +232,11 @@ simple "scrub avant de rendre public" :
 - Pas de docs de stratégie business/growth ni de captures d'écran perso dans le repo public.
 
 ## Déploiement
-Voir `docs/DEPLOY.md` pour la procédure complète, étape par étape. Résumé de l'archi : **tout sur
-un seul VPS** (l'auteur a pointé le domaine dessus dès le départ, pas de Vercel) :
+Voir `docs/DEPLOY.md` pour la procédure complète, étape par étape, et `docs/PREVIEW.md` pour les
+previews par PR (une URL de test par PR ouverte, `pr-<N>.snaplover-preview.hbdwall.xyz`, avant de
+merger — Traefik + sous-domaine wildcard sur le même VPS, complètement séparé de la prod). Résumé
+de l'archi : **tout sur un seul VPS** (l'auteur a pointé le domaine dessus dès le départ, pas de
+Vercel) :
 - **`web/`** ET **`signaling/`** tournent chacun dans un conteneur Docker sur le même VPS, bindés
   uniquement sur `127.0.0.1` — **zéro port entrant ouvert**. `web/` utilise la sortie `standalone`
   de Next.js (`next.config.ts` : `output: "standalone"` + `outputFileTracingRoot` fixé à la racine

@@ -1,0 +1,40 @@
+name: Teardown preview
+
+# Détruit les conteneurs de preview d'une PR à sa fermeture (mergée ou pas) —
+# voir docs/PREVIEW.md. Le nettoyage des images correspondantes sur GHCR
+# n'est pas automatisé (pas encore de vrai besoin au volume actuel) — voir
+# la note dans docs/PREVIEW.md.
+on:
+  pull_request:
+    types: [closed]
+
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  teardown:
+    # Même garde-fou que deploy-preview.yml : une PR de fork externe n'a
+    # jamais eu de preview déployée (pas d'accès aux secrets), rien à détruire.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Remove preview containers via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_DEPLOY_USER }}
+          key: ${{ secrets.VPS_DEPLOY_SSH_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT || 22 }}
+          # || true sur le compose down : une PR fermée sans qu'aucune preview
+          # n'ait jamais été déployée pour elle (ex. jamais touché web/ ou
+          # signaling/) ne doit pas faire échouer ce workflow.
+          script: |
+            set -euo pipefail
+            cd ~/snaplover/preview
+            export PR_NUMBER=${{ github.event.pull_request.number }}
+            export WEB_IMAGE_TAG=pr-${PR_NUMBER}
+            export SIGNALING_IMAGE_TAG=pr-${PR_NUMBER}
+            export PREVIEW_DOMAIN=${{ secrets.PREVIEW_DOMAIN }}
+            docker compose -p snaplover-pr-${PR_NUMBER} -f docker-compose.pr.yml down --rmi all --remove-orphans || true
+            docker image prune -f

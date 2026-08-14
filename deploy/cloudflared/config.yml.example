@@ -14,4 +14,15 @@ ingress:
     service: http://localhost:3002
   - hostname: snaplover-signaling.hbdwall.xyz
     service: http://localhost:8080
+  # Previews par PR (voir docs/PREVIEW.md) — UN SEUL wildcard couvre à la
+  # fois pr-<N>.snaplover-preview.hbdwall.xyz (web) et
+  # pr-<N>-ws.snaplover-preview.hbdwall.xyz (signaling), puisque les deux
+  # sont un seul niveau sous snaplover-preview.hbdwall.xyz. Volontairement
+  # scopé sous "snaplover-preview" (pas un wildcard sur tout hbdwall.xyz) :
+  # ce VPS héberge d'autres projets sur ce même domaine, un wildcard racine
+  # capturerait leurs sous-domaines aussi. Route vers Traefik (port 3999),
+  # jamais directement vers un conteneur de PR — voir
+  # deploy/preview/docker-compose.yml.
+  - hostname: "*.snaplover-preview.hbdwall.xyz"
+    service: http://localhost:3999
   - service: http_status:404

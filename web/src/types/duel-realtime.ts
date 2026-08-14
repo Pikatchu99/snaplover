@@ -22,4 +22,12 @@ export type DuelMessage =
   // Envoyé par le·la dessinateur·rice (seul·e autorité sur SA manche, qu'elle
   // se termine par une bonne réponse ou l'écoulement du chrono) — révèle enfin
   // le mot aux deux côtés.
-  | { t: "duel-round-end"; word: string; guessed: boolean; timeMs: number };
+  | { t: "duel-round-end"; word: string; guessed: boolean; timeMs: number }
+  // Envoyé par la première personne qui clique "Manche suivante"/"Voir le
+  // récap" après la révélation — sans ce message, les deux côtés avançaient
+  // chacun de leur côté sans se synchroniser, un simple clic en double sur
+  // l'un des deux écrans suffisait à les désynchroniser (manche 2/3 d'un
+  // côté, 3/3 de l'autre — bug réel observé en testant). `round` permet à
+  // l'autre côté d'ignorer un message en double (ex. les deux ont cliqué à
+  // peu près en même temps) plutôt que d'avancer deux fois.
+  | { t: "duel-next-round"; round: number };

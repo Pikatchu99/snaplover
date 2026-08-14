@@ -75,10 +75,14 @@ test("Doodle Duel : 3 manches jouées (rôles alternés, bonne réponse) → ré
     await expect(drawer.getByText("Le mot était :")).toBeVisible({ timeout: 5_000 });
     await expect(guesser.getByText("Le mot était :")).toBeVisible({ timeout: 5_000 });
 
+    // Un seul clic (drawer ou guesser, peu importe qui) fait avancer les DEUX
+    // écrans — voir hooks/use-duel-session.ts "duel-next-round" : avant ce
+    // message réseau, chaque côté devait cliquer séparément, et un clic en
+    // double sur un seul écran désynchronisait complètement la partie.
     const isLastRound = round === 2;
     const nextLabel = isLastRound ? "Voir le récap" : "Manche suivante";
     await drawer.getByRole("button", { name: nextLabel }).click();
-    await guesser.getByRole("button", { name: nextLabel }).click();
+    if (!isLastRound) await expect(guesser.getByText(`Manche ${round + 2} / 3`)).toBeVisible({ timeout: 5_000 });
 
     [drawer, guesser] = [guesser, drawer];
   }

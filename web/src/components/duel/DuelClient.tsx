@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useRoomConnection } from "@/hooks/use-room-connection";
 import { useDuelSession } from "@/hooks/use-duel-session";
 import { DuelLobby } from "@/components/duel/DuelLobby";
 import { DuelRoundStage } from "@/components/duel/DuelRoundStage";
-import { DuelFaceBubbles } from "@/components/duel/DuelFaceBubbles";
+import { FaceBubbles } from "@/components/room/FaceBubbles";
 import { DuelRecap } from "@/components/duel/DuelRecap";
 
 interface DuelClientProps {
@@ -21,6 +21,7 @@ export function DuelClient({ code }: DuelClientProps) {
   const { localStream, remoteStream, status, dataChannel, isInitiator, retryCamera } = useRoomConnection(code);
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const locale = useLocale();
+  const t = useTranslations("duelRound");
 
   const duel = useDuelSession({ dataChannel, isInitiator, locale });
 
@@ -39,7 +40,7 @@ export function DuelClient({ code }: DuelClientProps) {
     }
     return (
       <div className="flex min-h-screen flex-col gap-6 bg-[#161319] px-5 pt-16 pb-16">
-        <DuelFaceBubbles localStream={localStream} remoteStream={remoteStream} />
+        <FaceBubbles localStream={localStream} remoteStream={remoteStream} youLabel={t("you")} partnerLabel={t("partner")} />
         <DuelRoundStage duel={duel} />
       </div>
     );

@@ -525,3 +525,95 @@ oublie.
   trait en direct, bonne réponse insensible aux accents/casse, récap téléchargeable) + partie
   complète rejouée à la main plusieurs fois, carte récap inspectée à l'œil (mots, résultats, dessins
   miniatures et footer de marque tous corrects à pleine résolution).
+- **Retours utilisateur après un premier tour de test réel**, tous corrigés : bug de synchro (un
+  pair revoyait son propre dessin d'une manche précédente en redevenant dessinateur·rice — fix dans
+  `resetRoundState()`, appelé aussi côté "à venir deveneur·euse" à la transition de manche, pas
+  seulement par `startDrawerPrep`) ; caméra/audio qui disparaissaient dès le début du dessin (fix :
+  bulles rondes façon Loom persistantes pendant toute la partie, voir `components/room/FaceBubbles.tsx`
+  ci-dessous) ; aucune notice de règles avant de lancer (fix : bloc "Comment ça marche" dans
+  `DuelLobby.tsx`) ; dégradé violet inventé qui ne respectait pas le thème couleur de l'app (fix :
+  dégradé corail partout, sauf `/duel/join` qui garde le violet plein — le violet marque
+  spécifiquement le chemin "rejoindre", jamais un dégradé, jamais utilisé ailleurs).
+- **Second bug de synchro trouvé après ce premier tour** : "Manche suivante" n'envoyait AUCUN
+  message réseau — chaque côté avançait `roundIndex` purement localement. Un double-clic (ou deux
+  clics à peu près simultanés, un par écran) désynchronisait complètement la partie (observé en
+  conditions réelles : "Manche 2/3" d'un côté, "3/3" de l'autre, pour la même partie). Fix : message
+  réseau `duel-next-round` — la première personne qui clique fait avancer les DEUX écrans, avec une
+  ref-garde (`roundAdvancedRef`) contre le double-déclenchement. Ce même risque de classe de bug a
+  été anticipé dès la conception de Mind Match (voir plus bas, message `mindmatch-advance`) plutôt
+  que redécouvert une seconde fois.
+- **Promotion sur la landing** : le lien texte discret d'origine (`landing.doodleDuelCta`, une
+  simple ligne soulignée sous le CTA du hero) était "très mal mis en avant" (retour utilisateur après
+  test) — remplacé par une section pleine largeur dédiée (`components/landing/DoodleDuelPromo.tsx`),
+  même gabarit que `PackOfTheDay.tsx` (eyebrow + headline + subtitle + visuel 3 étapes + CTA dégradé
+  corail), placée juste après le pack du jour pour une prominence égale.
+
+## Room codes : préfixe par type de jeu
+En ajoutant un second jeu (Mind Match, voir plus bas), un bug latent est apparu : `signaling/`
+range toutes les rooms dans une seule `Map<code, RoomEntry>`, sans aucune notion de type — un code
+de room photo et un code de duel pouvaient collisionner (le premier arrivé "possède" ce code, peu
+importe la route par laquelle il est arrivé), et le champ générique "coller le lien / code" de la
+landing (`InlineJoinField.tsx`) redirigeait toujours vers `/r/`, quel que soit le type de code collé.
+Fix choisi (voir `lib/room-code.ts`) : chaque code généré commence désormais par un caractère qui
+encode son type (`P`=photo, `D`=duel, `M`=mindmatch, table `ROOM_KIND_PREFIX`), décodé côté client
+par `roomKindFromCode()` — aucun changement du protocole signaling nécessaire (qui reste inconscient
+du concept de "type"), et aucune requête réseau pour la landing (dispatch purement local). Les deux
+pages de jonction dédiées (`/join`, `/duel/join`, `/mindmatch/join`) vérifient maintenant aussi que
+le code collé correspond bien au type attendu (sinon même message d'erreur générique "code
+invalide"), pas seulement son format. Compromis accepté : ce changement de format invalide tout lien
+de room partagé avant cette date — acceptable, les rooms étant déjà conçues comme éphémères
+(§"Aucune BDD" plus haut), pas destinées à être conservées en favoris.
+
+## Mind Match
+Deuxième mini-jeu à deux (après Doodle Duel), né d'une observation de l'auteur en soirée : plusieurs
+jeux de société courts à deux (Bingo, Tic-Tac-Toe Ultimate, "un mot en commun", "deviner les lettres
+d'un mot") partagent la même mécanique de fond — deux pairs, un salon éphémère, un protocole réseau
+minimal sur le `dataChannel` existant. Vision produit exprimée par l'auteur : faire de SnapLover un
+"hub" de jeux rapides pour ami·es à distance, pas juste une cabine photo. Mind Match est le premier
+jeu construit avec cette vision explicite en tête (contrairement à Doodle Duel, conçu au départ comme
+une évolution de Duo Doodle) : chacun tape un mot en secret, en essayant de tomber sur le MÊME mot
+que son·sa partenaire, en autant d'essais que nécessaire (mécanique "convergence de mots" façon
+Mind Meld). Routes `/mindmatch`, `/mindmatch/join`, `/mindmatch/r/[code]`, composant racine
+`MindMatchClient.tsx`.
+- **Rôles parfaitement symétriques** (contrairement à Doodle Duel) : les deux pairs font exactement
+  la même chose à chaque instant — aucune notion de dessinateur·rice/deveneur·euse, aucune alternance
+  à gérer par parité d'index. Simplifie beaucoup la machine à états (`hooks/use-mindmatch-session.ts`) :
+  pas de chrono, pas de "lobby" intermédiaire entre les manches (contrairement à Doodle Duel, où
+  chaque manche repasse par "lobby" pour laisser le temps au·à la prochain·e dessinateur·rice de se
+  préparer) — après une convergence, les deux côtés repartent directement en phase "guessing".
+- **Révélation simultanée sans message réseau dédié** : chaque essai attend que les DEUX mots
+  (`myWord`/`peerWord`) soient connus avant de révéler (`maybeReveal()`), déclenché aussi bien par ma
+  propre soumission que par la réception du mot de mon·ma partenaire — peu importe lequel arrive en
+  second. La convergence (`isSameWord`, comparaison insensible à la casse/aux accents) est calculée
+  indépendamment des deux côtés, de façon identique, donc jamais transmise sur le réseau — même
+  principe que la parité `drawerIsInitiatorForRound` côté Doodle Duel.
+- **Leçon du bug "duel-next-round" appliquée dès la conception, pas redécouverte** : "Nouvel
+  essai"/"Manche suivante" envoie un message réseau dédié (`mindmatch-advance`, voir
+  `types/mindmatch-realtime.ts`) avec une ref-garde contre le double-déclenchement
+  (`advancedRef`) — sans ce message, un clic en double (ou deux pairs qui cliquent chacun sur leur
+  écran) désynchroniserait la partie exactement comme le bug réel trouvé sur Doodle Duel. Vérifié
+  explicitement dans `e2e/tests/mindmatch.spec.ts` (un essai raté, "Nouvel essai" cliqué par UN SEUL
+  côté, les deux écrans repartent bien synchronisés sur un mot vierge).
+- **Comparaison de mots partagée avec Doodle Duel** : la normalisation casse/accents/espaces
+  (`normalizeWord`/`isSameWord`) a été extraite de `lib/doodle-duel/pick-word.ts` vers
+  `lib/text/normalize-word.ts` à cette occasion (même besoin exact dans les deux jeux, jusque-là
+  dupliqué en un seul endroit — pas de sur-généralisation prématurée, juste le second appelant réel
+  qui justifie l'extraction).
+- **Bulles caméra partagées avec Doodle Duel** : `components/duel/DuelFaceBubbles.tsx` a été
+  généralisé en `components/room/FaceBubbles.tsx` (labels "toi"/"partenaire" passés en props au lieu
+  d'un `useTranslations("duelRound")` interne) à cette occasion — même raisonnement que pour
+  `normalizeWord` : deuxième appelant réel, moment naturel pour factoriser plutôt qu'avant.
+- **Récap** (`lib/mindmatch/compose-recap.ts`, `components/mindmatch/MindMatchRecap.tsx`) : plus
+  simple que celui de Doodle Duel (`lib/doodle-duel/compose-recap.ts`) — pas de dessin à composer,
+  juste une ligne par manche (mot trouvé + nombre d'essais), score en en-tête, footer de marque.
+  Même helper `lib/share-or-download.ts` pour télécharger/partager.
+- **Aucun prénom, aucune config à saisir**, mêmes labels génériques "Toi"/"Partenaire" — même choix
+  de scope que Doodle Duel (voir plus haut).
+- Vérifié bout en bout : `e2e/tests/mindmatch.spec.ts` (3 manches : convergence directe, puis
+  convergence après un essai raté avec un seul côté qui clique "Nouvel essai", récap téléchargeable)
+  + suite e2e complète (15 tests, photo + Doodle Duel + Mind Match) rejouée sans régression après
+  l'introduction du préfixe de code par type de jeu.
+- **Pas encore fait** : promotion sur la landing (en attente d'une décision sur un éventuel bloc
+  "Jeux" unifié listant Doodle Duel + Mind Match, plutôt que dupliquer deux sections promo
+  distinctes comme `DoodleDuelPromo.tsx` — à trancher avec l'auteur avant d'ajouter un second bloc
+  au même gabarit).

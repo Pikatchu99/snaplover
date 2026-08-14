@@ -66,6 +66,11 @@ export const config = {
      * Doodle) : dessiner ET deviner prend largement plus de 3 secondes. */
     roundDurationMs: 60_000,
   },
+  mindMatch: {
+    /** Nombre de mots à faire converger par partie — pas de chrono (voir
+     * CLAUDE.md "Mind Match") : le jeu est déjà rythmé par les essais. */
+    rounds: 3,
+  },
   challenge: {
     /** Largeur colonne sticker relative à cellWidth — voir docs/STICKER-CHALLENGES.md
      * (décision produit : même taille que les photos, ou au maximum 25% plus petit). */

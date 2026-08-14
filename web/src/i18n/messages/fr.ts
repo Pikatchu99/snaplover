@@ -39,7 +39,14 @@ const fr = {
     joinCta: "Rejoindre une séance",
     pasteLinkPlaceholder: "Coller le lien / code…",
     noAccount: "Sans compte · Directement dans le navigateur · Téléchargement PNG",
-    doodleDuelCta: "Nouveau : jouez au Doodle Duel",
+    doodleDuel: {
+      eyebrow: "Nouveau",
+      headline: "Dessinez, devinez, à deux",
+      subtitle:
+        "Un mot secret, l'un dessine en direct, l'autre devine. 3 manches, les rôles s'inversent à chaque fois.",
+      steps: ["Un mot secret", "Tu dessines en direct", "Iel devine"],
+      cta: "Jouer à Doodle Duel",
+    },
     /** Aperçu décoratif (hero) — pas de vraies données, juste illustratif. */
     demoCaption: "SNAPLOVER · 14 JUIL.",
     demoCaptionTogether: "À DEUX",

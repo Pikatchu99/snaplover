@@ -38,7 +38,13 @@ const en = {
     joinCta: "Join a session",
     pasteLinkPlaceholder: "Paste the link / code…",
     noAccount: "No account · Right in your browser · PNG download",
-    doodleDuelCta: "New: play Doodle Duel",
+    doodleDuel: {
+      eyebrow: "New",
+      headline: "Draw, guess, together",
+      subtitle: "One secret word, one of you draws live, the other guesses. 3 rounds, roles swap every time.",
+      steps: ["A secret word", "You draw live", "They guess"],
+      cta: "Play Doodle Duel",
+    },
     /** Decorative preview (hero) — not real data, illustrative only. */
     demoCaption: "SNAPLOVER · JUL 14",
     demoCaptionTogether: "TOGETHER",

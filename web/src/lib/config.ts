@@ -57,6 +57,15 @@ export const config = {
     /** Épaisseur du trait relative à la largeur du canvas (min. absolu 3px). */
     lineWidthRatio: 0.012,
   },
+  duel: {
+    /** Nombre de manches par partie — impair pour ne jamais finir à égalité
+     * sur "qui a dessiné en dernier" (détail cosmétique, pas un vrai souci
+     * de règle du jeu, mais plus satisfaisant). */
+    rounds: 3,
+    /** Chrono par manche — généreux (voir CLAUDE.md, leçon du 3·2·1 de Duo
+     * Doodle) : dessiner ET deviner prend largement plus de 3 secondes. */
+    roundDurationMs: 60_000,
+  },
   challenge: {
     /** Largeur colonne sticker relative à cellWidth — voir docs/STICKER-CHALLENGES.md
      * (décision produit : même taille que les photos, ou au maximum 25% plus petit). */

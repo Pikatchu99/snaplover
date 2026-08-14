@@ -1,4 +1,4 @@
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Palette } from "lucide-react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Logo } from "@/components/landing/Logo";
 import { HeroStrips } from "@/components/landing/HeroStrips";
@@ -99,6 +99,14 @@ export default async function LandingPage({ params }: LandingPageProps) {
           </div>
 
           <p className="text-xs text-[#8c8378]">{t("landing.noAccount")}</p>
+
+          <Link
+            href="/duel"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-[#6a48f4] underline-offset-2 hover:underline"
+          >
+            <Palette className="size-4" />
+            {t("landing.doodleDuelCta")}
+          </Link>
         </div>
 
         <div className="relative hidden flex-1 items-center justify-center overflow-hidden bg-[#161319] md:flex">

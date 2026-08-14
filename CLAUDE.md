@@ -464,3 +464,61 @@ Voir docs/SNAPROOM-SPEC.md §17 pour les jalons J1–J6.
     largeur de la bande, à pleine résolution).
 - Prochaine étape : **J6** — voir docs/SNAPROOM-SPEC.md §17 (purge complète des rooms orphelines
   déjà en place côté signaling depuis J1 ; reste à confirmer le périmètre exact de J6 avec l'auteur).
+
+## Doodle Duel
+Mini-jeu Pictionary à deux, ajouté sur demande explicite comme évolution de Duo Doodle — pas un
+outil de retouche mais une vraie activité répétable à distance, séparée de la bande photo (routes
+`/duel`, `/duel/join`, `/duel/r/[code]`, composant racine `DuelClient.tsx`). Positionnement : donner
+aux duos à distance une raison de revenir sur l'appli entre deux vraies séances photo (la bande
+photo reste plus "occasion spéciale"), avec un ressort de partage similaire à Wordle/GeoGuessr — un
+résultat court et drôle qu'on a envie de montrer/défier, pas une fonctionnalité qu'on utilise puis
+oublie.
+- **Règles** : `config.duel.rounds` manches (3), `config.duel.roundDurationMs` par manche (60s —
+  volontairement généreux, voir plus bas pourquoi). Dessinateur·rice alterné·e à chaque manche par
+  pure parité de l'index (manches paires = hôte, impaires = invité·e, voir
+  `drawerIsInitiatorForRound` dans `hooks/use-duel-session.ts`) : jamais transmis sur le réseau, les
+  deux côtés le déduisent identiquement.
+- **Une seule autorité par manche** : qui dessine choisit le mot (jamais envoyé sur le réseau avant
+  la fin de la manche — seul·e le·la dessinateur·rice le connaît), évalue chaque essai du·de la
+  deveneur·euse, et décide seul·e de la fin de manche (bonne réponse ou chrono écoulé). Ça évite
+  toute course entre les deux pairs sur "qui décide" — même principe que `triggerCapture`
+  (hôte-only) côté photo, mais ici l'autorité change de main à chaque manche plutôt que de rester
+  toujours côté hôte.
+- **Protocole réseau** (`types/duel-realtime.ts`) : réutilise le canal `dataChannel` existant
+  (`useRoomConnection`, inchangé) mais avec son propre petit jeu de messages
+  (`duel-round-start`/`duel-points`/`duel-clear`/`duel-guess`/`duel-guess-result`/`duel-round-end`),
+  jamais mélangés avec `RealtimeMessage` — une room `/duel/r/[code]` n'instancie jamais
+  `useCaptureSession`, donc ce canal ne porte jamais que ces messages.
+- **Leçon directement héritée du placement raté de Duo Doodle** (voir plus haut) : ne jamais faire
+  démarrer un chrono par surprise. La phase "drawer-prep" affiche le mot SANS lancer le chrono —
+  c'est le clic explicite sur "Dessiner !" qui envoie `duel-round-start` et démarre vraiment les 60s
+  des deux côtés. Le·la deveneur·euse a son propre tick local (`tickCountdown`, démarré à la
+  réception du message) — sans lui, son compte à rebours affiché resterait figé à la valeur de
+  départ pendant toute la manche (bug réel trouvé en écrivant ce fichier, avant tout test).
+- **Bug de closure React réel trouvé en écrivant ce hook** : le listener réseau (`handleMessage`,
+  dans un effet à deps `[dataChannel]`, monté une seule fois) lisait initialement `word`/`roundIndex`
+  directement depuis le state — closures figées sur leur valeur au montage, jamais mises à jour
+  après la première manche. Fix : tout ce que `handleMessage` lit passe par une ref
+  (`wordRef`/`roundIndexRef`/`myStrokesRef`/`peerStrokesRef`), tenue à jour par des effets dédiés —
+  même précaution déjà documentée dans `use-capture-session.ts`.
+- **Aucun prénom, aucune config à saisir** (contrairement à `/create`) : `/duel` ne demande rien,
+  juste un bouton "Créer un duel" — labels génériques "Toi"/"Partenaire" partout. Choix de scope
+  volontaire pour ce MVP, pas un oubli — l'échange de prénom existant (`hello`/`config`) est
+  spécifique au protocole photo, le dupliquer ici aurait ajouté de la complexité réseau pour un gain
+  cosmétique. Enrichissement possible plus tard si demandé.
+- **Récap** (`lib/doodle-duel/compose-recap.ts`, `components/duel/DuelRecap.tsx`) : une carte par
+  manche (dessin final + mot + résultat), score en en-tête, footer de marque — composé sur canvas
+  comme la bande photo (`compose-strip.ts`), téléchargeable/partageable via le même helper
+  `lib/share-or-download.ts` (extrait de `PhotoStrip.tsx` à cette occasion, pour éviter la
+  duplication maintenant qu'il a un second appelant). Piège évité : `redrawStrokes` commence par un
+  `clearRect` (nécessaire pour le calque live, qui doit rester transparent entre deux redraws) —
+  l'appliquer directement sur le canvas du récap aurait effacé le fond blanc de chaque carte tout
+  juste peint ; fix : dessiner chaque manche sur un canvas transparent séparé, puis le composer
+  par-dessus le fond blanc déjà peint sur le canvas final.
+- **Rejouer** (`replay()` dans le hook) repart pour une partie fraîche sur la MÊME connexion, sans
+  recharger la page ni renégocier WebRTC — chaque côté l'appelle indépendamment, pas de message
+  réseau nécessaire (round 0 redevient l'hôte, exactement comme au tout premier lancement).
+- Vérifié bout en bout : `e2e/tests/duel.spec.ts` (3 manches jouées, rôles alternés, synchro du
+  trait en direct, bonne réponse insensible aux accents/casse, récap téléchargeable) + partie
+  complète rejouée à la main plusieurs fois, carte récap inspectée à l'œil (mots, résultats, dessins
+  miniatures et footer de marque tous corrects à pleine résolution).

@@ -66,6 +66,19 @@ export const config = {
      * Doodle) : dessiner ET deviner prend largement plus de 3 secondes. */
     roundDurationMs: 60_000,
   },
+  wordSonar: {
+    rounds: 3,
+    /** Longueur de mot proposée par défaut à l'hôte (voir CLAUDE.md "Word
+     * Sonar") — bornes larges pour rester jouable en français (min. 4,
+     * max. 8, au-delà l'alphabet 26 lettres devient dur à mémoriser). */
+    defaultLength: 6,
+    minLength: 4,
+    maxLength: 8,
+    /** Chrono par tour — qui a la main possède et déclenche son propre
+     * timeout (même principe que `duel.roundDurationMs`), passe le tour si
+     * personne n'agit à temps. */
+    turnDurationMs: 30_000,
+  },
   challenge: {
     /** Largeur colonne sticker relative à cellWidth — voir docs/STICKER-CHALLENGES.md
      * (décision produit : même taille que les photos, ou au maximum 25% plus petit). */

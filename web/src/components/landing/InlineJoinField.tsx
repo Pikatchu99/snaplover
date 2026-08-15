@@ -14,11 +14,11 @@ interface InlineJoinFieldProps {
 const ROOM_PATH: Record<RoomKind, string> = {
   photo: "/r",
   duel: "/duel/r",
-  mindmatch: "/mindmatch/r",
+  "word-sonar": "/word-sonar/r",
 };
 
 // Champ "coller le lien / code" de la landing (E1) — accepte un lien complet
-// (/r/CODE..., /duel/r/CODE..., /mindmatch/r/CODE...) ou un code brut, et
+// (/r/CODE..., /duel/r/CODE..., /word-sonar/r/CODE...) ou un code brut, et
 // redirige vers la bonne room. Avant le préfixe de code par type (voir
 // lib/room-code.ts), ce champ redirigeait toujours vers /r/ — un code de
 // duel collé ici atterrissait sur une room photo inexistante.

@@ -1,4 +1,5 @@
 import { DUEL_WORDS_FR, DUEL_WORDS_EN } from "@/lib/doodle-duel/words";
+import { isSameWord } from "@/lib/text/normalize-word";
 
 function wordsForLocale(locale: string): readonly string[] {
   return locale === "en" ? DUEL_WORDS_EN : DUEL_WORDS_FR;
@@ -12,17 +13,6 @@ export function pickWord(locale: string, used: readonly string[]): string {
   return candidates[Math.floor(Math.random() * candidates.length)];
 }
 
-// Normalise pour comparer un essai au mot secret : casse, accents et espaces
-// superflus ne doivent jamais faire échouer une bonne réponse ("Sirene" ==
-// "sirène").
-export function normalizeGuess(text: string): string {
-  return text
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "");
-}
-
 export function isCorrectGuess(guess: string, word: string): boolean {
-  return normalizeGuess(guess) === normalizeGuess(word);
+  return isSameWord(guess, word);
 }

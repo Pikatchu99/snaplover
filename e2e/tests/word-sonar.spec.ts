@@ -3,11 +3,14 @@ import { randomRoomCode } from "./helpers";
 
 // Word Sonar — bataille navale de mots (voir hooks/use-word-sonar-session.ts) :
 // chacun·e choisit un mot secret d'une longueur convenue, puis on alterne
-// question ("as-tu telle lettre ?", position révélée si oui) ou tentative du
-// mot entier. Vérifie une partie complète (3 manches, rôles d'interrogateur·rice
-// alternés par manche, une élimination, une lettre trouvée, deux victoires par
-// tentative directe) jusqu'au récap téléchargeable.
-test("Word Sonar : 3 manches jouées (lettres + tentatives, rôles alternés) → récap téléchargeable", async ({ browser }) => {
+// question ("as-tu telle lettre ?", position révélée si oui) tandis qu'une
+// tentative du mot entier reste possible à tout moment, même hors tour — bug
+// réel trouvé en testant : une tentative correcte devait sinon attendre que
+// l'autre joue. Une case remplie tente automatiquement, aucun clic requis
+// (retour utilisateur réel). Vérifie une partie complète (3 manches, rôles
+// d'interrogateur·rice alternés, une élimination, une lettre trouvée, une
+// victoire hors tour) jusqu'au récap téléchargeable.
+test("Word Sonar : 3 manches jouées (lettres + tentatives hors tour, rôles alternés) → récap téléchargeable", async ({ browser }) => {
   test.setTimeout(60_000);
 
   const room = randomRoomCode();
@@ -41,6 +44,8 @@ test("Word Sonar : 3 manches jouées (lettres + tentatives, rôles alternés) �
     await page.getByRole("button", { name: "Valider mon mot" }).click();
   }
 
+  // Aucun bouton "Valider" : remplir la dernière case tente automatiquement
+  // (voir hooks/use-word-sonar-session.ts guessWord() / WordSonarRoundStage.tsx).
   async function fillGuessBoxes(page: Page, word: string) {
     for (let i = 0; i < word.length; i++) {
       const box = page.locator(`input[data-wordsonar-box="${i}"]`);
@@ -58,28 +63,25 @@ test("Word Sonar : 3 manches jouées (lettres + tentatives, rôles alternés) �
   await expect(host.getByRole("button", { name: "Z", exact: true })).toBeDisabled({ timeout: 5_000 });
   await expect(guest.getByText("À toi de jouer")).toBeVisible({ timeout: 5_000 });
 
-  // L'invité·e tente directement le mot de l'hôte (connu du test) → gagne la manche 0.
+  // L'invité·e tente directement le mot de l'hôte (connu du test, à son tour
+  // cette fois) → gagne la manche 0.
   await fillGuessBoxes(guest, "CHAT");
-  await guest.getByRole("button", { name: "Valider la tentative" }).click();
   await expect(host.getByText("Ton·ta partenaire a trouvé ton mot.")).toBeVisible({ timeout: 10_000 });
   await expect(guest.getByText("Tu as trouvé le mot de ton·ta partenaire !")).toBeVisible({ timeout: 10_000 });
   await host.getByRole("button", { name: "Manche suivante" }).click();
   await expect(guest.getByText("Manche 2 / 3")).toBeVisible({ timeout: 5_000 });
 
   // Manche 1 (l'invité·e interroge en premier — alternance par manche) :
-  // mot host="PAIN", guest="OURS".
+  // mot host="PAIN", guest="OURS". Bug réel corrigé : l'hôte n'a PAS la main
+  // ici (c'est le tour de l'invité·e) mais tente quand même directement le
+  // mot de l'invité·e — doit gagner sans attendre son tour.
   await submitSecretWord(host, "PAIN");
   await submitSecretWord(guest, "OURS");
   await expect(guest.getByText("À toi de jouer")).toBeVisible({ timeout: 10_000 });
 
-  // "Z" absent de PAIN → éliminé, le tour passe à l'hôte.
-  await guest.getByRole("button", { name: "Z", exact: true }).click();
-  await expect(host.getByText("À toi de jouer")).toBeVisible({ timeout: 5_000 });
-
-  // L'hôte tente directement le mot de l'invité·e → gagne la manche 1.
   await fillGuessBoxes(host, "OURS");
-  await host.getByRole("button", { name: "Valider la tentative" }).click();
   await expect(guest.getByText("Ton·ta partenaire a trouvé ton mot.")).toBeVisible({ timeout: 10_000 });
+  await expect(host.getByText("Tu as trouvé le mot de ton·ta partenaire !")).toBeVisible({ timeout: 10_000 });
   await guest.getByRole("button", { name: "Manche suivante" }).click();
   await expect(host.getByText("Manche 3 / 3")).toBeVisible({ timeout: 5_000 });
 
@@ -97,7 +99,6 @@ test("Word Sonar : 3 manches jouées (lettres + tentatives, rôles alternés) �
   // L'invité·e tente directement le mot de l'hôte → gagne la dernière manche,
   // "Voir le récap" au lieu de "Manche suivante".
   await fillGuessBoxes(guest, "ROSE");
-  await guest.getByRole("button", { name: "Valider la tentative" }).click();
   await expect(guest.getByText("Tu as trouvé le mot de ton·ta partenaire !")).toBeVisible({ timeout: 10_000 });
   await guest.getByRole("button", { name: "Voir le récap" }).click();
 

@@ -52,6 +52,11 @@ export function useWordSonarSession({ dataChannel, isInitiator }: UseWordSonarSe
   const turnsRef = useRef(0);
   const turnDeadlineRef = useRef(0);
   const turnEndedRef = useRef(true);
+  // Tentatives de mot entier déjà essayées cette manche — une tentative de
+  // mot n'est PAS soumise au tour (voir plus bas), donc sans cette garde une
+  // même frappe complète pourrait se re-soumettre en boucle pendant que la
+  // case est éditée lettre par lettre autour d'une valeur déjà tentée.
+  const triedWordsRef = useRef<Set<string>>(new Set());
   // Garde contre le double-avancement après une révélation — même bug de
   // classe déjà rencontré et corrigé côté Doodle Duel/Mind Match (voir
   // types/word-sonar-realtime.ts "wordsonar-advance").
@@ -167,17 +172,19 @@ export function useWordSonarSession({ dataChannel, isInitiator }: UseWordSonarSe
         setAwaitingResult(false);
         flipTurnToPeer();
       } else if (message.t === "wordsonar-guess-word") {
+        // Une tentative de mot entier n'est jamais soumise au tour (voir
+        // guessWord ci-dessous) : ni la réponse (ici) ni l'échec (branche
+        // "wordsonar-guess-result") ne font passer le tour — seul un
+        // "as-tu la lettre X ?" fait alterner qui interroge.
         const correct = isSameWord(message.word, myWordRef.current ?? "");
         pushEvent({ askerIsMe: false, kind: "guess", word: message.word, correct });
         send({ t: "wordsonar-guess-result", word: message.word, correct });
         if (correct) finalizeRound(false, myWordRef.current ?? "");
-        else flipTurnToMe();
       } else if (message.t === "wordsonar-guess-result") {
         pushEvent({ askerIsMe: true, kind: "guess", word: message.word, correct: message.correct });
         awaitingResultRef.current = false;
         setAwaitingResult(false);
         if (message.correct) finalizeRound(true, message.word);
-        else flipTurnToPeer();
       } else if (message.t === "wordsonar-turn-timeout") {
         pushEvent({ askerIsMe: false, kind: "skip" });
         flipTurnToMe();
@@ -201,6 +208,7 @@ export function useWordSonarSession({ dataChannel, isInitiator }: UseWordSonarSe
     setEvents([]);
     turnsRef.current = 0;
     turnEndedRef.current = true;
+    triedWordsRef.current = new Set();
   }
 
   function applyAdvance() {
@@ -250,10 +258,18 @@ export function useWordSonarSession({ dataChannel, isInitiator }: UseWordSonarSe
     send({ t: "wordsonar-ask-letter", letter: normalized });
   }
 
+  // Contrairement à askLetter, une tentative de mot entier n'est PAS soumise
+  // au tour — retour utilisateur réel après test : quelqu'un ayant déjà
+  // déduit le mot devait attendre que l'autre joue avant de pouvoir
+  // soumettre sa tentative, alors qu'en vrai on "lâche la réponse" dès qu'on
+  // la connaît, sans attendre son tour officiel. Seul `awaitingResult` (un
+  // aller-retour réseau à la fois) et `triedWordsRef` (jamais retenter deux
+  // fois le même mot dans la même manche) protègent cette action.
   function guessWord(word: string) {
-    if (!isMyTurnRef.current || awaitingResultRef.current) return;
-    const trimmed = word.trim();
-    if (trimmed.length !== lengthRef.current) return;
+    if (awaitingResultRef.current) return;
+    const trimmed = word.trim().toUpperCase();
+    if (trimmed.length !== lengthRef.current || triedWordsRef.current.has(trimmed)) return;
+    triedWordsRef.current.add(trimmed);
     awaitingResultRef.current = true;
     setAwaitingResult(true);
     send({ t: "wordsonar-guess-word", word: trimmed });

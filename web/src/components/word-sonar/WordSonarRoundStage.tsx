@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Check, X } from "lucide-react";
 import type { UseWordSonarSessionReturn } from "@/hooks/use-word-sonar-session";
@@ -84,6 +84,103 @@ function EventLog({ events }: { events: WordSonarEvent[] }) {
   );
 }
 
+interface PlayingBoardProps {
+  session: UseWordSonarSessionReturn;
+  board: (string | null)[];
+  found: Set<string>;
+  eliminated: Set<string>;
+  canAskLetter: boolean;
+  guessReady: boolean;
+  mergedGuess: string;
+  guessBoxes: string[];
+  setGuessBoxes: (next: string[]) => void;
+  roundLabel: string;
+}
+
+// Séparé du rendu principal pour isoler l'effet d'auto-soumission (dépend de
+// `mergedGuess`/`guessReady`, qui ne doivent être calculés qu'en phase
+// "playing" — les hooks ne peuvent pas être posés après un `return` précoce).
+function PlayingBoard({
+  session,
+  board,
+  found,
+  eliminated,
+  canAskLetter,
+  guessReady,
+  mergedGuess,
+  guessBoxes,
+  setGuessBoxes,
+  roundLabel,
+}: PlayingBoardProps) {
+  const t = useTranslations("wordSonarRound");
+
+  // Une tentative de mot entier n'attend ni le tour ni un clic explicite —
+  // retour utilisateur réel après test : "pourquoi faire submit si j'ai tapé
+  // la dernière lettre et trouvé ?". Dès que toutes les cases sont remplies,
+  // on tente automatiquement (guessWord() protège lui-même contre les
+  // doublons/l'attente d'un aller-retour réseau en cours, voir le hook).
+  useEffect(() => {
+    if (guessReady) session.guessWord(mergedGuess);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [guessReady, mergedGuess]);
+
+  return (
+    <div className="flex flex-1 flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold tracking-widest text-white/50 uppercase">{roundLabel}</p>
+        <span className="font-mono text-lg font-bold text-white">{formatSeconds(session.turnRemainingMs)}</span>
+      </div>
+
+      <p className="text-center text-sm text-white/60">{session.isMyTurn ? t("yourTurn") : t("partnerTurn")}</p>
+
+      <p className="text-center text-xs text-white/40">{t("guessHint")}</p>
+      <div className="mx-auto flex flex-wrap justify-center gap-2">
+        {board.map((letter, i) => (
+          <input
+            key={i}
+            data-wordsonar-box={i}
+            value={letter ?? guessBoxes[i]}
+            disabled={letter != null}
+            maxLength={1}
+            onChange={(event) => {
+              const next = [...guessBoxes];
+              next[i] = event.target.value.toUpperCase().slice(0, 1);
+              setGuessBoxes(next);
+            }}
+            className="size-11 rounded-lg border border-white/20 bg-white/5 text-center font-mono text-lg font-bold text-white uppercase focus:border-white/40 focus:outline-none disabled:border-emerald-400/40 disabled:bg-emerald-400/10 disabled:text-emerald-300"
+          />
+        ))}
+      </div>
+
+      <p className="text-center text-xs text-white/40">{t("orAskLetter")}</p>
+      <div className="mx-auto grid max-w-md grid-cols-7 gap-1.5 sm:grid-cols-9">
+        {ALPHABET.map((letter) => {
+          const isFound = found.has(letter);
+          const isEliminated = eliminated.has(letter);
+          return (
+            <button
+              key={letter}
+              onClick={() => session.askLetter(letter)}
+              disabled={!canAskLetter || isFound || isEliminated}
+              className={`rounded-lg px-2 py-1.5 text-sm font-medium transition ${
+                isFound
+                  ? "bg-emerald-400/20 text-emerald-300"
+                  : isEliminated
+                    ? "bg-white/5 text-white/20 line-through"
+                    : "bg-white/10 text-white hover:bg-white/20 disabled:opacity-30"
+              }`}
+            >
+              {letter}
+            </button>
+          );
+        })}
+      </div>
+
+      <EventLog events={session.events} />
+    </div>
+  );
+}
+
 // Écran de manche — voir hooks/use-word-sonar-session.ts pour la machine à
 // états. Trois phases : "picking" (chacun tape son mot secret), "playing"
 // (tableau de lettres connues + alphabet + tentative), "reveal" (résultat).
@@ -140,76 +237,28 @@ export function WordSonarRoundStage({ session }: WordSonarRoundStageProps) {
   if (session.phase === "playing") {
     const board = buildKnownBoard(session.events, session.length);
     const { found, eliminated } = askedLetterState(session.events);
-    const canAct = session.isMyTurn && !session.awaitingResult;
+    // Demander une lettre reste soumis au tour (alternance question/réponse),
+    // mais PAS une tentative de mot entier — voir hooks/use-word-sonar-session.ts
+    // guessWord() : retour utilisateur réel après test, quelqu'un ayant déjà
+    // trouvé le mot devait attendre le tour de l'autre avant de pouvoir
+    // valider sa réponse. Remplir les cases suffit désormais, à tout moment.
+    const canAskLetter = session.isMyTurn && !session.awaitingResult;
     const guessReady = board.every((letter, i) => letter != null || guessBoxes[i].trim() !== "");
-
-    function assembleGuess(): string {
-      return board.map((letter, i) => letter ?? guessBoxes[i]).join("");
-    }
+    const mergedGuess = board.map((letter, i) => letter ?? guessBoxes[i]).join("");
 
     return (
-      <div className="flex flex-1 flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <p className="text-xs font-semibold tracking-widest text-white/50 uppercase">{roundLabel}</p>
-          <span className="font-mono text-lg font-bold text-white">{formatSeconds(session.turnRemainingMs)}</span>
-        </div>
-
-        <p className="text-center text-sm text-white/60">
-          {session.isMyTurn ? t("yourTurn") : t("partnerTurn")}
-        </p>
-
-        <div className="mx-auto flex flex-wrap justify-center gap-2">
-          {board.map((letter, i) => (
-            <input
-              key={i}
-              data-wordsonar-box={i}
-              value={letter ?? guessBoxes[i]}
-              disabled={letter != null}
-              maxLength={1}
-              onChange={(event) => {
-                const next = [...guessBoxes];
-                next[i] = event.target.value.toUpperCase().slice(0, 1);
-                setGuessBoxes(next);
-              }}
-              className="size-11 rounded-lg border border-white/20 bg-white/5 text-center font-mono text-lg font-bold text-white uppercase focus:border-white/40 focus:outline-none disabled:border-emerald-400/40 disabled:bg-emerald-400/10 disabled:text-emerald-300"
-            />
-          ))}
-        </div>
-
-        <button
-          onClick={() => session.guessWord(assembleGuess())}
-          disabled={!canAct || !guessReady}
-          className="mx-auto rounded-2xl bg-linear-to-r from-[#fb5a46] to-[#ff7d54] px-6 py-2.5 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-30"
-        >
-          {t("validateGuess")}
-        </button>
-
-        <p className="text-center text-xs text-white/40">{t("orAskLetter")}</p>
-        <div className="mx-auto grid max-w-md grid-cols-7 gap-1.5 sm:grid-cols-9">
-          {ALPHABET.map((letter) => {
-            const isFound = found.has(letter);
-            const isEliminated = eliminated.has(letter);
-            return (
-              <button
-                key={letter}
-                onClick={() => session.askLetter(letter)}
-                disabled={!canAct || isFound || isEliminated}
-                className={`rounded-lg px-2 py-1.5 text-sm font-medium transition ${
-                  isFound
-                    ? "bg-emerald-400/20 text-emerald-300"
-                    : isEliminated
-                      ? "bg-white/5 text-white/20 line-through"
-                      : "bg-white/10 text-white hover:bg-white/20 disabled:opacity-30"
-                }`}
-              >
-                {letter}
-              </button>
-            );
-          })}
-        </div>
-
-        <EventLog events={session.events} />
-      </div>
+      <PlayingBoard
+        session={session}
+        board={board}
+        found={found}
+        eliminated={eliminated}
+        canAskLetter={canAskLetter}
+        guessReady={guessReady}
+        mergedGuess={mergedGuess}
+        guessBoxes={guessBoxes}
+        setGuessBoxes={setGuessBoxes}
+        roundLabel={roundLabel}
+      />
     );
   }
 

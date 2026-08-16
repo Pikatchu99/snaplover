@@ -767,3 +767,53 @@ mot français qui les respecte.
 - **Pas encore fait** : 6 jeux du roadmap restent à construire (Fleet Siege ensuite — bataille
   navale classique, réutilise directement le principe "qui répond calcule localement" de Word
   Sonar).
+
+## Fleet Siege
+Cinquième mini-jeu du hub, troisième construit depuis le roadmap du workflow multi-agents (voir
+`docs/GAMES-ROADMAP-DRAFT.json`) — la bataille navale classique, en direct à deux. Grille 8x8, 3
+navires chacun·e (tailles 4/3/2, `config.fleetSiege`), volontairement plus petit que la bataille
+navale traditionnelle (10x10, 5 navires) pour rester cohérent avec le positionnement "session
+rapide" du reste du hub.
+- **Premier jeu du hub avec une VRAIE information cachée à protéger** (contrairement à Connect Duo,
+  qui n'a structurellement rien à cacher) — mais **aucune autorité à négocier pour autant** :
+  extension spatiale directe du principe déjà établi par Word Sonar (qui a la main sur son propre
+  mot secret calcule localement la réponse), appliquée ici au plateau entier. Chaque flotte est la
+  seule source de vérité de son propre propriétaire (`lib/fleet-siege/board.ts`
+  `computeFireOutcome`), et ne quitte JAMAIS l'appareil qui l'a placée tant que la partie est en
+  cours — seul le verdict (touché/raté/coulé/partie terminée) traverse le réseau, en réponse
+  directe à un tir précis. Le seul moment où un plateau complet est jamais transmis
+  (`siege-reveal-board`) est APRÈS que l'issue est déjà tranchée des deux côtés, symétriquement
+  (gagnant·e ET perdant·e l'envoient) — purement cosmétique pour l'écran de révélation côte à côte.
+- **Le seul mécanisme du hub où le tour EST la règle, pas une gêne à éviter** — contrairement à Word
+  Sonar (question libre) et Edge Letters (course libre), la valeur de chaque tir dépend réellement
+  de connaître le résultat des précédents : pas de "réponse déjà connue" à livrer en avance. Le tour
+  se déduit uniquement de la parité du compteur de tirs partagé + qui tire en premier ce match
+  (`shooterForShotIndex` dans `hooks/use-fleet-siege-session.ts`) — jamais un message "à toi de
+  jouer" séparé, le canal ordonné/fiable garantissant qu'une paire tir/résultat se termine toujours
+  avant le tir suivant. Le·la défenseur·euse revalide quand même la parité du `shotIndex` reçu et
+  ignore silencieusement toute incohérence (tir dupliqué/désordonné) — défense bon marché, pas un
+  mécanisme de confiance (même esprit que le calcul local déjà accepté ailleurs).
+- **"Qui tire en premier" alterne à chaque match via le MÊME compteur que la garde d'idempotence du
+  rematch** (`matchIndex`/`siege-rematch id`) — délibérément un seul compteur partagé pour les deux
+  usages plutôt que deux compteurs indépendants qui pourraient dériver l'un de l'autre (match 0 →
+  hôte en premier, match 1 → invité·e en premier, etc., jamais renégocié explicitement).
+- **Pas d'écran de récap séparé** (même choix que Connect Duo, pour la même raison) : la révélation
+  et les boutons télécharger/partager/rejouer s'affichent directement sous les deux plateaux,
+  "Rejouer" repart en placement sur la MÊME connexion sans recharger — donc pas de coupure caméra en
+  fin de partie ici non plus (un `MediaStreamTrack` arrêté ne redémarre jamais).
+- **Placement 100% local, aucune validation croisée possible ni nécessaire** : bornes/chevauchement
+  vérifiés uniquement côté client qui place (`lib/fleet-siege/placement.ts`), pas de règle
+  d'adjacence (les navires peuvent se toucher, gardé simple). "Aléatoire" ne décide que des propres
+  données secrètes de qui clique — même nature que Word Sonar choisissant son mot en privé, aucun
+  hasard partagé à synchroniser entre les deux côtés.
+- **Carte récap** (`lib/fleet-siege/compose-recap.ts`) : les deux flottes révélées côte à côte,
+  snapshot façon carte de résultat Wordle — dès le premier ship (règle "tous les jeux doivent avoir
+  ça" plus haut), via le `lib/share-or-download.ts` déjà partagé.
+- Vérifié bout en bout : `e2e/tests/fleet-siege.spec.ts` (placement manuel des deux flottes à des
+  coordonnées connues, tour strictement alterné avec refus implicite de tirer hors tour côté UI,
+  coulage complet d'une flotte en 9 tirs entrelacés avec 8 tirs "à l'aveugle" de l'autre côté, écran
+  de révélation + récap téléchargeable, "Rejouer" remet les deux côtés en placement avec le premier
+  tireur inversé au match suivant) + suite e2e complète rejouée sans régression — réussi du premier
+  coup.
+- **Pas encore fait** : 5 jeux du roadmap restent à construire (Duo Quiz ensuite selon l'ordre de
+  priorité — voir `docs/GAMES-ROADMAP-DRAFT.json`).

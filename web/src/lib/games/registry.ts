@@ -1,4 +1,4 @@
-import { Circle, Palette, Radar, SpellCheck2, type LucideIcon } from "lucide-react";
+import { Anchor, Circle, Palette, Radar, SpellCheck2, type LucideIcon } from "lucide-react";
 
 // Registre central des rooms — SEULE source de vérité pour le type de room
 // (photo + chaque mini-jeu), son préfixe de code, ses routes et sa promo
@@ -77,6 +77,16 @@ export const GAMES = [
     name: "Edge Letters",
     icon: SpellCheck2,
     promoNamespace: "landing.edgeLetters",
+  },
+  {
+    kind: "fleet-siege",
+    prefix: "F",
+    roomPath: "/fleet-siege/r",
+    joinPath: "/fleet-siege/join",
+    createPath: "/fleet-siege",
+    name: "Fleet Siege",
+    icon: Anchor,
+    promoNamespace: "landing.fleetSiege",
   },
 ] as const satisfies readonly GameDefinition[];
 

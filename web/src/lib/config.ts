@@ -96,6 +96,17 @@ export const config = {
      * expiration ; l'autre côté ne fait qu'afficher un compte à rebours. */
     raceDurationMs: 45_000,
   },
+  fleetSiege: {
+    /** Grille identique pour les deux joueur·euses — centralisée ici pour que
+     * les deux clients s'accordent toujours sur les coordonnées légales sans
+     * jamais échanger la dimension de la grille (voir CLAUDE.md). */
+    gridSize: 8,
+    /** 3 navires par joueur·euse, tailles décroissantes — volontairement plus
+     * petit que la bataille navale classique (10x10, 5 navires) pour garder
+     * des parties courtes, cohérent avec le positionnement "session rapide"
+     * des autres jeux du hub. */
+    shipSizes: [4, 3, 2] as const,
+  },
   challenge: {
     /** Largeur colonne sticker relative à cellWidth — voir docs/STICKER-CHALLENGES.md
      * (décision produit : même taille que les photos, ou au maximum 25% plus petit). */

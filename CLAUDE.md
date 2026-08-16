@@ -894,3 +894,56 @@ contrairement à dessiner.
   complète rejouée sans régression — réussi du premier coup une fois le bug `replay()` corrigé.
 - **Pas encore fait** : 4 jeux du roadmap restent à construire (Ultimate Tic-Tac-Toe ensuite selon
   l'ordre de priorité — voir `docs/GAMES-ROADMAP-DRAFT.json`).
+
+## Ultimate Tic-Tac-Toe
+Septième mini-jeu du hub, cinquième construit depuis le roadmap du workflow multi-agents (voir
+`docs/GAMES-ROADMAP-DRAFT.json`) — le morpion classique élevé à la puissance 9 : un méta-plateau
+3x3 de neuf sous-plateaux 3x3, où la case jouée décide dans quel sous-plateau l'adversaire doit
+jouer ensuite. Prefixe de code `U`.
+- **Aucune information cachée nulle part — le seul jeu du hub dans ce cas** (contrairement à Fleet
+  Siege/Word Sonar/Edge Letters, chacun avec un secret à protéger d'un côté) : le plateau entier
+  est public des deux côtés en permanence. Conséquence directe : aucune autorité de manche à
+  négocier pour la légalité des coups ou la détection de victoire — les deux côtés font tourner
+  EXACTEMENT les mêmes fonctions pures importées de `lib/uttt/win-check.ts`
+  (`isLegalMove`/`checkSubBoardResult`/`checkMetaResult`/`activeBoard`), jamais deux copies de la
+  même règle qui pourraient dériver silencieusement l'une de l'autre. Chaque côté revalide quand
+  même le coup reçu de l'autre avec cette même fonction avant de l'appliquer — défense contre un
+  bug client (ex. un décalage d'index), jamais un mécanisme de confiance puisqu'il n'y a
+  structurellement rien à cacher entre deux ami·es qui jouent ensemble.
+- **Le seul mécanisme du hub où le tour EST strictement la règle** (comme Fleet Siege, contrairement
+  à Word Sonar/Edge Letters/Duo Quiz) — la légalité d'un coup dépend directement du coup précédent
+  (quel sous-plateau devient "actif"), aucune réponse à livrer en avance n'a de sens ici.
+- **Logique de légalité vérifiée AVANT tout test UI**, via un script one-off (pas de framework de
+  tests unitaires dans ce repo — seulement Playwright e2e, voir CLAUDE.md "Tests") rejouant
+  `lib/uttt/win-check.ts` contre des états de plateau construits à la main : confirme en particulier
+  le piège explicitement signalé par la spec — un sous-plateau NUL lève la contrainte de plateau
+  actif exactement comme un sous-plateau GAGNÉ, pas seulement ce dernier.
+- **Salle d'attente la plus simple du hub, un vrai changement de design par rapport aux 6 jeux
+  précédents** : aucun bouton "Lancer la partie". La partie démarre automatiquement dès que les
+  deux "uttt-ready" se sont croisés (voir `hooks/use-uttt-session.ts`) — cohérent avec l'absence
+  totale de configuration ou de secret à préparer (contrairement à Fleet Siege qui a une vraie phase
+  de placement, ou Word Sonar qui a une longueur de mot à choisir).
+- **Bug réel de course trouvé et corrigé AVANT tout commit, en écrivant précisément ce handshake
+  "uttt-ready"** (repéré grâce à des logs de debug temporaires côté navigateur, retirés ensuite) :
+  le renvoi périodique du "ready" s'arrêtait dès réception du "ready" du·de la partenaire — mais
+  recevoir le ready de l'autre ne prouve RIEN sur le fait que mon propre ready lui soit bien
+  parvenu (aucun accusé de réception dans ce protocole). Résultat observé : le·la premier·ère à
+  recevoir le ready de l'autre arrêtait ses propres tentatives avant même d'avoir réussi à envoyer
+  la sienne (le tout premier envoi, tenté avant que le data channel soit réellement "open", était
+  silencieusement perdu) — l'autre côté restait bloqué indéfiniment en salle d'attente. Fix : le
+  renvoi est maintenant borné par un NOMBRE DE TENTATIVES fixe (~5s), jamais conditionné à ce qui a
+  été reçu de l'autre côté.
+- **Pas d'écran de récap séparé** (même choix que Connect Duo/Fleet Siege, pour la même raison —
+  partie continue, pas de manches) : la révélation et les boutons télécharger/partager/rejouer
+  s'affichent directement sous le plateau, la caméra ne s'arrête donc jamais. Contrairement à Doodle
+  Duel/Edge Letters/Duo Quiz (récap en plusieurs lignes, un par manche), le récap ici est un
+  snapshot UNIQUE du méta-plateau final (`lib/uttt/compose-recap.ts`) : chaque sous-plateau décidé
+  s'y affiche comme un grand X/O/trait, façon partie physique.
+- Vérifié bout en bout : `e2e/tests/uttt.spec.ts` — une séquence de 17 coups générée et vérifiée
+  par un script one-off indépendant (rejouant `lib/uttt/win-check.ts` contre l'historique construit
+  à la main) exerçant le routage forcé normal, un coup forcé vers un sous-plateau DÉJÀ DÉCIDÉ (le
+  17e et dernier coup, qui libère le choix de X puisque le sous-plateau visé est déjà gagné par O),
+  jusqu'à une victoire méta de l'hôte, plus le récap téléchargeable et "Rejouer" — passé 4 fois de
+  suite pour confirmer la robustesse du fix de course sur le handshake.
+- **Pas encore fait** : 3 jeux du roadmap restent à construire (Copy Cat ensuite selon l'ordre de
+  priorité — voir `docs/GAMES-ROADMAP-DRAFT.json`).

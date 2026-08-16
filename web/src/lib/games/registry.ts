@@ -1,4 +1,4 @@
-import { Anchor, Circle, Lightbulb, Palette, Radar, SpellCheck2, type LucideIcon } from "lucide-react";
+import { Anchor, Circle, Grid3x3, Lightbulb, Palette, Radar, SpellCheck2, type LucideIcon } from "lucide-react";
 
 // Registre central des rooms — SEULE source de vérité pour le type de room
 // (photo + chaque mini-jeu), son préfixe de code, ses routes et sa promo
@@ -97,6 +97,16 @@ export const GAMES = [
     name: "Duo Quiz",
     icon: Lightbulb,
     promoNamespace: "landing.duoQuiz",
+  },
+  {
+    kind: "uttt",
+    prefix: "U",
+    roomPath: "/uttt/r",
+    joinPath: "/uttt/join",
+    createPath: "/uttt",
+    name: "Ultimate Tic-Tac-Toe",
+    icon: Grid3x3,
+    promoNamespace: "landing.uttt",
   },
 ] as const satisfies readonly GameDefinition[];
 

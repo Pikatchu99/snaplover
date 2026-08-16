@@ -77,6 +77,11 @@ const fr = {
       headline: "Culture générale, en direct",
       cta: "Jouer à Duo Quiz",
     },
+    uttt: {
+      eyebrow: "Nouveau",
+      headline: "Morpion Ultimate, en direct",
+      cta: "Jouer à Ultimate Tic-Tac-Toe",
+    },
     /** Aperçu décoratif (hero) — pas de vraies données, juste illustratif. */
     demoCaption: "SNAPLOVER · 14 JUIL.",
     demoCaptionTogether: "À DEUX",
@@ -749,6 +754,66 @@ const fr = {
     partnerLabel: "Partenaire",
     footerText: "SNAPLOVER · DUO QUIZ",
     shareText: "On vient de jouer à Duo Quiz sur SnapLover !",
+  },
+  utttCreate: {
+    eyebrow: "Nouveau",
+    title: "Ultimate Tic-Tac-Toe",
+    description:
+      "Le morpion classique, élevé à la puissance 9 : un méta-plateau de neuf morpions, où chaque coup décide où l'autre doit jouer ensuite.",
+    submit: "Créer une partie",
+    noAccount: "Sans compte · Directement dans le navigateur",
+  },
+  utttJoin: {
+    eyebrow: "On vous a envoyé un code ?",
+    title: "Rejoindre un Ultimate Tic-Tac-Toe",
+    invalidCode: "Code invalide.",
+    submit: "Rejoindre",
+    or: "ou",
+    createInstead: "Créer ma propre partie",
+  },
+  utttLobby: {
+    title: "Salle d'attente",
+    you: "Toi",
+    partner: "Partenaire",
+    rulesTitle: "Comment ça marche",
+    rulesText:
+      "Neuf morpions dans un morpion. La case que vous jouez décide dans quel petit morpion votre partenaire doit jouer ensuite. Gagnez trois petits morpions alignés pour remporter la partie.",
+    autoStart: "La partie démarre automatiquement dès que vous êtes tous les deux connectés.",
+    cameraDeniedMessage:
+      "Caméra bloquée. Autorisez l'accès à votre caméra dans les réglages de votre navigateur, puis rechargez la page.",
+    retry: "Réessayer",
+    roomFullMessage: "Cette partie est déjà complète : Ultimate Tic-Tac-Toe se joue à deux.",
+    roomFullCta: "Créer une nouvelle partie",
+    invalidRoomMessage: "Ce lien a expiré ou le code est incorrect.",
+    invalidRoomCreateCta: "Créer une partie",
+    invalidRoomJoinCta: "Saisir un code",
+    turnUnavailableMessage:
+      "Vos deux caméras n'arrivent pas à se parler directement, et le service gratuit qui sert de relais dans ce cas ne répond plus. Réessayez un peu plus tard, ou avec un autre réseau.",
+    status: {
+      requestingCamera: "Activation de votre caméra…",
+      cameraDenied: "Caméra bloquée",
+      waitingForPeer: "En attente de votre partenaire…",
+      connecting: "Connexion en cours…",
+      connected: "2 connectés · prêts à jouer",
+      reconnecting: "Signal faible — reconnexion…",
+      roomFull: "Cette partie est déjà complète",
+      invalidRoom: "Code invalide",
+      turnUnavailable: "Relais indisponible",
+    },
+  },
+  utttRound: {
+    you: "Toi",
+    partner: "Partenaire",
+    yourTurn: "À toi de jouer",
+    partnerTurn: "Au tour de ton·ta partenaire…",
+    youWon: "Tu as gagné !",
+    partnerWon: "Ton·ta partenaire a gagné.",
+    draw: "Égalité !",
+    download: "Télécharger PNG",
+    share: "Partager",
+    rematch: "Rejouer",
+    footerText: "SNAPLOVER · ULTIMATE TIC-TAC-TOE",
+    shareText: "On vient de jouer à Ultimate Tic-Tac-Toe sur SnapLover !",
   },
 };
 

@@ -707,3 +707,63 @@ Puissance 4 classique, sans aucune information cachée ni hasard à gérer.
 - **Pas encore fait** : les 7 autres jeux du roadmap restent à construire, dans l'ordre de priorité
   du workflow (Edge Letters ensuite — reprend le "mot en commun" de départ de l'auteur, façon
   "starts with X, ends with Y").
+
+## Edge Letters
+Quatrième mini-jeu du hub, deuxième construit depuis le roadmap du workflow multi-agents (voir
+`docs/GAMES-ROADMAP-DRAFT.json`) — reprend le "starts with X, ends with Y" de l'idée de départ de
+l'auteur. Chaque manche, les deux joueur·euses choisissent CHACUN·E une lettre (l'un·e le DÉBUT,
+l'autre la FIN, rôle qui alterne par manche) puis courent librement (aucun tour) à taper un vrai
+mot français qui les respecte.
+- **Prérequis explicitement flaggé par la spec avant tout code** : une liste de mots français à
+  embarquer côté client pour valider les tentatives — et puisque ce repo est PUBLIC et EST l'infra
+  de prod (voir §"Open source & auto-hébergement"), la licence de cette liste devait être confirmée
+  avec l'auteur, pas devinée. Recherchée et vérifiée avant tout code (pas de confiance en mémoire
+  générale) : `an-array-of-french-words` (MIT, ~336k mots, maintenue par un mainteneur open-source
+  reconnu) — filtrée aux mots simples (sans formes composées à trait d'union) et pré-normalisée
+  (minuscules, sans accents) en `lib/text/french-word-list.json` (318 883 entrées, ~750 Ko gzippé),
+  licence complète dans `french-word-list.LICENSE.txt` à côté. Chargée via `import()` dynamique
+  (`lib/text/word-list.ts`) — ne bloat jamais le bundle des autres pages.
+- **Aucun tour pendant la course — c'est le point central du jeu, pas un raccourci UX** : réponse
+  directe aux deux bugs de tour déjà rencontrés dans cette app (message "next round" manquant de
+  Doodle Duel, tentative de Word Sonar initialement soumise à un tour). La seule chose "de tour"
+  ici est le RÔLE (qui choisit quelle lettre) — jamais une action gatée.
+- **Un·e seul·e arbitre par manche, même parité que le choix de rôle, volontairement** (voir
+  `roundAuthorityIsInitiator` dans `hooks/use-edge-letters-session.ts`) : une seule fonction, une
+  seule source de vérité, jamais deux parités indépendantes qui pourraient dériver. L'arbitre est
+  la SEULE à émettre `edgeletters-round-result` — l'autre côté n'affirme jamais une victoire de son
+  propre chef ("j'ai tapé en premier"), iel soumet sa tentative puis ATTEND toujours ce message.
+  Avant de créditer QUELQUE tentative que ce soit (y compris la sienne), l'arbitre la revalide
+  indépendamment avec la même fonction `isValidEdgeLettersWord` déjà passée localement par
+  l'émetteur·rice — jamais confiance aveugle en un client modifié.
+- **Validation locale AVANT tout envoi réseau — simplification volontaire par rapport à Word
+  Sonar** : une tentative invalide ne touche jamais le réseau (contrairement à Word Sonar, où
+  chaque tentative DOIT transiter puisque seul·e l'adversaire connaît le mot secret à vérifier) —
+  ici, aucun secret à protéger, une tentative ratée ne coûte donc rien à personne.
+- **Chrono de choix de lettre purement LOCAL** (`config.edgeLetters.pickDurationMs`, 15s généreux,
+  même leçon "jamais de pression de temps surprise" que les autres jeux) : si non choisie à temps,
+  le client tire lui-même une lettre au hasard, aucune coordination réseau nécessaire pour ce
+  repli — seul le côté en retard doit agir.
+- **Chrono de course, déviation volontaire de la spec générée** : la spec suggérait un chrono
+  symétrique des deux côtés déclenchant chacun son propre message `edgeletters-race-timeout`,
+  gardé par une idempotence par manche. Simplifié : seul le chrono de L'ARBITRE déclenche le
+  verdict de match nul à son expiration (réutilise directement `edgeletters-round-result` avec
+  `winner: null`, pas de message séparé) — cohérent avec le principe "une seule autorité, un seul
+  verdict" déjà établi pour les tentatives, l'autre côté se contente d'afficher un compte à rebours
+  qui s'arrête sans rien déclencher.
+- **`role` transmis explicitement** dans `edgeletters-letter-pick` plutôt que redéduit de la parité
+  de manche à la réception — retire toute une classe de bug "les deux côtés ne sont plus d'accord
+  sur qui a quel rôle", au prix de quelques octets par message (même précaution que la spec l'avait
+  identifiée).
+- **5 manches toujours jouées jusqu'au bout**, même si le score est déjà joué (même simplicité que
+  Doodle Duel/Word Sonar — pas d'arrêt anticipé à gérer). Récap canvas multi-lignes (une par
+  manche : lettres + mot trouvé + qui a gagné), score en en-tête, téléchargeable/partageable dès le
+  premier ship (voir règle "tous les jeux doivent avoir ça" plus haut) via le
+  `lib/share-or-download.ts` déjà partagé.
+- Vérifié bout en bout : `e2e/tests/edge-letters.spec.ts` (5 manches complètes, rôles et arbitrage
+  alternés à chaque manche, tentative gagnante testée à la fois via le chemin "l'arbitre reçoit et
+  juge la tentative de l'autre" ET "l'arbitre gagne via sa propre tentative", récap téléchargeable)
+  + suite e2e complète rejouée sans régression — réussi du premier coup, y compris la logique
+  d'arbitrage tournant la plus complexe du hub à ce jour.
+- **Pas encore fait** : 6 jeux du roadmap restent à construire (Fleet Siege ensuite — bataille
+  navale classique, réutilise directement le principe "qui répond calcule localement" de Word
+  Sonar).

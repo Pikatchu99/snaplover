@@ -1,4 +1,4 @@
-import { Circle, Palette, Radar, type LucideIcon } from "lucide-react";
+import { Circle, Palette, Radar, SpellCheck2, type LucideIcon } from "lucide-react";
 
 // Registre central des rooms — SEULE source de vérité pour le type de room
 // (photo + chaque mini-jeu), son préfixe de code, ses routes et sa promo
@@ -67,6 +67,16 @@ export const GAMES = [
     name: "Connect Duo",
     icon: Circle,
     promoNamespace: "landing.connectDuo",
+  },
+  {
+    kind: "edge-letters",
+    prefix: "E",
+    roomPath: "/edge-letters/r",
+    joinPath: "/edge-letters/join",
+    createPath: "/edge-letters",
+    name: "Edge Letters",
+    icon: SpellCheck2,
+    promoNamespace: "landing.edgeLetters",
   },
 ] as const satisfies readonly GameDefinition[];
 

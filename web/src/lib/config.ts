@@ -79,6 +79,23 @@ export const config = {
      * personne n'agit à temps. */
     turnDurationMs: 30_000,
   },
+  edgeLetters: {
+    /** Nombre de manches — toujours jouées jusqu'au bout même si le score
+     * est déjà joué (même simplicité que les autres jeux : pas d'arrêt
+     * anticipé à gérer). */
+    rounds: 5,
+    /** Chrono de choix de lettre — purement LOCAL (voir CLAUDE.md "Edge
+     * Letters") : si non choisie à temps, le client tire lui-même une
+     * lettre au hasard, aucune coordination réseau nécessaire pour ce
+     * repli. Généreux, même leçon que les autres jeux : jamais de pression
+     * de temps surprise. */
+    pickDurationMs: 15_000,
+    /** Chrono de course — démarre symétriquement des deux côtés à l'entrée
+     * en phase "racing", mais seul le·la arbitre de la manche (voir
+     * adjudicatorIsInitiator) déclenche le verdict de match nul à son
+     * expiration ; l'autre côté ne fait qu'afficher un compte à rebours. */
+    raceDurationMs: 45_000,
+  },
   challenge: {
     /** Largeur colonne sticker relative à cellWidth — voir docs/STICKER-CHALLENGES.md
      * (décision produit : même taille que les photos, ou au maximum 25% plus petit). */

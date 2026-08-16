@@ -238,5 +238,765 @@
       "fr": ["Osaka", "Kyoto", "Tokyo", "Nagoya"],
       "en": ["Osaka", "Kyoto", "Tokyo", "Nagoya"]
     }
+  },
+  {
+    "id": "q25",
+    "category": "geography",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quel océan est le plus grand du monde ?", "en": "Which ocean is the largest in the world?" },
+    "choices": {
+      "fr": ["Atlantique", "Pacifique", "Indien", "Arctique"],
+      "en": ["Atlantic", "Pacific", "Indian", "Arctic"]
+    }
+  },
+  {
+    "id": "q26",
+    "category": "geography",
+    "correctIndex": 0,
+    "prompt": { "fr": "Dans quel pays se trouve la tour Eiffel ?", "en": "In which country is the Eiffel Tower located?" },
+    "choices": {
+      "fr": ["France", "Belgique", "Espagne", "Italie"],
+      "en": ["France", "Belgium", "Spain", "Italy"]
+    }
+  },
+  {
+    "id": "q27",
+    "category": "geography",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quelle est la capitale du Canada ?", "en": "What is the capital of Canada?" },
+    "choices": {
+      "fr": ["Toronto", "Ottawa", "Vancouver", "Montréal"],
+      "en": ["Toronto", "Ottawa", "Vancouver", "Montreal"]
+    }
+  },
+  {
+    "id": "q28",
+    "category": "geography",
+    "correctIndex": 2,
+    "prompt": { "fr": "Quel est le plus grand pays du monde par superficie ?", "en": "What is the largest country in the world by area?" },
+    "choices": {
+      "fr": ["Chine", "Canada", "Russie", "États-Unis"],
+      "en": ["China", "Canada", "Russia", "United States"]
+    }
+  },
+  {
+    "id": "q29",
+    "category": "geography",
+    "correctIndex": 1,
+    "prompt": { "fr": "Sur quel continent se trouve l'Égypte ?", "en": "On which continent is Egypt located?" },
+    "choices": {
+      "fr": ["Asie", "Afrique", "Europe", "Océanie"],
+      "en": ["Asia", "Africa", "Europe", "Oceania"]
+    }
+  },
+  {
+    "id": "q30",
+    "category": "geography",
+    "correctIndex": 2,
+    "prompt": { "fr": "Quelle est la capitale de l'Espagne ?", "en": "What is the capital of Spain?" },
+    "choices": {
+      "fr": ["Barcelone", "Séville", "Madrid", "Valence"],
+      "en": ["Barcelona", "Seville", "Madrid", "Valencia"]
+    }
+  },
+  {
+    "id": "q31",
+    "category": "geography",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quelle est la capitale de l'Allemagne ?", "en": "What is the capital of Germany?" },
+    "choices": {
+      "fr": ["Munich", "Berlin", "Hambourg", "Francfort"],
+      "en": ["Munich", "Berlin", "Hamburg", "Frankfurt"]
+    }
+  },
+  {
+    "id": "q32",
+    "category": "geography",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quel fleuve traverse Paris ?", "en": "Which river runs through Paris?" },
+    "choices": {
+      "fr": ["La Loire", "La Seine", "Le Rhône", "La Garonne"],
+      "en": ["The Loire", "The Seine", "The Rhône", "The Garonne"]
+    }
+  },
+  {
+    "id": "q33",
+    "category": "geography",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quelle est la capitale de la Russie ?", "en": "What is the capital of Russia?" },
+    "choices": {
+      "fr": ["Saint-Pétersbourg", "Moscou", "Kiev", "Minsk"],
+      "en": ["Saint Petersburg", "Moscow", "Kyiv", "Minsk"]
+    }
+  },
+  {
+    "id": "q34",
+    "category": "geography",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quel pays a pour capitale Brasília ?", "en": "Which country has Brasília as its capital?" },
+    "choices": {
+      "fr": ["Argentine", "Brésil", "Chili", "Pérou"],
+      "en": ["Argentina", "Brazil", "Chile", "Peru"]
+    }
+  },
+  {
+    "id": "q35",
+    "category": "geography",
+    "correctIndex": 2,
+    "prompt": { "fr": "Quelle chaîne de montagnes sépare l'Europe de l'Asie ?", "en": "Which mountain range separates Europe from Asia?" },
+    "choices": {
+      "fr": ["Les Alpes", "Les Andes", "L'Oural", "L'Himalaya"],
+      "en": ["The Alps", "The Andes", "The Urals", "The Himalayas"]
+    }
+  },
+  {
+    "id": "q36",
+    "category": "geography",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quel est le plus grand pays d'Amérique du Sud ?", "en": "What is the largest country in South America?" },
+    "choices": {
+      "fr": ["Argentine", "Brésil", "Pérou", "Colombie"],
+      "en": ["Argentina", "Brazil", "Peru", "Colombia"]
+    }
+  },
+  {
+    "id": "q37",
+    "category": "geography",
+    "correctIndex": 2,
+    "prompt": { "fr": "Quelle ville est surnommée la « Ville lumière » ?", "en": "Which city is nicknamed the \"City of Light\"?" },
+    "choices": {
+      "fr": ["Rome", "Londres", "Paris", "Vienne"],
+      "en": ["Rome", "London", "Paris", "Vienna"]
+    }
+  },
+  {
+    "id": "q38",
+    "category": "geography",
+    "correctIndex": 1,
+    "prompt": { "fr": "Dans quel pays se trouve le Colisée ?", "en": "In which country is the Colosseum located?" },
+    "choices": {
+      "fr": ["Grèce", "Italie", "Espagne", "Turquie"],
+      "en": ["Greece", "Italy", "Spain", "Turkey"]
+    }
+  },
+  {
+    "id": "q39",
+    "category": "geography",
+    "correctIndex": 0,
+    "prompt": { "fr": "Quelle est la capitale de la Grèce ?", "en": "What is the capital of Greece?" },
+    "choices": {
+      "fr": ["Athènes", "Sparte", "Thessalonique", "Corinthe"],
+      "en": ["Athens", "Sparta", "Thessaloniki", "Corinth"]
+    }
+  },
+  {
+    "id": "q40",
+    "category": "geography",
+    "correctIndex": 0,
+    "prompt": { "fr": "Quel détroit sépare l'Europe de l'Afrique à son point le plus étroit ?", "en": "Which strait separates Europe from Africa at its narrowest point?" },
+    "choices": {
+      "fr": ["Détroit de Gibraltar", "Détroit de Bering", "Détroit de Malacca", "Le Bosphore"],
+      "en": ["Strait of Gibraltar", "Bering Strait", "Strait of Malacca", "The Bosphorus"]
+    }
+  },
+  {
+    "id": "q41",
+    "category": "science",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quel gaz les plantes absorbent-elles principalement lors de la photosynthèse ?", "en": "Which gas do plants mainly absorb during photosynthesis?" },
+    "choices": {
+      "fr": ["Oxygène", "Dioxyde de carbone", "Azote", "Hydrogène"],
+      "en": ["Oxygen", "Carbon dioxide", "Nitrogen", "Hydrogen"]
+    }
+  },
+  {
+    "id": "q42",
+    "category": "science",
+    "correctIndex": 2,
+    "prompt": { "fr": "Quelle est l'unité de mesure de la force ?", "en": "What is the unit of measurement for force?" },
+    "choices": {
+      "fr": ["Watt", "Joule", "Newton", "Pascal"],
+      "en": ["Watt", "Joule", "Newton", "Pascal"]
+    }
+  },
+  {
+    "id": "q43",
+    "category": "science",
+    "correctIndex": 1,
+    "prompt": { "fr": "Combien de planètes compte notre système solaire (classification actuelle) ?", "en": "How many planets are in our solar system (current classification)?" },
+    "choices": {
+      "fr": ["7", "8", "9", "10"],
+      "en": ["7", "8", "9", "10"]
+    }
+  },
+  {
+    "id": "q44",
+    "category": "science",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quel est le symbole chimique de l'or ?", "en": "What is the chemical symbol for gold?" },
+    "choices": {
+      "fr": ["Ag", "Au", "Gd", "Or"],
+      "en": ["Ag", "Au", "Gd", "Go"]
+    }
+  },
+  {
+    "id": "q45",
+    "category": "science",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quelle partie de la cellule contient l'ADN ?", "en": "Which part of the cell contains DNA?" },
+    "choices": {
+      "fr": ["Le cytoplasme", "Le noyau", "La membrane", "La mitochondrie"],
+      "en": ["The cytoplasm", "The nucleus", "The membrane", "The mitochondria"]
+    }
+  },
+  {
+    "id": "q46",
+    "category": "science",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quel scientifique a formulé la théorie de la relativité ?", "en": "Which scientist formulated the theory of relativity?" },
+    "choices": {
+      "fr": ["Isaac Newton", "Albert Einstein", "Niels Bohr", "Galilée"],
+      "en": ["Isaac Newton", "Albert Einstein", "Niels Bohr", "Galileo"]
+    }
+  },
+  {
+    "id": "q47",
+    "category": "science",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quel est le plus petit os du corps humain ?", "en": "What is the smallest bone in the human body?" },
+    "choices": {
+      "fr": ["Le fémur", "L'étrier", "Le tibia", "Le radius"],
+      "en": ["The femur", "The stapes", "The tibia", "The radius"]
+    }
+  },
+  {
+    "id": "q48",
+    "category": "science",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quelle planète possède le plus d'anneaux visibles ?", "en": "Which planet has the most visible rings?" },
+    "choices": {
+      "fr": ["Jupiter", "Saturne", "Uranus", "Neptune"],
+      "en": ["Jupiter", "Saturn", "Uranus", "Neptune"]
+    }
+  },
+  {
+    "id": "q49",
+    "category": "science",
+    "correctIndex": 2,
+    "prompt": { "fr": "Quel est l'état de la matière de la glace ?", "en": "What state of matter is ice?" },
+    "choices": {
+      "fr": ["Liquide", "Gazeux", "Solide", "Plasma"],
+      "en": ["Liquid", "Gas", "Solid", "Plasma"]
+    }
+  },
+  {
+    "id": "q50",
+    "category": "science",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quelle vitamine est principalement produite par exposition au soleil ?", "en": "Which vitamin is mainly produced through sun exposure?" },
+    "choices": {
+      "fr": ["Vitamine C", "Vitamine D", "Vitamine B12", "Vitamine A"],
+      "en": ["Vitamin C", "Vitamin D", "Vitamin B12", "Vitamin A"]
+    }
+  },
+  {
+    "id": "q51",
+    "category": "science",
+    "correctIndex": 2,
+    "prompt": { "fr": "Combien de dents une personne adulte a-t-elle en général ?", "en": "How many teeth does an adult generally have?" },
+    "choices": {
+      "fr": ["28", "30", "32", "34"],
+      "en": ["28", "30", "32", "34"]
+    }
+  },
+  {
+    "id": "q52",
+    "category": "science",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quel métal est liquide à température ambiante ?", "en": "Which metal is liquid at room temperature?" },
+    "choices": {
+      "fr": ["Plomb", "Mercure", "Étain", "Zinc"],
+      "en": ["Lead", "Mercury", "Tin", "Zinc"]
+    }
+  },
+  {
+    "id": "q53",
+    "category": "science",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quelle est la formule chimique de l'eau ?", "en": "What is the chemical formula for water?" },
+    "choices": {
+      "fr": ["CO2", "H2O", "O2", "NaCl"],
+      "en": ["CO2", "H2O", "O2", "NaCl"]
+    }
+  },
+  {
+    "id": "q54",
+    "category": "history",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quel empire a été dirigé par Jules César ?", "en": "Which empire was led by Julius Caesar?" },
+    "choices": {
+      "fr": ["L'Empire perse", "L'Empire romain", "L'Empire ottoman", "L'Empire byzantin"],
+      "en": ["The Persian Empire", "The Roman Empire", "The Ottoman Empire", "The Byzantine Empire"]
+    }
+  },
+  {
+    "id": "q55",
+    "category": "history",
+    "correctIndex": 2,
+    "prompt": { "fr": "En quelle année a eu lieu la chute de l'Empire romain d'Occident ?", "en": "In which year did the fall of the Western Roman Empire happen?" },
+    "choices": {
+      "fr": ["376", "410", "476", "526"],
+      "en": ["376", "410", "476", "526"]
+    }
+  },
+  {
+    "id": "q56",
+    "category": "history",
+    "correctIndex": 0,
+    "prompt": { "fr": "Qui a été la première femme à recevoir un prix Nobel ?", "en": "Who was the first woman to receive a Nobel Prize?" },
+    "choices": {
+      "fr": ["Marie Curie", "Rosalind Franklin", "Ada Lovelace", "Rita Levi-Montalcini"],
+      "en": ["Marie Curie", "Rosalind Franklin", "Ada Lovelace", "Rita Levi-Montalcini"]
+    }
+  },
+  {
+    "id": "q57",
+    "category": "history",
+    "correctIndex": 0,
+    "prompt": { "fr": "Quel roi français est surnommé le « Roi Soleil » ?", "en": "Which French king is nicknamed the \"Sun King\"?" },
+    "choices": {
+      "fr": ["Louis XIV", "Louis XVI", "Napoléon Bonaparte", "Henri IV"],
+      "en": ["Louis XIV", "Louis XVI", "Napoleon Bonaparte", "Henri IV"]
+    }
+  },
+  {
+    "id": "q58",
+    "category": "history",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quelle civilisation a inventé l'écriture cunéiforme ?", "en": "Which civilization invented cuneiform writing?" },
+    "choices": {
+      "fr": ["Les Égyptiens", "Les Sumériens", "Les Grecs", "Les Phéniciens"],
+      "en": ["The Egyptians", "The Sumerians", "The Greeks", "The Phoenicians"]
+    }
+  },
+  {
+    "id": "q59",
+    "category": "history",
+    "correctIndex": 1,
+    "prompt": { "fr": "En quelle année l'homme a-t-il marché sur la Lune pour la première fois ?", "en": "In which year did man first walk on the Moon?" },
+    "choices": {
+      "fr": ["1965", "1969", "1972", "1959"],
+      "en": ["1965", "1969", "1972", "1959"]
+    }
+  },
+  {
+    "id": "q60",
+    "category": "history",
+    "correctIndex": 0,
+    "prompt": { "fr": "Quel traité a mis fin à la Première Guerre mondiale ?", "en": "Which treaty ended World War I?" },
+    "choices": {
+      "fr": ["Traité de Versailles", "Traité de Rome", "Traité de Paris", "Traité de Vienne"],
+      "en": ["Treaty of Versailles", "Treaty of Rome", "Treaty of Paris", "Treaty of Vienna"]
+    }
+  },
+  {
+    "id": "q61",
+    "category": "history",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quel explorateur est crédité de l'arrivée en Amérique en 1492 ?", "en": "Which explorer is credited with reaching the Americas in 1492?" },
+    "choices": {
+      "fr": ["Vasco de Gama", "Christophe Colomb", "Magellan", "Marco Polo"],
+      "en": ["Vasco da Gama", "Christopher Columbus", "Magellan", "Marco Polo"]
+    }
+  },
+  {
+    "id": "q62",
+    "category": "history",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quel pharaon est associé à la découverte de son tombeau intact en 1922 ?", "en": "Which pharaoh is associated with the discovery of his intact tomb in 1922?" },
+    "choices": {
+      "fr": ["Ramsès II", "Toutânkhamon", "Khéops", "Akhenaton"],
+      "en": ["Ramesses II", "Tutankhamun", "Khufu", "Akhenaten"]
+    }
+  },
+  {
+    "id": "q63",
+    "category": "history",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quelle guerre a opposé le Nord et le Sud des États-Unis ?", "en": "Which war pitted the North against the South of the United States?" },
+    "choices": {
+      "fr": ["La guerre d'indépendance", "La guerre de Sécession", "La guerre hispano-américaine", "La guerre de 1812"],
+      "en": ["The Revolutionary War", "The Civil War", "The Spanish-American War", "The War of 1812"]
+    }
+  },
+  {
+    "id": "q64",
+    "category": "nature",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quel est le plus rapide des animaux terrestres ?", "en": "What is the fastest land animal?" },
+    "choices": {
+      "fr": ["Lion", "Guépard", "Antilope", "Zèbre"],
+      "en": ["Lion", "Cheetah", "Antelope", "Zebra"]
+    }
+  },
+  {
+    "id": "q65",
+    "category": "nature",
+    "correctIndex": 1,
+    "prompt": { "fr": "Combien de pattes possède une araignée ?", "en": "How many legs does a spider have?" },
+    "choices": {
+      "fr": ["6", "8", "10", "12"],
+      "en": ["6", "8", "10", "12"]
+    }
+  },
+  {
+    "id": "q66",
+    "category": "nature",
+    "correctIndex": 0,
+    "prompt": { "fr": "Quel est le plus grand reptile vivant ?", "en": "What is the largest living reptile?" },
+    "choices": {
+      "fr": ["Crocodile marin", "Alligator", "Varan de Komodo", "Anaconda"],
+      "en": ["Saltwater crocodile", "Alligator", "Komodo dragon", "Anaconda"]
+    }
+  },
+  {
+    "id": "q67",
+    "category": "nature",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quel oiseau est incapable de voler mais excellent nageur ?", "en": "Which bird cannot fly but is an excellent swimmer?" },
+    "choices": {
+      "fr": ["Autruche", "Manchot", "Kiwi", "Émeu"],
+      "en": ["Ostrich", "Penguin", "Kiwi", "Emu"]
+    }
+  },
+  {
+    "id": "q68",
+    "category": "nature",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quel est le plus grand félin du monde ?", "en": "What is the largest wild cat in the world?" },
+    "choices": {
+      "fr": ["Lion", "Tigre", "Jaguar", "Léopard"],
+      "en": ["Lion", "Tiger", "Jaguar", "Leopard"]
+    }
+  },
+  {
+    "id": "q69",
+    "category": "nature",
+    "correctIndex": 2,
+    "prompt": { "fr": "Combien de cœurs possède une pieuvre ?", "en": "How many hearts does an octopus have?" },
+    "choices": {
+      "fr": ["1", "2", "3", "4"],
+      "en": ["1", "2", "3", "4"]
+    }
+  },
+  {
+    "id": "q70",
+    "category": "nature",
+    "correctIndex": 2,
+    "prompt": { "fr": "De quel continent le kangourou est-il originaire ?", "en": "Which continent is the kangaroo native to?" },
+    "choices": {
+      "fr": ["Afrique", "Asie", "Océanie", "Amérique du Sud"],
+      "en": ["Africa", "Asia", "Oceania", "South America"]
+    }
+  },
+  {
+    "id": "q71",
+    "category": "nature",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quel est le plus grand poisson du monde ?", "en": "What is the largest fish in the world?" },
+    "choices": {
+      "fr": ["Requin blanc", "Requin-baleine", "Espadon", "Thon rouge"],
+      "en": ["Great white shark", "Whale shark", "Swordfish", "Bluefin tuna"]
+    }
+  },
+  {
+    "id": "q72",
+    "category": "nature",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quel animal est célèbre pour changer de couleur afin de se fondre dans son environnement ?", "en": "Which animal is famous for changing color to blend into its environment?" },
+    "choices": {
+      "fr": ["Iguane", "Caméléon", "Gecko", "Lézard"],
+      "en": ["Iguana", "Chameleon", "Gecko", "Lizard"]
+    }
+  },
+  {
+    "id": "q73",
+    "category": "nature",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quelle est la plus grande forêt tropicale du monde ?", "en": "What is the largest rainforest in the world?" },
+    "choices": {
+      "fr": ["Forêt du Congo", "Forêt amazonienne", "Forêt de Bornéo", "Forêt de Daintree"],
+      "en": ["Congo Rainforest", "Amazon Rainforest", "Borneo Rainforest", "Daintree Rainforest"]
+    }
+  },
+  {
+    "id": "q74",
+    "category": "art",
+    "correctIndex": 1,
+    "prompt": { "fr": "Qui a sculpté le David, célèbre statue de la Renaissance ?", "en": "Who sculpted David, the famous Renaissance statue?" },
+    "choices": {
+      "fr": ["Donatello", "Michel-Ange", "Bernin", "Raphaël"],
+      "en": ["Donatello", "Michelangelo", "Bernini", "Raphael"]
+    }
+  },
+  {
+    "id": "q75",
+    "category": "art",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quel peintre est connu pour « La Nuit étoilée » ?", "en": "Which painter is known for \"The Starry Night\"?" },
+    "choices": {
+      "fr": ["Claude Monet", "Vincent van Gogh", "Paul Cézanne", "Edgar Degas"],
+      "en": ["Claude Monet", "Vincent van Gogh", "Paul Cézanne", "Edgar Degas"]
+    }
+  },
+  {
+    "id": "q76",
+    "category": "literature",
+    "correctIndex": 1,
+    "prompt": { "fr": "Qui a écrit « Roméo et Juliette » ?", "en": "Who wrote \"Romeo and Juliet\"?" },
+    "choices": {
+      "fr": ["Charles Dickens", "William Shakespeare", "Jane Austen", "Oscar Wilde"],
+      "en": ["Charles Dickens", "William Shakespeare", "Jane Austen", "Oscar Wilde"]
+    }
+  },
+  {
+    "id": "q77",
+    "category": "literature",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quel auteur a créé le détective Sherlock Holmes ?", "en": "Which author created the detective Sherlock Holmes?" },
+    "choices": {
+      "fr": ["Agatha Christie", "Arthur Conan Doyle", "Edgar Allan Poe", "Charles Dickens"],
+      "en": ["Agatha Christie", "Arthur Conan Doyle", "Edgar Allan Poe", "Charles Dickens"]
+    }
+  },
+  {
+    "id": "q78",
+    "category": "art",
+    "correctIndex": 1,
+    "prompt": { "fr": "Dans quel musée peut-on voir la Joconde ?", "en": "In which museum can the Mona Lisa be seen?" },
+    "choices": {
+      "fr": ["Le British Museum", "Le Louvre", "Le Prado", "Les Offices"],
+      "en": ["The British Museum", "The Louvre", "The Prado", "The Uffizi"]
+    }
+  },
+  {
+    "id": "q79",
+    "category": "literature",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quel est le nom de famille du jeune sorcier créé par J.K. Rowling ?", "en": "What is the surname of the young wizard created by J.K. Rowling?" },
+    "choices": {
+      "fr": ["Weasley", "Potter", "Malefoy", "Londubat"],
+      "en": ["Weasley", "Potter", "Malfoy", "Longbottom"]
+    }
+  },
+  {
+    "id": "q80",
+    "category": "art",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quel compositeur est célèbre pour être devenu sourd tout en continuant à composer ?", "en": "Which composer is famous for going deaf while continuing to compose?" },
+    "choices": {
+      "fr": ["Mozart", "Beethoven", "Bach", "Chopin"],
+      "en": ["Mozart", "Beethoven", "Bach", "Chopin"]
+    }
+  },
+  {
+    "id": "q81",
+    "category": "general",
+    "correctIndex": 2,
+    "prompt": { "fr": "Combien de minutes y a-t-il dans une journée ?", "en": "How many minutes are there in a day?" },
+    "choices": {
+      "fr": ["1000", "1200", "1440", "1600"],
+      "en": ["1000", "1200", "1440", "1600"]
+    }
+  },
+  {
+    "id": "q82",
+    "category": "general",
+    "correctIndex": 2,
+    "prompt": { "fr": "Combien de joueurs y a-t-il dans une équipe de football sur le terrain ?", "en": "How many players are on a football (soccer) team on the pitch?" },
+    "choices": {
+      "fr": ["9", "10", "11", "12"],
+      "en": ["9", "10", "11", "12"]
+    }
+  },
+  {
+    "id": "q83",
+    "category": "general",
+    "correctIndex": 2,
+    "prompt": { "fr": "Combien de couleurs compte l'arc-en-ciel traditionnellement ?", "en": "How many colors does a rainbow traditionally have?" },
+    "choices": {
+      "fr": ["5", "6", "7", "8"],
+      "en": ["5", "6", "7", "8"]
+    }
+  },
+  {
+    "id": "q84",
+    "category": "general",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quel est le résultat de 9 x 9 ?", "en": "What is 9 times 9?" },
+    "choices": {
+      "fr": ["72", "81", "90", "99"],
+      "en": ["72", "81", "90", "99"]
+    }
+  },
+  {
+    "id": "q85",
+    "category": "general",
+    "correctIndex": 2,
+    "prompt": { "fr": "Combien de zéros comporte un million en chiffres ?", "en": "How many zeros does one million have?" },
+    "choices": {
+      "fr": ["4", "5", "6", "7"],
+      "en": ["4", "5", "6", "7"]
+    }
+  },
+  {
+    "id": "q86",
+    "category": "general",
+    "correctIndex": 1,
+    "prompt": { "fr": "Combien de faces possède un dé standard ?", "en": "How many faces does a standard die have?" },
+    "choices": {
+      "fr": ["4", "6", "8", "12"],
+      "en": ["4", "6", "8", "12"]
+    }
+  },
+  {
+    "id": "q87",
+    "category": "general",
+    "correctIndex": 2,
+    "prompt": { "fr": "Combien de jours compte le mois de février une année bissextile ?", "en": "How many days does February have in a leap year?" },
+    "choices": {
+      "fr": ["27", "28", "29", "30"],
+      "en": ["27", "28", "29", "30"]
+    }
+  },
+  {
+    "id": "q88",
+    "category": "general",
+    "correctIndex": 2,
+    "prompt": { "fr": "Combien de touches noires y a-t-il par octave sur un piano ?", "en": "How many black keys are there per octave on a piano?" },
+    "choices": {
+      "fr": ["3", "4", "5", "6"],
+      "en": ["3", "4", "5", "6"]
+    }
+  },
+  {
+    "id": "q89",
+    "category": "general",
+    "correctIndex": 2,
+    "prompt": { "fr": "Combien de sens humains classiques sont généralement listés ?", "en": "How many classic human senses are generally listed?" },
+    "choices": {
+      "fr": ["3", "4", "5", "6"],
+      "en": ["3", "4", "5", "6"]
+    }
+  },
+  {
+    "id": "q90",
+    "category": "general",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quelle forme géométrique a trois côtés ?", "en": "Which geometric shape has three sides?" },
+    "choices": {
+      "fr": ["Carré", "Triangle", "Pentagone", "Hexagone"],
+      "en": ["Square", "Triangle", "Pentagon", "Hexagon"]
+    }
+  },
+  {
+    "id": "q91",
+    "category": "mythology",
+    "correctIndex": 1,
+    "prompt": { "fr": "Dans la mythologie grecque, qui est le roi des dieux ?", "en": "In Greek mythology, who is the king of the gods?" },
+    "choices": {
+      "fr": ["Poséidon", "Zeus", "Hadès", "Apollon"],
+      "en": ["Poseidon", "Zeus", "Hades", "Apollo"]
+    }
+  },
+  {
+    "id": "q92",
+    "category": "mythology",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quel dieu égyptien a une tête de chacal ?", "en": "Which Egyptian god has the head of a jackal?" },
+    "choices": {
+      "fr": ["Rê", "Anubis", "Horus", "Osiris"],
+      "en": ["Ra", "Anubis", "Horus", "Osiris"]
+    }
+  },
+  {
+    "id": "q93",
+    "category": "mythology",
+    "correctIndex": 2,
+    "prompt": { "fr": "Dans la mythologie nordique, quel est le nom du dieu du tonnerre ?", "en": "In Norse mythology, what is the name of the god of thunder?" },
+    "choices": {
+      "fr": ["Odin", "Loki", "Thor", "Baldr"],
+      "en": ["Odin", "Loki", "Thor", "Baldr"]
+    }
+  },
+  {
+    "id": "q94",
+    "category": "language",
+    "correctIndex": 2,
+    "prompt": { "fr": "Combien de lettres compte l'alphabet français standard ?", "en": "How many letters are in the standard French alphabet?" },
+    "choices": {
+      "fr": ["24", "25", "26", "27"],
+      "en": ["24", "25", "26", "27"]
+    }
+  },
+  {
+    "id": "q95",
+    "category": "language",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quel alphabet utilise le russe ?", "en": "Which alphabet does Russian use?" },
+    "choices": {
+      "fr": ["Latin", "Cyrillique", "Grec", "Arabe"],
+      "en": ["Latin", "Cyrillic", "Greek", "Arabic"]
+    }
+  },
+  {
+    "id": "q96",
+    "category": "language",
+    "correctIndex": 1,
+    "prompt": { "fr": "Comment appelle-t-on un mot qui se lit de la même façon dans les deux sens ?", "en": "What do you call a word that reads the same forwards and backwards?" },
+    "choices": {
+      "fr": ["Un acronyme", "Un palindrome", "Un anagramme", "Un homophone"],
+      "en": ["An acronym", "A palindrome", "An anagram", "A homophone"]
+    }
+  },
+  {
+    "id": "q97",
+    "category": "food",
+    "correctIndex": 1,
+    "prompt": { "fr": "De quel pays est originaire la pizza margherita ?", "en": "Which country is the margherita pizza originally from?" },
+    "choices": {
+      "fr": ["France", "Italie", "Espagne", "Grèce"],
+      "en": ["France", "Italy", "Spain", "Greece"]
+    }
+  },
+  {
+    "id": "q98",
+    "category": "food",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quel fruit est utilisé pour fabriquer le vin ?", "en": "Which fruit is used to make wine?" },
+    "choices": {
+      "fr": ["Pomme", "Raisin", "Poire", "Cerise"],
+      "en": ["Apple", "Grape", "Pear", "Cherry"]
+    }
+  },
+  {
+    "id": "q99",
+    "category": "food",
+    "correctIndex": 1,
+    "prompt": { "fr": "De quelle plante est extrait le chocolat ?", "en": "Which plant is chocolate extracted from?" },
+    "choices": {
+      "fr": ["Café", "Cacaoyer", "Vanille", "Canne à sucre"],
+      "en": ["Coffee", "Cacao tree", "Vanilla", "Sugar cane"]
+    }
+  },
+  {
+    "id": "q100",
+    "category": "astronomy",
+    "correctIndex": 0,
+    "prompt": { "fr": "Quelle est l'étoile la plus proche de la Terre ?", "en": "What is the closest star to Earth?" },
+    "choices": {
+      "fr": ["Le Soleil", "Proxima Centauri", "Sirius", "Alpha Centauri"],
+      "en": ["The Sun", "Proxima Centauri", "Sirius", "Alpha Centauri"]
+    }
   }
 ]

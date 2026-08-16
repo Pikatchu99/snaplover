@@ -821,7 +821,7 @@ rapide" du reste du hub.
 ## Duo Quiz
 Sixième mini-jeu du hub, quatrième construit depuis le roadmap du workflow multi-agents (voir
 `docs/GAMES-ROADMAP-DRAFT.json`) — 8 questions de culture générale identiques des deux côtés,
-piochées dans une banque statique bilingue (`lib/duo-quiz/question-bank.json`, 24 questions,
+piochées dans une banque statique bilingue (`lib/duo-quiz/question-bank.json`, 100 questions,
 `config.duoQuiz.rounds` = 8 par partie). Fenêtre de réponse `config.duoQuiz.roundDurationMs` = 15s,
 volontairement bien plus courte que les 60s de Doodle Duel — se souvenir d'un fait est immédiat,
 contrairement à dessiner.
@@ -875,10 +875,18 @@ contrairement à dessiner.
   Non corrigé ici (hors périmètre de cette session de travail, jeux déjà livrés séparément) —
   signalé pour un futur passage dédié plutôt que corrigé à la volée.
 - **Banque bilingue, licence non applicable** : contrairement à la liste de mots français d'Edge
-  Letters (dataset tiers), ces 24 questions de culture générale sont rédigées directement pour ce
+  Letters (dataset tiers), ces 100 questions de culture générale sont rédigées directement pour ce
   projet — pas de fichier de licence nécessaire. Choisies volontairement "increvables" (géographie,
-  sciences, histoire, culture générale) plutôt que liées à l'actualité, pour ne jamais devenir
-  fausses avec le temps.
+  sciences, histoire, nature, art/littérature, mythologie, langue, gastronomie, astronomie, culture
+  générale) plutôt que liées à l'actualité, pour ne jamais devenir fausses avec le temps.
+  **Élargie de 24 à 100 sur retour explicite de l'auteur** ("vas au moins à 100 questions") après
+  avoir testé le jeu et remarqué qu'avec seulement 24 questions pour 8 piochées par partie, deux
+  parties de suite recroisaient vite les mêmes questions — chaque nouvelle question revalidée par un
+  passage de vérification dédié (script one-off comparant chaque `correctIndex` résolu en fr ET en
+  en, plutôt qu'une simple relecture) : un vrai bug d'indexation trouvé et corrigé avant tout test
+  (q100 : "l'étoile la plus proche de la Terre" listait bien "Le Soleil" en premier choix mais
+  pointait `correctIndex: 1`, soit "Proxima Centauri" — la bonne réponse à cette question classique
+  est bien le Soleil lui-même, une étoile).
 - Vérifié bout en bout : `e2e/tests/duo-quiz.spec.ts` (partie complète de 8 questions, une manche à
   fin anticipée avec vérification qu'aucune révélation n'apparaît chez l'invité·e avant sa propre
   réponse, une manche terminée par expiration du chrono côté invité·e silencieux, récap

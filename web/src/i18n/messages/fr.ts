@@ -514,6 +514,10 @@ const fr = {
     partnerWon: "Ton·ta partenaire a gagné.",
     draw: "Égalité !",
     rematch: "Rejouer",
+    download: "Télécharger PNG",
+    share: "Partager",
+    footerText: "SNAPLOVER · CONNECT DUO",
+    shareText: "On vient de jouer à Connect Duo sur SnapLover !",
   },
 };
 

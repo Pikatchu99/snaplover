@@ -679,14 +679,31 @@ Puissance 4 classique, sans aucune information cachée ni hasard à gérer.
   d'attente n'a qu'un bouton "Lancer la partie", aucun réglage — l'hôte joue toujours en premier
   (jetons corail), l'invité·e toujours en second (jetons encre), fixé une fois pour toutes par
   `isInitiator`, jamais renégocié y compris sur un rematch.
-- **Couleurs** : jetons corail (`#fb5a46`, hôte) / encre sombre (`#1c1712`, invité·e) — jamais de
-  violet ici (réservé exclusivement au chemin "rejoindre", voir convention Doodle Duel). Pas
-  d'animation de chute du jeton en v1 (le spec généré par le workflow la suggérait) — priorité à
-  prouver le concept vite avec le mécanisme le moins risqué, animation possible plus tard si
-  demandée.
+- **Couleurs, retour utilisateur réel après un premier test** : les jetons de l'invité·e étaient à
+  l'encre sombre (`#1c1712`) dans le tout premier jet — invisibles sur le fond déjà sombre de
+  l'écran de jeu, et la case vide (papier clair `#fbf7f1`) se lisait comme "déjà remplie d'un jeton
+  blanc". Fix : jetons de l'invité·e passés au papier clair (vrai contraste), case vide passée à un
+  simple trou sombre (`#1c1a20`, un ton au-dessus du fond `#0d0b0f` du plateau) — jamais de violet
+  ici (réservé exclusivement au chemin "rejoindre", voir convention Doodle Duel).
+- **Animation de chute ajoutée après coup** (déférée en v1 pour prouver le concept vite, comme prévu
+  dès le départ) — avec Framer Motion, pas GSAP comme suggéré par l'auteur : déjà la librairie
+  d'animation du projet, largement suffisante pour un ressort de gravité, une deuxième dépendance
+  d'animation n'apportait rien. Chaque jeton ne joue sa chute qu'une seule fois : une case vide ne
+  rend rien de `motion`, donc le composant ne monte dans l'arbre React qu'au moment exact où le jeton
+  est posé — `initial` de Framer Motion ne se rejoue jamais après un premier montage, les jetons déjà
+  posés ne ré-animent donc jamais sur les coups suivants, sans code de garde supplémentaire.
+- **Carte récap partageable ajoutée après coup** — retour utilisateur explicite : "tous les jeux
+  doivent avoir ça" (un résultat partageable, comme Doodle Duel/Word Sonar en ont déjà). Connect Duo
+  était le seul jeu du hub à ne pas en avoir, la spec générée par le workflow l'ayant explicitement
+  reporté en "v1.1" pour prouver le concept vite. Snapshot du plateau final façon carte Wordle
+  (`lib/connect-duo/compose-recap.ts`), composé à la fin de partie — mais PAS un écran de récap
+  séparé comme les autres jeux : les boutons télécharger/partager s'ajoutent directement sous le
+  plateau existant (voir plus haut, pas d'écran séparé pour ne jamais casser "Rejouer" via une
+  caméra coupée). **Règle retenue pour tout futur jeu du hub : un résultat partageable est
+  obligatoire dès le premier ship, plus un "v1.1" à reporter.**
 - Vérifié bout en bout : `e2e/tests/connect-duo.spec.ts` (alternance stricte vérifiée y compris le
-  refus d'un coup hors tour côté UI, victoire par alignement vertical, "Rejouer" réinitialise les
-  deux côtés sans recharger) + suite e2e complète rejouée sans régression.
+  refus d'un coup hors tour côté UI, victoire par alignement vertical, carte récap téléchargeable,
+  "Rejouer" réinitialise les deux côtés sans recharger) + suite e2e complète rejouée sans régression.
 - **Pas encore fait** : les 7 autres jeux du roadmap restent à construire, dans l'ordre de priorité
   du workflow (Edge Letters ensuite — reprend le "mot en commun" de départ de l'auteur, façon
   "starts with X, ends with Y").

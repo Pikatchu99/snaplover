@@ -59,6 +59,14 @@ test("Connect Duo : alternance stricte, victoire par alignement vertical, Rejoue
   await expect(host.getByText("Tu as gagné !")).toBeVisible({ timeout: 10_000 });
   await expect(guest.getByText("Ton·ta partenaire a gagné.")).toBeVisible({ timeout: 10_000 });
 
+  // Carte récap partageable (retour utilisateur : "tous les jeux doivent
+  // avoir ça") — composée dès la fin de partie, téléchargeable en PNG.
+  const downloadButton = host.getByRole("button", { name: "Télécharger PNG" });
+  await expect(downloadButton).toBeEnabled({ timeout: 10_000 });
+  const downloadPromise = host.waitForEvent("download");
+  await downloadButton.click();
+  await downloadPromise;
+
   // "Rejouer" côté hôte réinitialise le plateau des DEUX côtés — plus de
   // jeton en colonne 0 après reset (retour au fond clair vide).
   await host.getByRole("button", { name: "Rejouer" }).click();

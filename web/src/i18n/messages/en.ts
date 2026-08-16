@@ -504,6 +504,10 @@ const en = {
     partnerWon: "Your partner won.",
     draw: "It's a draw!",
     rematch: "Rematch",
+    download: "Download PNG",
+    share: "Share",
+    footerText: "SNAPLOVER · CONNECT DUO",
+    shareText: "We just played Connect Duo on SnapLover!",
   },
 };
 

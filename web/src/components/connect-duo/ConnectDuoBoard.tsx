@@ -1,8 +1,12 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
+import { Download, Share2 } from "lucide-react";
 import { buildBoard, isColumnFull, type Disc } from "@/lib/connect-duo/board";
+import { composeConnectDuoRecap } from "@/lib/connect-duo/compose-recap";
+import { shareOrDownload } from "@/lib/share-or-download";
 import type { UseConnectDuoSessionReturn } from "@/hooks/use-connect-duo-session";
 
 interface ConnectDuoBoardProps {
@@ -38,6 +42,51 @@ export function ConnectDuoBoard({ session, isInitiator }: ConnectDuoBoardProps) 
   const board = buildBoard(session.moves);
   const myDisc: Disc = isInitiator ? "host" : "guest";
   const winningCells = new Set((session.winner?.cells ?? []).map(([row, col]) => `${row}-${col}`));
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+  const outcomeText = session.winner
+    ? session.winner.disc === myDisc
+      ? t("youWon")
+      : t("partnerWon")
+    : t("draw");
+
+  // Carte récap partageable — voir CLAUDE.md "tous les jeux doivent avoir
+  // ça" : composée dès la fin de partie (comme Doodle Duel/Word Sonar),
+  // jamais en continu pendant la partie. Contrairement à ces deux-là,
+  // Connect Duo n'a pas d'écran de récap séparé (voir plus haut, pas de
+  // coupure de caméra) : les boutons télécharger/partager s'ajoutent
+  // directement sous le plateau, sans changer d'écran.
+  useEffect(() => {
+    if (session.phase !== "ended") return;
+    let cancelled = false;
+    composeConnectDuoRecap(session.moves, session.winner, {
+      outcomeText,
+      footerText: t("footerText"),
+    }).then((url) => {
+      if (!cancelled) setImageUrl(url);
+    });
+    // Nettoyage : à la sortie de "ended" (rematch, déclenché localement ou
+    // par l'autre côté) ou au démontage, on efface l'image obsolète — jamais
+    // un setState synchrone dans le corps de l'effet lui-même.
+    return () => {
+      cancelled = true;
+      setImageUrl(null);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session.phase]);
+
+  async function handleDownload() {
+    if (!imageUrl) return;
+    const a = document.createElement("a");
+    a.href = imageUrl;
+    a.download = "snaplover-connect-duo.png";
+    a.click();
+  }
+
+  async function handleShare() {
+    if (!imageUrl) return;
+    await shareOrDownload(imageUrl, "snaplover-connect-duo.png", t("shareText"));
+  }
 
   return (
     <div className="flex flex-1 flex-col gap-6">
@@ -78,10 +127,28 @@ export function ConnectDuoBoard({ session, isInitiator }: ConnectDuoBoardProps) 
       </div>
 
       {session.phase === "ended" && (
-        <div className="flex flex-col items-center gap-3 text-center">
-          <p className="font-heading text-xl font-bold text-white">
-            {session.winner ? (session.winner.disc === myDisc ? t("youWon") : t("partnerWon")) : t("draw")}
-          </p>
+        <div className="flex flex-col items-center gap-4 text-center">
+          <p className="font-heading text-xl font-bold text-white">{outcomeText}</p>
+
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <button
+              onClick={handleDownload}
+              disabled={!imageUrl}
+              className="inline-flex items-center gap-2 rounded-2xl border border-white/20 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10 disabled:opacity-50"
+            >
+              <Download className="size-4" />
+              {t("download")}
+            </button>
+            <button
+              onClick={handleShare}
+              disabled={!imageUrl}
+              className="inline-flex items-center gap-2 rounded-2xl border border-white/20 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10 disabled:opacity-50"
+            >
+              <Share2 className="size-4" />
+              {t("share")}
+            </button>
+          </div>
+
           <button
             onClick={session.rematch}
             className="rounded-2xl bg-linear-to-r from-[#fb5a46] to-[#ff7d54] px-6 py-3 font-medium text-white transition hover:opacity-90"

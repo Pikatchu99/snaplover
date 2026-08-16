@@ -817,3 +817,72 @@ rapide" du reste du hub.
   coup.
 - **Pas encore fait** : 5 jeux du roadmap restent à construire (Duo Quiz ensuite selon l'ordre de
   priorité — voir `docs/GAMES-ROADMAP-DRAFT.json`).
+
+## Duo Quiz
+Sixième mini-jeu du hub, quatrième construit depuis le roadmap du workflow multi-agents (voir
+`docs/GAMES-ROADMAP-DRAFT.json`) — 8 questions de culture générale identiques des deux côtés,
+piochées dans une banque statique bilingue (`lib/duo-quiz/question-bank.json`, 24 questions,
+`config.duoQuiz.rounds` = 8 par partie). Fenêtre de réponse `config.duoQuiz.roundDurationMs` = 15s,
+volontairement bien plus courte que les 60s de Doodle Duel — se souvenir d'un fait est immédiat,
+contrairement à dessiner.
+- **Aucun tour DANS une manche — les deux répondent au même instant** : contrairement à
+  Doodle Duel (dessinateur·rice/deveneur·euse) ou Fleet Siege (tour la règle), rien n'est
+  asymétrique ici, donc rien ne justifierait d'attendre — même principe que la tentative de mot
+  entier de Word Sonar, jamais soumise à un tour.
+- **L'hôte reste seul·e arbitre de manche pour TOUTE la session, jamais d'alternance** —
+  contrairement à Doodle Duel (dessinateur·rice qui change à chaque manche) ou Edge Letters
+  (arbitre qui change à chaque manche) : il n'y a structurellement rien à cacher ici, la banque de
+  questions (texte ET bonne réponse) est publique et identique dans les deux bundles avant même le
+  début de la partie. Le·la "pouvoir" de l'hôte se limite à l'ORDRE des questions (mélange
+  Fisher-Yates local, jamais transmis ni à reproduire côté invité·e) — zéro avantage d'information
+  ou de score, un modèle de confiance plus simple que tous les autres jeux du hub.
+- **Déviation volontaire de la spec générée, pour une vraie raison propre à cette app bilingue** :
+  la spec suggérait de transmettre le texte complet de la question/des choix sur le réseau ("pour
+  que les deux affichent un texte identique"). Cette app est fr/en (next-intl) — si le texte
+  voyageait sur le réseau, un·e invité·e en anglais verrait la question dans la langue de l'hôte.
+  Fix : seul `questionId` traverse `duoquiz-round-start` ; chaque client résout le prompt/les choix
+  dans SA PROPRE locale via la banque bilingue partagée (`lib/duo-quiz/pick-questions.ts`) — jamais
+  de texte de jeu en dur envoyé sur le réseau, cohérent avec la convention i18n déjà établie
+  (IDs sur le réseau/dans la config, labels résolus localement). Par la même logique, `durationMs`
+  et le nombre total de manches ne sont pas non plus transmis (constantes partagées de `config.ts`,
+  jamais négociées — même principe que la grille/les tailles de navires de Fleet Siege).
+- **Chaque camp grade sa PROPRE réponse localement** (via la banque publique, par `questionId`) et
+  n'envoie QUE le verdict booléen — jamais le choix exact ni la bonne réponse, qui ne sont une
+  information nouvelle pour personne. `duoquiz-round-end` est une pure balise de synchronisation
+  (pas de `correctIndex` à bord, déjà retrouvable localement) : son seul rôle est de garantir que
+  les deux écrans révèlent au MÊME instant — jamais un calcul local sur son propre chrono, sinon la
+  réponse apparaîtrait en avance chez qui a fini son décompte en premier pendant que l'autre
+  choisit encore.
+- **Manche terminée par le premier de deux déclencheurs locaux** (les deux verdicts connus, OU le
+  propre chrono de l'hôte expiré) — gardée par `roundEndedRef`, même classe de bug que les autres
+  jeux du hub mais ici deux déclencheurs locaux sur UN SEUL client plutôt que deux humains qui
+  cliquent. Une réponse absente à l'expiration compte comme fausse.
+- **Enchaînement AUTOMATIQUE vers la manche suivante après la pause de révélation**
+  (`config.duoQuiz.revealPauseMs` = 1,5s) — AUCUN clic manuel, contrairement à "Manche suivante"
+  d'Edge Letters/Word Sonar : cohérent avec l'absence de tour, la manche suivante n'attend
+  l'action de personne. `duoquiz-game-over` porte le score final comme filet de sécurité canonique
+  (au cas où un `duoquiz-answer-result` se serait perdu en route), pour que les deux récaps
+  affichent toujours le même total.
+- **Bug réel trouvé avant tout test, en écrivant `replay()`** : la première version remettait
+  `phase` à `"lobby"` sans jamais repasser `hasStarted` à `false` — `DuoQuizClient.tsx` n'aiguille
+  que sur `hasStarted` pour choisir entre salle d'attente et écran de jeu, donc l'invité·e serait
+  resté·e coincé·e sur l'écran de manche (vide, aucune question chargée) après un "Rejouer" plutôt
+  que de revenir à la salle d'attente. Fix : `replay()` repasse aussi `hasStarted` à `false`. En
+  creusant ce point, le même souci semble présent dans `use-duel-session.ts`/
+  `use-edge-letters-session.ts` (`replay()` ne réinitialise pas non plus `hasStarted` sur ces deux
+  jeux) — Doodle Duel s'en sort car `DuelRoundStage.tsx` gère explicitement un cas `phase ===
+  "lobby"` propre, mais `EdgeLettersRoundStage.tsx` n'a pas cette branche et retournerait `null`.
+  Non corrigé ici (hors périmètre de cette session de travail, jeux déjà livrés séparément) —
+  signalé pour un futur passage dédié plutôt que corrigé à la volée.
+- **Banque bilingue, licence non applicable** : contrairement à la liste de mots français d'Edge
+  Letters (dataset tiers), ces 24 questions de culture générale sont rédigées directement pour ce
+  projet — pas de fichier de licence nécessaire. Choisies volontairement "increvables" (géographie,
+  sciences, histoire, culture générale) plutôt que liées à l'actualité, pour ne jamais devenir
+  fausses avec le temps.
+- Vérifié bout en bout : `e2e/tests/duo-quiz.spec.ts` (partie complète de 8 questions, une manche à
+  fin anticipée avec vérification qu'aucune révélation n'apparaît chez l'invité·e avant sa propre
+  réponse, une manche terminée par expiration du chrono côté invité·e silencieux, récap
+  téléchargeable, "Rejouer" testé des deux côtés indépendamment sans reconnexion) + suite e2e
+  complète rejouée sans régression — réussi du premier coup une fois le bug `replay()` corrigé.
+- **Pas encore fait** : 4 jeux du roadmap restent à construire (Ultimate Tic-Tac-Toe ensuite selon
+  l'ordre de priorité — voir `docs/GAMES-ROADMAP-DRAFT.json`).

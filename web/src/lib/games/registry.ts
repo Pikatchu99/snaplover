@@ -1,4 +1,4 @@
-import { Anchor, Circle, Palette, Radar, SpellCheck2, type LucideIcon } from "lucide-react";
+import { Anchor, Circle, Lightbulb, Palette, Radar, SpellCheck2, type LucideIcon } from "lucide-react";
 
 // Registre central des rooms — SEULE source de vérité pour le type de room
 // (photo + chaque mini-jeu), son préfixe de code, ses routes et sa promo
@@ -87,6 +87,16 @@ export const GAMES = [
     name: "Fleet Siege",
     icon: Anchor,
     promoNamespace: "landing.fleetSiege",
+  },
+  {
+    kind: "duo-quiz",
+    prefix: "Q",
+    roomPath: "/duo-quiz/r",
+    joinPath: "/duo-quiz/join",
+    createPath: "/duo-quiz",
+    name: "Duo Quiz",
+    icon: Lightbulb,
+    promoNamespace: "landing.duoQuiz",
   },
 ] as const satisfies readonly GameDefinition[];
 

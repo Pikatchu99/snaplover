@@ -107,6 +107,20 @@ export const config = {
      * des autres jeux du hub. */
     shipSizes: [4, 3, 2] as const,
   },
+  duoQuiz: {
+    /** Nombre de questions par partie — piochées sans remise dans la banque
+     * complète (voir lib/duo-quiz/pick-questions.ts). */
+    rounds: 8,
+    /** Fenêtre de réponse par question — nettement plus court que les 60s de
+     * Doodle Duel : la mémoire d'un fait est immédiate, contrairement à
+     * dessiner, pas besoin d'un chrono généreux ici. */
+    roundDurationMs: 15_000,
+    /** Pause d'affichage de la bonne réponse avant d'enchaîner
+     * automatiquement sur la question suivante (aucun clic manuel — voir
+     * CLAUDE.md "Duo Quiz", contrairement à "Manche suivante" d'Edge
+     * Letters/Word Sonar). */
+    revealPauseMs: 1500,
+  },
   challenge: {
     /** Largeur colonne sticker relative à cellWidth — voir docs/STICKER-CHALLENGES.md
      * (décision produit : même taille que les photos, ou au maximum 25% plus petit). */

@@ -1,0 +1,242 @@
+[
+  {
+    "id": "q1",
+    "category": "geography",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quelle est la capitale de l'Australie ?", "en": "What is the capital of Australia?" },
+    "choices": {
+      "fr": ["Sydney", "Canberra", "Melbourne", "Perth"],
+      "en": ["Sydney", "Canberra", "Melbourne", "Perth"]
+    }
+  },
+  {
+    "id": "q2",
+    "category": "science",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quelle planète est surnommée la « planète rouge » ?", "en": "Which planet is nicknamed the \"Red Planet\"?" },
+    "choices": {
+      "fr": ["Vénus", "Mars", "Jupiter", "Saturne"],
+      "en": ["Venus", "Mars", "Jupiter", "Saturn"]
+    }
+  },
+  {
+    "id": "q3",
+    "category": "history",
+    "correctIndex": 0,
+    "prompt": { "fr": "En quelle année a débuté la Révolution française ?", "en": "In which year did the French Revolution begin?" },
+    "choices": {
+      "fr": ["1789", "1799", "1804", "1815"],
+      "en": ["1789", "1799", "1804", "1815"]
+    }
+  },
+  {
+    "id": "q4",
+    "category": "nature",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quel est le plus grand mammifère du monde ?", "en": "What is the largest mammal in the world?" },
+    "choices": {
+      "fr": ["Éléphant d'Afrique", "Baleine bleue", "Girafe", "Rhinocéros"],
+      "en": ["African elephant", "Blue whale", "Giraffe", "Rhinoceros"]
+    }
+  },
+  {
+    "id": "q5",
+    "category": "geography",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quel est le plus long fleuve du monde ?", "en": "What is the longest river in the world?" },
+    "choices": {
+      "fr": ["Amazone", "Nil", "Yangtsé", "Mississippi"],
+      "en": ["Amazon", "Nile", "Yangtze", "Mississippi"]
+    }
+  },
+  {
+    "id": "q6",
+    "category": "science",
+    "correctIndex": 1,
+    "prompt": { "fr": "Combien d'os compte le corps humain adulte ?", "en": "How many bones does the adult human body have?" },
+    "choices": {
+      "fr": ["186", "206", "226", "246"],
+      "en": ["186", "206", "226", "246"]
+    }
+  },
+  {
+    "id": "q7",
+    "category": "art",
+    "correctIndex": 1,
+    "prompt": { "fr": "Qui a peint la Joconde ?", "en": "Who painted the Mona Lisa?" },
+    "choices": {
+      "fr": ["Michel-Ange", "Léonard de Vinci", "Raphaël", "Botticelli"],
+      "en": ["Michelangelo", "Leonardo da Vinci", "Raphael", "Botticelli"]
+    }
+  },
+  {
+    "id": "q8",
+    "category": "geography",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quel pays a la forme d'une botte ?", "en": "Which country is shaped like a boot?" },
+    "choices": {
+      "fr": ["Espagne", "Italie", "Grèce", "Portugal"],
+      "en": ["Spain", "Italy", "Greece", "Portugal"]
+    }
+  },
+  {
+    "id": "q9",
+    "category": "history",
+    "correctIndex": 1,
+    "prompt": { "fr": "Qui a été le premier homme à marcher sur la Lune ?", "en": "Who was the first man to walk on the Moon?" },
+    "choices": {
+      "fr": ["Buzz Aldrin", "Neil Armstrong", "Youri Gagarine", "John Glenn"],
+      "en": ["Buzz Aldrin", "Neil Armstrong", "Yuri Gagarin", "John Glenn"]
+    }
+  },
+  {
+    "id": "q10",
+    "category": "science",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quel est l'élément chimique le plus abondant dans l'univers ?", "en": "What is the most abundant chemical element in the universe?" },
+    "choices": {
+      "fr": ["Oxygène", "Hydrogène", "Carbone", "Hélium"],
+      "en": ["Oxygen", "Hydrogen", "Carbon", "Helium"]
+    }
+  },
+  {
+    "id": "q11",
+    "category": "geography",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quelle est la plus haute montagne du monde ?", "en": "What is the tallest mountain in the world?" },
+    "choices": {
+      "fr": ["K2", "Everest", "Kilimandjaro", "Mont Blanc"],
+      "en": ["K2", "Everest", "Kilimanjaro", "Mont Blanc"]
+    }
+  },
+  {
+    "id": "q12",
+    "category": "general",
+    "correctIndex": 1,
+    "prompt": { "fr": "Combien de côtés a un hexagone ?", "en": "How many sides does a hexagon have?" },
+    "choices": {
+      "fr": ["5", "6", "7", "8"],
+      "en": ["5", "6", "7", "8"]
+    }
+  },
+  {
+    "id": "q13",
+    "category": "nature",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quel animal est surnommé le « roi de la jungle » ?", "en": "Which animal is nicknamed the \"king of the jungle\"?" },
+    "choices": {
+      "fr": ["Tigre", "Lion", "Léopard", "Gorille"],
+      "en": ["Tiger", "Lion", "Leopard", "Gorilla"]
+    }
+  },
+  {
+    "id": "q14",
+    "category": "history",
+    "correctIndex": 0,
+    "prompt": { "fr": "Quel mur est tombé en 1989 ?", "en": "Which wall fell in 1989?" },
+    "choices": {
+      "fr": ["Le mur de Berlin", "Le mur d'Hadrien", "La Grande Muraille", "Le mur des Lamentations"],
+      "en": ["The Berlin Wall", "Hadrian's Wall", "The Great Wall", "The Western Wall"]
+    }
+  },
+  {
+    "id": "q15",
+    "category": "science",
+    "correctIndex": 0,
+    "prompt": { "fr": "Quelle est la vitesse approximative de la lumière dans le vide ?", "en": "What is the approximate speed of light in a vacuum?" },
+    "choices": {
+      "fr": ["300 000 km/s", "150 000 km/s", "1 000 000 km/s", "30 000 km/s"],
+      "en": ["300,000 km/s", "150,000 km/s", "1,000,000 km/s", "30,000 km/s"]
+    }
+  },
+  {
+    "id": "q16",
+    "category": "geography",
+    "correctIndex": 1,
+    "prompt": { "fr": "Dans quel pays se trouve le Machu Picchu ?", "en": "In which country is Machu Picchu located?" },
+    "choices": {
+      "fr": ["Mexique", "Pérou", "Bolivie", "Chili"],
+      "en": ["Mexico", "Peru", "Bolivia", "Chile"]
+    }
+  },
+  {
+    "id": "q17",
+    "category": "general",
+    "correctIndex": 2,
+    "prompt": { "fr": "Combien de cordes possède une guitare classique ?", "en": "How many strings does a classical guitar have?" },
+    "choices": {
+      "fr": ["4", "5", "6", "7"],
+      "en": ["4", "5", "6", "7"]
+    }
+  },
+  {
+    "id": "q18",
+    "category": "literature",
+    "correctIndex": 0,
+    "prompt": { "fr": "Qui a écrit « Les Misérables » ?", "en": "Who wrote \"Les Misérables\"?" },
+    "choices": {
+      "fr": ["Victor Hugo", "Émile Zola", "Alexandre Dumas", "Molière"],
+      "en": ["Victor Hugo", "Émile Zola", "Alexandre Dumas", "Molière"]
+    }
+  },
+  {
+    "id": "q19",
+    "category": "geography",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quel est le plus petit pays du monde ?", "en": "What is the smallest country in the world?" },
+    "choices": {
+      "fr": ["Monaco", "Vatican", "Malte", "Liechtenstein"],
+      "en": ["Monaco", "Vatican City", "Malta", "Liechtenstein"]
+    }
+  },
+  {
+    "id": "q20",
+    "category": "science",
+    "correctIndex": 2,
+    "prompt": { "fr": "Combien de cavités possède le cœur humain ?", "en": "How many chambers does the human heart have?" },
+    "choices": {
+      "fr": ["2", "3", "4", "5"],
+      "en": ["2", "3", "4", "5"]
+    }
+  },
+  {
+    "id": "q21",
+    "category": "nature",
+    "correctIndex": 0,
+    "prompt": { "fr": "Quel est le plus grand désert chaud du monde ?", "en": "What is the largest hot desert in the world?" },
+    "choices": {
+      "fr": ["Sahara", "Gobi", "Kalahari", "Mojave"],
+      "en": ["Sahara", "Gobi", "Kalahari", "Mojave"]
+    }
+  },
+  {
+    "id": "q22",
+    "category": "history",
+    "correctIndex": 1,
+    "prompt": { "fr": "Quelle civilisation a construit les pyramides de Gizeh ?", "en": "Which civilization built the pyramids of Giza?" },
+    "choices": {
+      "fr": ["Maya", "Égyptienne", "Romaine", "Grecque"],
+      "en": ["Maya", "Egyptian", "Roman", "Greek"]
+    }
+  },
+  {
+    "id": "q23",
+    "category": "general",
+    "correctIndex": 2,
+    "prompt": { "fr": "Combien de continents compte-t-on généralement ?", "en": "How many continents are generally counted?" },
+    "choices": {
+      "fr": ["5", "6", "7", "8"],
+      "en": ["5", "6", "7", "8"]
+    }
+  },
+  {
+    "id": "q24",
+    "category": "geography",
+    "correctIndex": 2,
+    "prompt": { "fr": "Quelle est la capitale du Japon ?", "en": "What is the capital of Japan?" },
+    "choices": {
+      "fr": ["Osaka", "Kyoto", "Tokyo", "Nagoya"],
+      "en": ["Osaka", "Kyoto", "Tokyo", "Nagoya"]
+    }
+  }
+]

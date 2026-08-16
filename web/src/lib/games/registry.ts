@@ -1,4 +1,4 @@
-import { Palette, Radar, type LucideIcon } from "lucide-react";
+import { Circle, Palette, Radar, type LucideIcon } from "lucide-react";
 
 // Registre central des rooms — SEULE source de vérité pour le type de room
 // (photo + chaque mini-jeu), son préfixe de code, ses routes et sa promo
@@ -57,6 +57,16 @@ export const GAMES = [
     name: "Word Sonar",
     icon: Radar,
     promoNamespace: "landing.wordSonar",
+  },
+  {
+    kind: "connect-duo",
+    prefix: "C",
+    roomPath: "/connect-duo/r",
+    joinPath: "/connect-duo/join",
+    createPath: "/connect-duo",
+    name: "Connect Duo",
+    icon: Circle,
+    promoNamespace: "landing.connectDuo",
   },
 ] as const satisfies readonly GameDefinition[];
 

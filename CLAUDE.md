@@ -636,3 +636,57 @@ listes ci-dessus à modifier séparément.
 - **`RoomKind` dérive maintenant du registre** (`"photo" | (typeof GAMES)[number]["kind"]`), plus
   une simple union à jour à la main dans `lib/room-code.ts` — un jeu ajouté à `GAMES` élargit le
   type automatiquement partout où `RoomKind` est utilisé.
+
+## Connect Duo
+Troisième mini-jeu du hub, premier construit à partir de la démarche voulue par l'auteur : après
+la transformation en "hub de jeux", un workflow multi-agents a généré, scoré et spécifié 8 jeux
+candidats (Connect Duo, Edge Letters, Fleet Siege, Duo Quiz, Ultimate Tic-Tac-Toe, Copy Cat,
+Reflex Match, Bingo — voir `docs/GAMES-ROADMAP-DRAFT.json` pour les specs complètes des 8).
+Connect Duo a été choisi en premier précisément parce qu'il est le moins risqué de la liste : un
+Puissance 4 classique, sans aucune information cachée ni hasard à gérer.
+- **Aucune autorité à négocier, contrairement à Doodle Duel/Word Sonar** : le plateau, le tour
+  courant et la victoire/l'égalité sont TOUJOURS des fonctions pures du même log de coups partagé
+  (`lib/connect-duo/board.ts` `buildBoard`/`checkWinner`), jamais un verdict transmis séparément —
+  aucun côté n'a besoin de "faire confiance" à l'autre pour une information secrète, il n'y a
+  structurellement rien à cacher. Un seul type de message de jeu
+  (`{ t: "connectduo-move"; index; column }`), le reste (grille, tour, victoire) se déduit.
+- **L'alternance de tour EST la mécanique ici, pas une gêne à éviter** : contrairement à la
+  tentative de mot entier de Word Sonar (jamais soumise à un tour, retour utilisateur explicite),
+  laisser un joueur poser deux jetons avant la réponse de l'autre changerait le résultat de la
+  partie, pas seulement son rythme — les deux joueurs raisonnent sur le MÊME plateau partagé tour
+  par tour. Les cellules hors tour sont désactivées côté UI, et un coup reçu dont l'`index` ne
+  correspond pas au prochain coup attendu est silencieusement ignoré (défense, pas mécanisme de
+  confiance — l'UI empêche déjà l'envoi d'un coup illégal).
+- **Poignée de main `connectduo-hello` + `connectduo-start` explicite** : l'invité·e envoie
+  `connectduo-hello` dès que son listener réseau est attaché (comme le hello/config de la photo),
+  mais ça ne suffit PAS à faire passer les deux côtés à l'écran de jeu — l'hôte doit encore cliquer
+  "Lancer la partie" (`connectduo-start`), sinon l'invité·e (dont le hello part dès la connexion,
+  avant tout clic de l'hôte) verrait l'écran de jeu avant l'hôte. Bug trouvé et corrigé avant tout
+  test en écrivant le hook : le premier jet mettait `hasStarted = true` sur la réception de N'IMPORTE
+  QUEL message, y compris ce hello.
+- **Pas d'écran de récap séparé** (contrairement à Doodle Duel/Word Sonar) : le résultat s'affiche
+  directement sous le plateau, "Rejouer" repart immédiatement sans quitter l'écran. Conséquence
+  directe : **pas de coupure de caméra à la fin d'une partie** — les autres jeux coupent
+  `localStream` en arrivant sur leur écran de récap (vie privée, une fois la partie terminée), mais
+  ici ça casserait irrémédiablement "Rejouer" (un `MediaStreamTrack` arrêté ne redémarre jamais).
+  Piège identifié avant d'écrire le code (pas un bug trouvé en testant) en comparant à
+  `WordSonarClient.tsx`/`DuelClient.tsx`, qui ont ce même effet mais un vrai écran de récap séparé.
+- **"Rejouer" avec la même garde d'idempotence que les 3 jeux précédents** (`connectduo-rematch`,
+  `id` monotone + ref locale) — même classe de bug déjà rencontrée et corrigée sur Doodle Duel/Mind
+  Match/Word Sonar (`duel-next-round`/`mindmatch-advance`/`wordsonar-advance`), anticipée dès la
+  conception plutôt que redécouverte une 4e fois.
+- **Aucune config à choisir** (contrairement à Word Sonar, qui a la longueur du mot) : la salle
+  d'attente n'a qu'un bouton "Lancer la partie", aucun réglage — l'hôte joue toujours en premier
+  (jetons corail), l'invité·e toujours en second (jetons encre), fixé une fois pour toutes par
+  `isInitiator`, jamais renégocié y compris sur un rematch.
+- **Couleurs** : jetons corail (`#fb5a46`, hôte) / encre sombre (`#1c1712`, invité·e) — jamais de
+  violet ici (réservé exclusivement au chemin "rejoindre", voir convention Doodle Duel). Pas
+  d'animation de chute du jeton en v1 (le spec généré par le workflow la suggérait) — priorité à
+  prouver le concept vite avec le mécanisme le moins risqué, animation possible plus tard si
+  demandée.
+- Vérifié bout en bout : `e2e/tests/connect-duo.spec.ts` (alternance stricte vérifiée y compris le
+  refus d'un coup hors tour côté UI, victoire par alignement vertical, "Rejouer" réinitialise les
+  deux côtés sans recharger) + suite e2e complète rejouée sans régression.
+- **Pas encore fait** : les 7 autres jeux du roadmap restent à construire, dans l'ordre de priorité
+  du workflow (Edge Letters ensuite — reprend le "mot en commun" de départ de l'auteur, façon
+  "starts with X, ends with Y").

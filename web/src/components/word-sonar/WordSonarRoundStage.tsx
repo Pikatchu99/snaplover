@@ -42,6 +42,14 @@ export function WordSonarRoundStage({ session, isInitiator }: WordSonarRoundStag
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session.phase, guessReady, mergedGuess]);
 
+  // Diffuse en direct quelles cases sont remplies (jamais les lettres) —
+  // retour utilisateur : chacun·e doit voir où en est l'autre sur SON mot,
+  // pas seulement découvrir le résultat à la fin.
+  useEffect(() => {
+    if (session.phase === "playing") session.sendProgress(guessBoxes.map((letter) => letter.trim() !== ""));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session.phase, guessBoxes]);
+
   // "Rejouer" (voir WordSonarRecap.tsx) ramène ici, pas à la salle d'attente
   // complète (déjà connectée, caméras déjà affichées via FaceBubbles) —
   // même convention que DuelRoundStage gérant sa propre phase "lobby".
@@ -127,6 +135,20 @@ export function WordSonarRoundStage({ session, isInitiator }: WordSonarRoundStag
         </div>
 
         <p className="text-center text-sm text-white/60">{t("myWordReminder", { word: session.myWord ?? "" })}</p>
+
+        <div className="flex flex-col items-center gap-2">
+          <p className="text-xs text-white/40">{t("partnerProgress")}</p>
+          <div className="flex gap-1.5">
+            {Array.from({ length: session.length }, (_, i) => session.peerProgress[i] ?? false).map((filled, i) => (
+              <span
+                key={i}
+                data-wordsonar-peer-progress={i}
+                data-filled={filled}
+                className={`size-3 rounded-sm ${filled ? "bg-[#fb5a46]" : "bg-white/15"}`}
+              />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }

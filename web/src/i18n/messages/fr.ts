@@ -420,6 +420,7 @@ const fr = {
     confirmWord: "Valider mon mot",
     notepadHint: "Demandez-vous les lettres à l'oral — notez ici ce que vous apprenez, tentez le mot entier à tout moment",
     myWordReminder: "Ton mot : {word}",
+    partnerProgress: "Avancée de ton·ta partenaire sur ton mot",
     relayTimerHint: "Connexion relayée — la partie se termine à 0",
   },
   wordSonarRecap: {

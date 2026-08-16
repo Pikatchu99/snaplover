@@ -39,6 +39,10 @@ export function useWordSonarSession({ dataChannel, isInitiator, connectionType }
   const [awaitingResult, setAwaitingResult] = useState(false);
   const [gameRemainingMs, setGameRemainingMs] = useState<number>(config.wordSonar.gameDurationMs);
   const [result, setResult] = useState<WordSonarResult | null>(null);
+  // Ce que je sais de l'avancée de mon·ma partenaire sur MON mot — jamais
+  // les lettres, seulement quelles cases iel a remplies (voir
+  // types/word-sonar-realtime.ts "wordsonar-progress").
+  const [peerProgress, setPeerProgress] = useState<boolean[]>([]);
 
   const lengthRef = useRef<number>(config.wordSonar.defaultLength);
   const myWordRef = useRef<string | null>(null);
@@ -144,6 +148,8 @@ export function useWordSonarSession({ dataChannel, isInitiator, connectionType }
         setResult((prev) => (prev ? { ...prev, peerWord: message.word } : prev));
       } else if (message.t === "wordsonar-timeout") {
         declareTimeout();
+      } else if (message.t === "wordsonar-progress") {
+        setPeerProgress(message.filled);
       }
     }
 
@@ -165,6 +171,7 @@ export function useWordSonarSession({ dataChannel, isInitiator, connectionType }
     gameEndedRef.current = false;
     setResult(null);
     setGameRemainingMs(config.wordSonar.gameDurationMs);
+    setPeerProgress([]);
     setGameId((id) => id + 1);
   }
 
@@ -207,6 +214,14 @@ export function useWordSonarSession({ dataChannel, isInitiator, connectionType }
     send({ t: "wordsonar-guess-word", word: trimmed });
   }
 
+  // Diffuse quelles cases de MON carnet de notes sont remplies (jamais les
+  // lettres) — retour utilisateur : "chaque joueur doit savoir où en est
+  // son adversaire sur son mot", pour que le remplissage du carnet de
+  // l'autre soit visible en direct, comme un indicateur de progression.
+  function sendProgress(filled: boolean[]) {
+    send({ t: "wordsonar-progress", filled });
+  }
+
   // "Rejouer" — repart pour une partie fraîche sur la MÊME connexion, sans
   // recharger la page ni renégocier WebRTC (même convention que les autres
   // jeux). Repasse par "lobby" : la longueur du mot redevient un choix de
@@ -229,9 +244,11 @@ export function useWordSonarSession({ dataChannel, isInitiator, connectionType }
     isRelayTimed: connectionType === "relay",
     gameRemainingMs,
     result,
+    peerProgress,
     launch,
     submitWord,
     guessWord,
+    sendProgress,
     replay,
   };
 }

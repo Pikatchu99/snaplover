@@ -412,6 +412,7 @@ const en = {
     confirmWord: "Confirm my word",
     notepadHint: "Ask each other letters out loud — jot down what you learn here, try the whole word anytime",
     myWordReminder: "Your word: {word}",
+    partnerProgress: "Your partner's progress on your word",
     relayTimerHint: "Relayed connection — the game ends at 0",
   },
   wordSonarRecap: {

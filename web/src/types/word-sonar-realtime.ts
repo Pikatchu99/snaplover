@@ -36,4 +36,11 @@ export type WordSonarMessage =
   // Envoyé UNE SEULE FOIS par l'hôte, seul propriétaire de ce chrono (même
   // principe que les chronos par manche des autres jeux — toujours un seul
   // côté qui possède et déclenche un timeout, jamais les deux).
-  | { t: "wordsonar-timeout" };
+  | { t: "wordsonar-timeout" }
+  // Envoyé à chaque frappe dans le carnet de notes — jamais les lettres
+  // elles-mêmes, seulement quelles cases sont remplies ou vides, pour que
+  // chacun·e voie en direct où en est l'autre sur SON mot (retour
+  // utilisateur : "chaque joueur doit savoir où en est son adversaire").
+  // Aucune information de justesse : une case remplie ne veut pas dire une
+  // lettre correcte, juste "iel a tapé quelque chose là".
+  | { t: "wordsonar-progress"; filled: boolean[] };

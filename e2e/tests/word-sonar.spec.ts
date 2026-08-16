@@ -61,6 +61,16 @@ test("Word Sonar : tentative incorrecte continue, tentative correcte hors tour r
   await guest.waitForTimeout(500);
   await expect(guest.getByText("Ton mot : VELO")).toBeVisible();
 
+  // L'hôte voit en direct l'avancée de l'invité·e sur SON mot (retour
+  // utilisateur : "chaque joueur doit savoir où en est son adversaire") —
+  // les 4 cases remplies par l'invité·e doivent apparaître comme remplies
+  // côté hôte, jamais les lettres elles-mêmes.
+  for (let i = 0; i < 4; i++) {
+    await expect(host.locator(`[data-wordsonar-peer-progress="${i}"]`)).toHaveAttribute("data-filled", "true", {
+      timeout: 5_000,
+    });
+  }
+
   // Bug réel corrigé : une tentative correcte ne doit PAS attendre un tour
   // ("hors tour" n'a même plus de sens ici, il n'y a plus de notion de
   // tour du tout) — l'hôte tente directement le mot de l'invité·e et doit

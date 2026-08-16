@@ -6,29 +6,35 @@ import { Download, Plus, RotateCcw, Share2 } from "lucide-react";
 import { composeWordSonarRecap } from "@/lib/word-sonar/compose-recap";
 import { shareOrDownload } from "@/lib/share-or-download";
 import { Link } from "@/i18n/navigation";
-import type { WordSonarRoundResult } from "@/types/word-sonar";
+import type { WordSonarResult } from "@/types/word-sonar";
 
 interface WordSonarRecapProps {
-  rounds: WordSonarRoundResult[];
+  result: WordSonarResult;
   onReplay: () => void;
 }
 
-// Carte récap — voir lib/word-sonar/compose-recap.ts. "Rejouer" repart sur la
-// MÊME connexion (même room, l'hôte rechoisit une longueur de mot) ;
-// "Nouvelle partie" crée un lien tout neuf (même convention que les autres
-// jeux, voir DuelRecap.tsx).
-export function WordSonarRecap({ rounds, onReplay }: WordSonarRecapProps) {
+// Carte récap — voir lib/word-sonar/compose-recap.ts. Une seule carte
+// (partie unique, pas de manches). "Rejouer" repart sur la MÊME connexion
+// (même room, l'hôte rechoisit une longueur de mot) ; "Nouvelle partie" crée
+// un lien tout neuf (même convention que les autres jeux).
+export function WordSonarRecap({ result, onReplay }: WordSonarRecapProps) {
   const t = useTranslations("wordSonarRecap");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const wonCount = rounds.filter((round) => round.iWon).length;
+
+  const outcomeText =
+    result.outcome === "won" ? t("won") : result.outcome === "lost" ? t("lost") : t("draw");
 
   useEffect(() => {
+    // peerWord arrive juste après la fin de partie (message "wordsonar-
+    // reveal") — on attend qu'il soit là plutôt que de composer/télécharger
+    // une image avec un mot manquant.
+    if (!result.peerWord) return;
     let cancelled = false;
-    composeWordSonarRecap(rounds, {
-      scoreText: t("scoreText", { count: wonCount, total: rounds.length }),
+    composeWordSonarRecap(result, {
+      outcomeText,
+      myWordLabel: t("myWordLabel"),
+      peerWordLabel: t("peerWordLabel"),
       footerText: t("footerText"),
-      wonLabel: t("wonLabel"),
-      lostLabel: t("lostLabel"),
     }).then((url) => {
       if (!cancelled) setImageUrl(url);
     });
@@ -36,7 +42,7 @@ export function WordSonarRecap({ rounds, onReplay }: WordSonarRecapProps) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rounds]);
+  }, [result.peerWord]);
 
   async function handleDownload() {
     if (!imageUrl) return;
@@ -55,12 +61,19 @@ export function WordSonarRecap({ rounds, onReplay }: WordSonarRecapProps) {
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-[#fbf7f1] px-4 pt-12 pb-20">
       <div className="flex flex-col items-center gap-1 text-center">
         <p className="text-xs font-semibold tracking-[0.15em] text-[#fb5a46] uppercase">{t("eyebrow")}</p>
-        <h1 className="font-heading text-2xl font-bold text-[#1c1712]">{t("title")}</h1>
+        <h1 className="font-heading text-2xl font-bold text-[#1c1712]">{outcomeText}</h1>
       </div>
 
-      {imageUrl && (
+      {imageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element -- data URL générée côté client
         <img src={imageUrl} alt={t("imageAlt")} className="max-h-[60vh] rounded-lg border border-[#ece4d8] shadow-sm" />
+      ) : (
+        <div className="flex flex-col items-center gap-2 text-center">
+          <p className="text-sm text-[#8c8378]">{t("myWordLabel")}</p>
+          <p className="font-heading text-2xl font-bold text-[#1c1712]">{result.myWord}</p>
+          <p className="mt-2 text-sm text-[#8c8378]">{t("peerWordLabel")}</p>
+          <p className="font-heading text-2xl font-bold text-[#1c1712]">{result.peerWord ?? "…"}</p>
+        </div>
       )}
 
       <div className="flex flex-wrap items-center justify-center gap-3">

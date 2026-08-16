@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Check, Copy } from "lucide-react";
 import { CameraTile, type CameraTileState } from "@/components/room/CameraTile";
 import type { RoomConnectionStatus } from "@/hooks/use-room-connection";
-import { config } from "@/lib/config";
+import { WordSonarLengthPicker } from "@/components/word-sonar/WordSonarLengthPicker";
 import { Link, getPathname } from "@/i18n/navigation";
 
 interface WordSonarLobbyProps {
@@ -57,7 +57,6 @@ export function WordSonarLobby({
   const tCommon = useTranslations("common");
   const locale = useLocale();
   const [copied, setCopied] = useState(false);
-  const [length, setLength] = useState<number>(config.wordSonar.defaultLength);
 
   const STATUS_LABEL: Record<RoomConnectionStatus, string> = {
     "requesting-camera": t("status.requestingCamera"),
@@ -174,27 +173,7 @@ export function WordSonarLobby({
         </div>
 
         {isInitiator ? (
-          <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-            <div className="flex items-center justify-between text-sm text-white/80">
-              <span>{t("lengthLabel")}</span>
-              <span className="font-mono text-lg font-bold text-white">{length}</span>
-            </div>
-            <input
-              type="range"
-              min={config.wordSonar.minLength}
-              max={config.wordSonar.maxLength}
-              value={length}
-              onChange={(event) => setLength(Number(event.target.value))}
-              className="w-full accent-[#fb5a46]"
-            />
-            <button
-              onClick={() => onLaunch(length)}
-              disabled={status !== "connected"}
-              className="w-full rounded-2xl bg-linear-to-r from-[#fb5a46] to-[#ff7d54] px-6 py-3.5 font-medium text-white transition hover:opacity-90 disabled:from-white/15 disabled:to-white/15 disabled:text-white/50"
-            >
-              {t("launch")}
-            </button>
-          </div>
+          <WordSonarLengthPicker onLaunch={onLaunch} disabled={status !== "connected"} />
         ) : (
           <p className="text-center text-sm text-white/50">{t("waitingForHost")}</p>
         )}

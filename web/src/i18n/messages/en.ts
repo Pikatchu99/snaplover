@@ -38,12 +38,22 @@ const en = {
     joinCta: "Join a session",
     pasteLinkPlaceholder: "Paste the link / code…",
     noAccount: "No account · Right in your browser · PNG download",
+    gamesHub: {
+      eyebrow: "The hub",
+      headline: "Quick games for two",
+      subtitle: "Between two photo sessions, catch up for a round or three — nothing to install.",
+    },
     doodleDuel: {
       eyebrow: "New",
       headline: "Draw, guess, together",
       subtitle: "One secret word, one of you draws live, the other guesses. 3 rounds, roles swap every time.",
       steps: ["A secret word", "You draw live", "They guess"],
       cta: "Play Doodle Duel",
+    },
+    wordSonar: {
+      eyebrow: "New",
+      headline: "Guess each other's secret word",
+      cta: "Play Word Sonar",
     },
     /** Decorative preview (hero) — not real data, illustrative only. */
     demoCaption: "SNAPLOVER · JUL 14",

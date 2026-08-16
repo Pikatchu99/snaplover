@@ -1,21 +1,17 @@
 import { config } from "@/lib/config";
+import { ROOM_KIND_PREFIX, type RoomKind } from "@/lib/games/registry";
+
+export type { RoomKind };
 
 // Code de room court et lisible — voir SNAPROOM-SPEC.md §7. Le premier
-// caractère encode le type de room (photo/duel/mindmatch…) : sans ça, deux
-// rooms de types différents pouvaient tomber sur le même code et entrer en
-// collision côté signaling/ (une seule Map<code, RoomEntry>, aucune notion de
-// type — voir signaling/src/server.ts) — et la landing ne pouvait pas savoir
-// vers quelle route rediriger un code collé dans le champ générique "coller
-// le lien / code" (voir InlineJoinField.tsx, qui redirigeait toujours vers
-// /r/, même pour un code de duel).
-export type RoomKind = "photo" | "duel" | "word-sonar";
-
-const ROOM_KIND_PREFIX: Record<RoomKind, string> = {
-  photo: "P",
-  duel: "D",
-  "word-sonar": "W",
-};
-
+// caractère encode le type de room (photo/chaque mini-jeu — voir
+// lib/games/registry.ts pour la table des préfixes) : sans ça, deux rooms de
+// types différents pouvaient tomber sur le même code et entrer en collision
+// côté signaling/ (une seule Map<code, RoomEntry>, aucune notion de type —
+// voir signaling/src/server.ts) — et la landing ne pouvait pas savoir vers
+// quelle route rediriger un code collé dans le champ générique "coller le
+// lien / code" (voir InlineJoinField.tsx, qui redirigeait toujours vers /r/,
+// même pour un code de duel).
 const ROOM_CODE_RE = /^[A-Z0-9]{4,8}$/;
 
 export function generateRoomCode(kind: RoomKind): string {

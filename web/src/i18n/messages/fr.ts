@@ -39,6 +39,11 @@ const fr = {
     joinCta: "Rejoindre une séance",
     pasteLinkPlaceholder: "Coller le lien / code…",
     noAccount: "Sans compte · Directement dans le navigateur · Téléchargement PNG",
+    gamesHub: {
+      eyebrow: "Le hub",
+      headline: "Des jeux rapides à deux",
+      subtitle: "Entre deux séances photo, retrouvez-vous pour une manche ou trois — sans rien installer.",
+    },
     doodleDuel: {
       eyebrow: "Nouveau",
       headline: "Dessinez, devinez, à deux",
@@ -46,6 +51,11 @@ const fr = {
         "Un mot secret, l'un dessine en direct, l'autre devine. 3 manches, les rôles s'inversent à chaque fois.",
       steps: ["Un mot secret", "Tu dessines en direct", "Iel devine"],
       cta: "Jouer à Doodle Duel",
+    },
+    wordSonar: {
+      eyebrow: "Nouveau",
+      headline: "Devinez le mot secret de l'autre",
+      cta: "Jouer à Word Sonar",
     },
     /** Aperçu décoratif (hero) — pas de vraies données, juste illustratif. */
     demoCaption: "SNAPLOVER · 14 JUIL.",

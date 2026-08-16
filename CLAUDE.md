@@ -606,6 +606,33 @@ que l'auteur avait en tête.
   trouvée avec position révélée, tentative directe gagnante des deux côtés, alternance de qui
   interroge en premier par manche, récap téléchargeable) + suite e2e complète rejouée sans
   régression.
-- **Pas encore fait** : promotion sur la landing — en attente d'un bloc "Jeux" unifié listant Doodle
-  Duel + Word Sonar plutôt que d'empiler des sections promo plein-écran par jeu (même décision prise
-  pour l'ancien Mind Match, toujours valable).
+- Promotion sur la landing : voir "Registre des jeux" ci-dessous — Word Sonar apparaît désormais
+  dans le bloc "Jeux" unifié plutôt que dans une section plein-écran dédiée.
+
+## Registre des jeux (`lib/games/registry.ts`)
+Suite à la demande explicite de l'auteur de transformer SnapLover en "hub de jeux" (le photobooth
+restant le pilier, toujours mis en avant en premier — voir plus bas), le registre devient la SEULE
+source de vérité pour tout ce qui concernait jusqu'ici trois endroits maintenus à la main en
+parallèle (et qui avaient déjà chacun raté une mise à jour au moins une fois) :
+- **Préfixe de code par type** (`ROOM_KIND_PREFIX`, utilisé par `lib/room-code.ts`) — évite la
+  collision entre types de room décrite plus haut ("Room codes : préfixe par type de jeu").
+- **Route de room par type** (`ROOM_KIND_PATH`, utilisé par `InlineJoinField.tsx`) — pour rediriger
+  un code collé vers la bonne room sans requête réseau.
+- **Disallow robots.ts** — généré par un `.flatMap` sur `GAMES`, plus de liste à jour à la main à
+  chaque nouveau jeu (voir `app/robots.ts`).
+- **Carte sur la landing** (`components/landing/GamesHubPromo.tsx`) — une section "Jeux" unique,
+  une carte compacte par entrée de `GAMES` (icône, nom, accroche, CTA), plutôt que la section
+  plein-écran par jeu de `DoodleDuelPromo.tsx` (premier jet, supprimé à cette occasion — intenable
+  dès le second jeu, comme anticipé).
+Ajouter un jeu au hub ne devrait désormais toucher QUE : ses propres fichiers de jeu (hook/
+composants/types/routes) + une entrée dans `GAMES` + les clés i18n `landing.<promoNamespace>`
+(eyebrow/headline/cta, voir la structure compacte de `landing.wordSonar`) — plus aucune des quatre
+listes ci-dessus à modifier séparément.
+- **Le photobooth n'est PAS dans `GAMES`** — c'est le pilier du produit (voir demande explicite de
+  l'auteur), pas un mini-jeu du hub : sa propre page dédiée, son propre traitement hero sur la
+  landing, aucune carte dans la grille "Jeux". Il garde néanmoins une entrée dans le système de
+  préfixe de code (`PHOTO_ROOM`, kind `"photo"`) puisque ce mécanisme protège TOUS les types de
+  room, pas seulement les mini-jeux.
+- **`RoomKind` dérive maintenant du registre** (`"photo" | (typeof GAMES)[number]["kind"]`), plus
+  une simple union à jour à la main dans `lib/room-code.ts` — un jeu ajouté à `GAMES` élargit le
+  type automatiquement partout où `RoomKind` est utilisé.

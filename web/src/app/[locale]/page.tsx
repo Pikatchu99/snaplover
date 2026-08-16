@@ -4,7 +4,7 @@ import { Logo } from "@/components/landing/Logo";
 import { HeroStrips } from "@/components/landing/HeroStrips";
 import { InlineJoinField } from "@/components/landing/InlineJoinField";
 import { PackOfTheDay } from "@/components/landing/PackOfTheDay";
-import { DoodleDuelPromo } from "@/components/landing/DoodleDuelPromo";
+import { GamesHubPromo } from "@/components/landing/GamesHubPromo";
 import { Link } from "@/i18n/navigation";
 import { SITE_URL } from "@/lib/site";
 import { getDailyChallenge } from "@/lib/stickers/daily-pack";
@@ -115,7 +115,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
 
       <PackOfTheDay packId={dailyChallenge.packId} stickerIds={dailyChallenge.stickerIds} />
 
-      <DoodleDuelPromo />
+      <GamesHubPromo />
 
       <section className="bg-[#fbf7f1] px-6 py-16 md:px-16">
         <div className="mx-auto flex max-w-5xl flex-col gap-10">

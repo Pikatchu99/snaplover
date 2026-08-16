@@ -2,26 +2,21 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { roomKindFromCode, type RoomKind } from "@/lib/room-code";
+import { roomKindFromCode } from "@/lib/room-code";
+import { ROOM_KIND_PATH } from "@/lib/games/registry";
 import { useRouter } from "@/i18n/navigation";
 
 interface InlineJoinFieldProps {
   dark?: boolean;
 }
 
-// Un seul chemin de room par type, jamais deviné ailleurs — voir
-// lib/room-code.ts (préfixe de code) pour pourquoi cette table existe.
-const ROOM_PATH: Record<RoomKind, string> = {
-  photo: "/r",
-  duel: "/duel/r",
-  "word-sonar": "/word-sonar/r",
-};
-
 // Champ "coller le lien / code" de la landing (E1) — accepte un lien complet
 // (/r/CODE..., /duel/r/CODE..., /word-sonar/r/CODE...) ou un code brut, et
-// redirige vers la bonne room. Avant le préfixe de code par type (voir
-// lib/room-code.ts), ce champ redirigeait toujours vers /r/ — un code de
-// duel collé ici atterrissait sur une room photo inexistante.
+// redirige vers la bonne room via ROOM_KIND_PATH (lib/games/registry.ts,
+// SEULE source de vérité pour ce genre de table — voir CLAUDE.md). Avant le
+// préfixe de code par type (voir lib/room-code.ts), ce champ redirigeait
+// toujours vers /r/ — un code de duel collé ici atterrissait sur une room
+// photo inexistante.
 export function InlineJoinField({ dark }: InlineJoinFieldProps) {
   const router = useRouter();
   const tLanding = useTranslations("landing");
@@ -34,7 +29,7 @@ export function InlineJoinField({ dark }: InlineJoinFieldProps) {
     const code = (match ? match[1] : value).trim().toUpperCase();
     const kind = roomKindFromCode(code);
     if (!kind) return;
-    router.push(`${ROOM_PATH[kind]}/${code}`);
+    router.push(`${ROOM_KIND_PATH[kind]}/${code}`);
   }
 
   return (

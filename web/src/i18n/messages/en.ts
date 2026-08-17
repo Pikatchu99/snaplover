@@ -784,6 +784,18 @@ const en = {
       invalidRoom: "Invalid code",
       turnUnavailable: "Relay unavailable",
     },
+    reviewRules: "Review the rules",
+    tutorial: {
+      stepCounter: "{current} / {total}",
+      next: "Next",
+      gotIt: "Got it",
+      boardsTitle: "A board inside the board",
+      boardsText: "It's a big 3x3 tic-tac-toe, but each cell itself holds a small 3x3 tic-tac-toe.",
+      routingTitle: "Your cell decides where to play next",
+      routingText: "The exact spot you play INSIDE your small board forces your partner to play in the small board at that same spot.",
+      freeMoveTitle: "Board already decided? Free move",
+      freeMoveText: "If the targeted small board is already won or drawn, you can play wherever you like.",
+    },
   },
   utttRound: {
     you: "You",

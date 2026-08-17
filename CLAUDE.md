@@ -945,5 +945,26 @@ jouer ensuite. Prefixe de code `U`.
   17e et dernier coup, qui libère le choix de X puisque le sous-plateau visé est déjà gagné par O),
   jusqu'à une victoire méta de l'hôte, plus le récap téléchargeable et "Rejouer" — passé 4 fois de
   suite pour confirmer la robustesse du fix de course sur le handshake.
+- **Tutoriel de règles ajouté sur retour utilisateur explicite** : après un premier test réel,
+  "je comprends pas les règles" — la règle du routage forcé n'est pas intuitive, et un simple
+  paragraphe de texte dans la salle d'attente (`rulesText`) ne suffisait pas. Ajout de
+  `components/uttt/UtttTutorial.tsx`, un tutoriel visuel en 3 étapes (le plateau dans le plateau,
+  le routage forcé illustré par un diagramme avec la case jouée + le sous-plateau qui devient
+  jouable, le coup libre quand le sous-plateau visé est déjà décidé) affiché automatiquement à la
+  connexion — même schéma qu'un précédent déjà existant dans ce repo (`challengeTutorial` du mode
+  Challenge photo, `components/room/Lobby.tsx`) : un tap à la fois, un seul bouton dont le libellé
+  change à la dernière étape. Diagrammes en divs simples réutilisant les mêmes classes visuelles
+  que `UtttBoard.tsx` (anneau corail = plateau jouable), pas de canvas ni d'image — rien de
+  spécifique à prévisualiser contrairement aux vrais stickers du mode Challenge, juste une
+  mécanique toujours identique. Un lien "Revoir les règles" permet de le rouvrir volontairement
+  après l'avoir fermé, tant que la partie n'a pas commencé.
+  - **Changement structurel nécessaire, pas juste un ajout d'UI** : la partie démarrait jusque-là
+    automatiquement dès la connexion (voir plus haut), donc le tutoriel se serait fait
+    interrompre en plein milieu par le début de partie. Fix dans `hooks/use-uttt-session.ts` :
+    l'effet d'écoute réseau (toujours actif dès que le data channel existe) et l'effet d'annonce
+    du "uttt-ready" (qui ne se déclenche désormais qu'une fois `readyToStart` vrai — passé par
+    `UtttClient.tsx` comme `tutorialDismissed`) sont maintenant deux effets SÉPARÉS. Chaque côté
+    ne peut donc structurellement jamais démarrer avant d'avoir fermé son propre tutoriel, quel
+    que soit le temps que ça prend — pas de délai arbitraire à deviner.
 - **Pas encore fait** : 3 jeux du roadmap restent à construire (Copy Cat ensuite selon l'ordre de
   priorité — voir `docs/GAMES-ROADMAP-DRAFT.json`).

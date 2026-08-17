@@ -36,8 +36,20 @@ test("Ultimate Tic-Tac-Toe : démarrage automatique, routage forcé, coup libre 
   await a.goto(`/uttt/r/${room}`);
   await b.goto(`/uttt/r/${room}`);
 
-  // Aucun bouton à cliquer : la partie démarre dès que les deux sont
-  // connectés (voir CLAUDE.md "Ultimate Tic-Tac-Toe").
+  // Tutoriel de règles affiché automatiquement à la connexion (voir
+  // CLAUDE.md "Ultimate Tic-Tac-Toe") — la partie ne démarre qu'une fois
+  // que les DEUX côtés l'ont fermé (chacun gate son propre "uttt-ready",
+  // voir hooks/use-uttt-session.ts `readyToStart`).
+  async function dismissTutorial(page: Page) {
+    await expect(page.getByText("Un plateau dans le plateau")).toBeVisible({ timeout: 15_000 });
+    await page.getByRole("button", { name: "Suivant" }).click();
+    await page.getByRole("button", { name: "Suivant" }).click();
+    await page.getByRole("button", { name: "J'ai compris" }).click();
+  }
+  await Promise.all([dismissTutorial(a), dismissTutorial(b)]);
+
+  // Aucun bouton "Lancer la partie" : une fois le tutoriel fermé des deux
+  // côtés, la partie démarre automatiquement.
   await expect(a.locator('[data-uttt-board="0"]')).toBeVisible({ timeout: 20_000 });
   await expect(b.locator('[data-uttt-board="0"]')).toBeVisible({ timeout: 20_000 });
 

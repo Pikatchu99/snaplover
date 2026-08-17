@@ -4,6 +4,7 @@ import { useState, type RefObject } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Check, Copy } from "lucide-react";
 import { CameraTile, type CameraTileState } from "@/components/room/CameraTile";
+import { UtttTutorial } from "@/components/uttt/UtttTutorial";
 import type { RoomConnectionStatus } from "@/hooks/use-room-connection";
 import { Link, getPathname } from "@/i18n/navigation";
 
@@ -14,6 +15,8 @@ interface UtttLobbyProps {
   status: RoomConnectionStatus;
   localVideoRef: RefObject<HTMLVideoElement | null>;
   onRetryCamera: () => void;
+  tutorialDismissed: boolean;
+  onTutorialDismissedChange: (dismissed: boolean) => void;
 }
 
 function localTileState(status: RoomConnectionStatus): CameraTileState {
@@ -39,7 +42,16 @@ function UtttShell({ children }: { children: React.ReactNode }) {
 // Tic-Tac-Toe") : aucun bouton "Lancer la partie" — la partie démarre
 // automatiquement dès que les deux côtés ont confirmé s'écouter (voir
 // hooks/use-uttt-session.ts "uttt-ready"), rien à configurer.
-export function UtttLobby({ roomCode, localStream, remoteStream, status, localVideoRef, onRetryCamera }: UtttLobbyProps) {
+export function UtttLobby({
+  roomCode,
+  localStream,
+  remoteStream,
+  status,
+  localVideoRef,
+  onRetryCamera,
+  tutorialDismissed,
+  onTutorialDismissedChange,
+}: UtttLobbyProps) {
   const t = useTranslations("utttLobby");
   const tCommon = useTranslations("common");
   const locale = useLocale();
@@ -133,6 +145,29 @@ export function UtttLobby({ roomCode, localStream, remoteStream, status, localVi
     );
   }
 
+  // Tutoriel de règles — retour utilisateur explicite ("je comprends pas
+  // les règles") après un premier test. Affiché automatiquement dès la
+  // connexion, tant qu'il n'a pas été vu (voir CLAUDE.md "Ultimate
+  // Tic-Tac-Toe") ; les caméras restent visibles pendant le tutoriel, même
+  // principe que le tutoriel du mode Challenge (components/room/Lobby.tsx).
+  // Tant que je n'ai pas moi-même fermé ce tutoriel, mon propre
+  // "uttt-ready" n'est jamais envoyé (voir hooks/use-uttt-session.ts
+  // `readyToStart`) — la partie ne peut donc jamais démarrer avant que les
+  // deux aient vu les règles.
+  if (status === "connected" && !tutorialDismissed) {
+    return (
+      <UtttShell>
+        <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6">
+          <div className="grid grid-cols-2 gap-4">
+            <CameraTile stream={localStream} label={t("you")} state={localTileState(status)} mirrored muted videoRef={localVideoRef} />
+            <CameraTile stream={remoteStream} label={t("partner")} state={remoteTileState(status, Boolean(remoteStream))} />
+          </div>
+          <UtttTutorial onDismiss={() => onTutorialDismissedChange(true)} />
+        </div>
+      </UtttShell>
+    );
+  }
+
   return (
     <UtttShell>
       <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6">
@@ -157,6 +192,14 @@ export function UtttLobby({ roomCode, localStream, remoteStream, status, localVi
         <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
           <p className="text-xs font-semibold tracking-widest text-white/50 uppercase">{t("rulesTitle")}</p>
           <p className="mt-1 text-sm text-white/80">{t("rulesText")}</p>
+          {tutorialDismissed && (
+            <button
+              onClick={() => onTutorialDismissedChange(false)}
+              className="mt-2 text-sm text-[#fb5a46] underline-offset-2 hover:underline"
+            >
+              {t("reviewRules")}
+            </button>
+          )}
         </div>
 
         <p className="text-center text-sm text-white/50">{t("autoStart")}</p>

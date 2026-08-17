@@ -800,6 +800,19 @@ const fr = {
       invalidRoom: "Code invalide",
       turnUnavailable: "Relais indisponible",
     },
+    reviewRules: "Revoir les règles",
+    tutorial: {
+      stepCounter: "{current} / {total}",
+      next: "Suivant",
+      gotIt: "J'ai compris",
+      boardsTitle: "Un plateau dans le plateau",
+      boardsText: "C'est un grand morpion 3x3, mais chaque case contient elle-même un petit morpion 3x3.",
+      routingTitle: "Ta case décide où jouer ensuite",
+      routingText:
+        "La position exacte où tu joues DANS ton petit morpion force ton·ta partenaire à jouer dans le petit morpion à cette même position.",
+      freeMoveTitle: "Plateau déjà décidé ? Coup libre",
+      freeMoveText: "Si le petit morpion visé est déjà gagné ou nul, tu peux jouer où tu veux.",
+    },
   },
   utttRound: {
     you: "Toi",

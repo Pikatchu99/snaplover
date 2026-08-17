@@ -8,6 +8,12 @@ import type { UtttMove, UtttPhase, UtttSymbol } from "@/types/uttt";
 interface UseUtttSessionOptions {
   dataChannel: RTCDataChannel | null;
   isInitiator: boolean;
+  /** Passe à `true` une fois que CE client a fini son propre tutoriel de
+   * règles (voir components/uttt/UtttTutorial.tsx) — tant que c'est
+   * `false`, ce côté n'annonce jamais son "uttt-ready", donc la partie
+   * n'a aucune chance de démarrer avant que les deux aient vu les règles,
+   * quel que soit le temps que ça prend de son côté. */
+  readyToStart: boolean;
 }
 
 // Renvoyé toutes les READY_RETRY_MS tant que le "ready" du partenaire n'est
@@ -38,7 +44,7 @@ const READY_RETRY_ATTEMPTS = 20;
 // (effet à deps [dataChannel]) et ne doit jamais lire une variable de state
 // fermée par sa closure au montage — tout ce qu'il lit passe par une ref
 // tenue à jour à côté du state correspondant.
-export function useUtttSession({ dataChannel, isInitiator }: UseUtttSessionOptions) {
+export function useUtttSession({ dataChannel, isInitiator, readyToStart }: UseUtttSessionOptions) {
   const mySymbol: UtttSymbol = isInitiator ? "X" : "O";
 
   const [phase, setPhase] = useState<UtttPhase>("lobby");
@@ -93,6 +99,19 @@ export function useUtttSession({ dataChannel, isInitiator }: UseUtttSessionOptio
     }
 
     dataChannel.addEventListener("message", handleMessage);
+    return () => dataChannel.removeEventListener("message", handleMessage);
+  }, [dataChannel]);
+
+  // Annonce ma propre disponibilité — dans un effet SÉPARÉ de l'écoute
+  // ci-dessus (qui reste toujours active dès que le data channel existe,
+  // pour ne jamais rater le "ready" de l'autre pendant que je lis encore
+  // mon propre tutoriel) : je ne commence à envoyer/renvoyer "uttt-ready"
+  // qu'une fois `readyToStart` vrai, c'est-à-dire une fois que J'AI
+  // moi-même fini mon tutoriel — combiné à l'autre côté qui fait de même,
+  // la partie ne peut structurellement jamais démarrer avant que les deux
+  // aient vu les règles.
+  useEffect(() => {
+    if (!dataChannel || !readyToStart) return;
 
     myReadyRef.current = true;
     send({ t: "uttt-ready" });
@@ -114,12 +133,9 @@ export function useUtttSession({ dataChannel, isInitiator }: UseUtttSessionOptio
       if (attempts >= READY_RETRY_ATTEMPTS) clearInterval(retryInterval);
     }, READY_RETRY_MS);
 
-    return () => {
-      dataChannel.removeEventListener("message", handleMessage);
-      clearInterval(retryInterval);
-    };
+    return () => clearInterval(retryInterval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dataChannel]);
+  }, [dataChannel, readyToStart]);
 
   const currentTurn = symbolForMoveIndex(moves.length);
   const isMyTurn = phase === "playing" && currentTurn === mySymbol;

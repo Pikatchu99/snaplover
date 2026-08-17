@@ -1,4 +1,4 @@
-import { Anchor, Circle, Grid3x3, Lightbulb, Palette, Radar, Repeat2, SpellCheck2, type LucideIcon } from "lucide-react";
+import { Anchor, Circle, Grid3x3, Lightbulb, Palette, Radar, Repeat2, SpellCheck2, Zap, type LucideIcon } from "lucide-react";
 
 // Registre central des rooms — SEULE source de vérité pour le type de room
 // (photo + chaque mini-jeu), son préfixe de code, ses routes et sa promo
@@ -117,6 +117,16 @@ export const GAMES = [
     name: "Copy Cat",
     icon: Repeat2,
     promoNamespace: "landing.copyCat",
+  },
+  {
+    kind: "reflex-match",
+    prefix: "R",
+    roomPath: "/reflex-match/r",
+    joinPath: "/reflex-match/join",
+    createPath: "/reflex-match",
+    name: "Reflex Match",
+    icon: Zap,
+    promoNamespace: "landing.reflexMatch",
   },
 ] as const satisfies readonly GameDefinition[];
 

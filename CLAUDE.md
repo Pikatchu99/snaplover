@@ -1040,3 +1040,61 @@ d'image.
   rejouée sans régression — réussi après correction du bug de callback ref trouvé en testant.
 - **Pas encore fait** : 2 jeux du roadmap restent à construire (Reflex Match ensuite selon l'ordre
   de priorité — voir `docs/GAMES-ROADMAP-DRAFT.json`).
+
+## Reflex Match
+Neuvième mini-jeu du hub, septième construit depuis le roadmap du workflow multi-agents (voir
+`docs/GAMES-ROADMAP-DRAFT.json`) — course de réflexes à deux, meilleur des `config.reflexMatch.rounds`
+= 7 manches (impair, même raison que Doodle Duel). Grille fixe 3x3 de neuf formes procédurales
+(`lib/reflex-match/generate-round.ts`) : huit identiques, une seule diffère (rotation, teinte, ou
+encoche ajoutée) — à repérer et taper en premier.
+- **Premier jeu du hub avec une vraie fenêtre de course dans le TEMPS à arbitrer** (contrairement à
+  Ultimate Tic-Tac-Toe, rien de temporel là-bas) : la grille doit se révéler au MÊME instant réel
+  chez les deux, sans quoi l'autorité de manche (qui mint la graine) aurait toujours une longueur
+  d'avance mécanique — elle connaît la graine avant même que le message parte sur le réseau.
+- **Horloge synchronisée réimplémentée sous protocole propre, jamais réutilisée telle quelle** :
+  `lib/realtime/clock-sync.ts`/`lib/realtime/schedule-capture.ts` (déjà prouvés pour le compte à
+  rebours 3·2·1 de la bande photo) sont câblés en dur sur `RealtimeChannel`/`RealtimeMessage`. Seule
+  la formule pure est dupliquée (`lib/reflex-match/clock-sync.ts` : `offset = s + rtt/2 - r`,
+  meilleur échantillon par RTT le plus faible), le ping/pong est réimplémenté sous les messages
+  `reflex-ping`/`reflex-pong` propres à ce jeu — même reasoning déjà appliqué à Copy Cat pour
+  `image-transfer.ts`.
+- **La référence d'horloge reste toujours l'hôte (offset 0), même si l'AUTORITÉ DE MANCHE alterne**
+  (hôte manches paires, invité·e impaires, `authorityIsInitiatorForRound`, même parité que
+  `drawerIsInitiatorForRound` de Doodle Duel) — ces deux notions sont indépendantes : qui a
+  l'autorité cette manche convertit simplement SON PROPRE horodatage local vers l'heure de
+  référence via son propre offset (0 pour l'hôte, mesuré une fois pour l'invité·e à la connexion),
+  jamais besoin d'une synchronisation bidirectionnelle.
+- **Aucun rendu anticipé, y compris pour l'autorité elle-même** : le rendu de la grille ET
+  l'acceptation des taps sont bloqués derrière le MÊME instant `revealAt` (converti via l'offset de
+  chacun·e) des deux côtés — l'autorité programme sa propre révélation exactement comme l'autre
+  côté, jamais un accès direct anticipé juste parce qu'elle a généré la graine en premier.
+- **Taper n'est JAMAIS soumis à un tour** — seule l'autorité (qui mint la graine et arbitre)
+  alterne par manche, jamais qui a le droit de taper : course libre dès la révélation, même
+  principe que la tentative de mot entier de Word Sonar ou la course sans tour d'Edge Letters. Un
+  faux départ est structurellement impossible : les cases ne sont même pas montées dans le DOM
+  avant la phase "active".
+- **L'autorité attend le délai maximal avant de conclure par défaut, jamais l'instant où SA PROPRE
+  tentative arrive** — piège explicitement identifié dans la spec, vérifié dès la conception :
+  résoudre dès qu'un seul côté a tapé transformerait une latence réseau tout à fait normale en
+  défaite injustifiée pour l'autre côté. L'arbitrage résout dès que les DEUX tentatives sont
+  connues (rien à gagner à attendre plus dans ce cas), sinon attend `config.reflexMatch.roundTimeoutMs`
+  avant de conclure avec ce qui est connu.
+- **Mort subite** : au-delà des 7 manches nominales, si les scores restent à égalité (une manche
+  nulle — personne n'a tapé à temps — compte comme une manche jouée mais aucun point), on rejoue
+  une manche de plus jusqu'à ce qu'un score strictement supérieur se dégage. Le message
+  `reflex-advance` porte un `matchOver` explicite plutôt qu'un simple `round >= config.X.rounds`
+  (comme Copy Cat/Duo Quiz) car le nombre total de manches n'est plus fixe une fois la mort subite
+  entamée.
+- **Rendu SVG plutôt que canvas** (déviation volontaire de la suggestion de la spec, qui proposait
+  un module façon `lib/frames/paint.ts`) : les cases doivent être cliquables individuellement et
+  animées (Framer Motion) — un canvas demanderait un hit-testing manuel par forme et s'anime mal,
+  un SVG se comporte comme n'importe quel élément DOM.
+- Vérifié bout en bout : `e2e/tests/reflex-match.spec.ts` (une case ratée sans effet sur la manche,
+  6 manches où les deux tapent la bonne case avec un léger décalage volontaire pour vérifier la
+  comparaison réelle de deux horodatages, une 7e et dernière manche où un seul côté tape — vérifie
+  que la résolution attend bien le délai maximal plutôt que de conclure immédiatement — jusqu'au
+  récap téléchargeable et "Rejouer" testé des deux côtés indépendamment) + suite e2e complète
+  rejouée sans régression — réussi du premier coup, deux fois de suite.
+- **Pas encore fait** : 1 jeu du roadmap initial reste à construire — Bingo, le dernier des 8
+  (`docs/GAMES-ROADMAP-DRAFT.json`). Les 7 précédents (Connect Duo, Edge Letters, Fleet Siege, Duo
+  Quiz, Ultimate Tic-Tac-Toe, Copy Cat, Reflex Match) sont tous livrés.

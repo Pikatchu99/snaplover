@@ -131,6 +131,22 @@ export const config = {
      * assez faible pour voir sa propre caméra derrière. */
     ghostOpacity: 0.35,
   },
+  reflexMatch: {
+    /** Best-of-7, impair (même raison que Doodle Duel) — mais une manche
+     * NULLE (personne n'a tapé à temps) peut encore laisser une égalité au
+     * score final, gérée par la mort subite (voir CLAUDE.md). */
+    rounds: 7,
+    /** Fenêtre "prêt ?" avant révélation — nettement plus courte que les
+     * 3,2s de la photo (pas de 3·2·1 visuel à afficher, juste un
+     * placeholder qui pulse). */
+    leadMs: 1200,
+    /** Délai maximal après révélation avant qu'une manche sans tap valide
+     * des deux côtés ne soit déclarée nulle — laisse le temps au message
+     * de l'autre côté d'arriver avant de conclure trop vite (voir
+     * CLAUDE.md : ne jamais transformer une latence réseau normale en
+     * défaite injustifiée). */
+    roundTimeoutMs: 5_000,
+  },
   challenge: {
     /** Largeur colonne sticker relative à cellWidth — voir docs/STICKER-CHALLENGES.md
      * (décision produit : même taille que les photos, ou au maximum 25% plus petit). */

@@ -4,9 +4,51 @@ import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { ReflexShape } from "@/components/reflex-match/ReflexShape";
 import type { UseReflexMatchSessionReturn } from "@/hooks/use-reflex-match-session";
+import type { ReflexRound } from "@/types/reflex-match";
 
 interface ReflexMatchRoundStageProps {
   session: UseReflexMatchSessionReturn;
+}
+
+interface ReflexMatchGridProps {
+  session: UseReflexMatchSessionReturn;
+  // Composant séparé plutôt qu'un bloc inline dans ReflexMatchRoundStage :
+  // reçu ici comme prop typée non-nullable, `activeRound` échappe au piège
+  // classique de TypeScript où le rétrécissement d'une garde `&&` sur un
+  // accès de propriété (`session.activeRound &&`) ne survit pas à une
+  // fermeture imbriquée (le `.map()` ci-dessous) — bug réel qui a fait
+  // échouer le build de production (jamais le mode dev de l'e2e, qui ne
+  // fait pas échouer le typecheck), trouvé après coup sur le déploiement
+  // de preview plutôt qu'avant de committer.
+  activeRound: ReflexRound;
+}
+
+function ReflexMatchGrid({ session, activeRound }: ReflexMatchGridProps) {
+  return (
+    <div className="mx-auto grid w-full max-w-sm grid-cols-3 gap-2.5">
+      {activeRound.cells.map((cell, index) => (
+        <motion.button
+          key={index}
+          data-reflex-cell={index}
+          data-reflex-cell-odd={index === activeRound.oddIndex}
+          onClick={() => session.tap(index)}
+          initial={{ scale: 0.7, opacity: 0 }}
+          animate={
+            session.lastMiss && index !== activeRound.oddIndex
+              ? { scale: [1, 0.9, 1], x: [0, -4, 4, 0] }
+              : { scale: 1, opacity: 1 }
+          }
+          transition={{ duration: 0.2, ease: "easeOut" }}
+          disabled={session.myTapAt !== null}
+          className={`flex aspect-square items-center justify-center rounded-xl bg-[#1c1a20] transition ${
+            session.myTapAt !== null && index === activeRound.oddIndex ? "ring-2 ring-[#1f9d55]" : ""
+          }`}
+        >
+          <ReflexShape cell={cell} />
+        </motion.button>
+      ))}
+    </div>
+  );
 }
 
 // Écran de manche — voir hooks/use-reflex-match-session.ts. Aucun tour :
@@ -76,29 +118,7 @@ export function ReflexMatchRoundStage({ session }: ReflexMatchRoundStageProps) {
       )}
 
       {session.phase === "active" && session.activeRound && (
-        <div className="mx-auto grid w-full max-w-sm grid-cols-3 gap-2.5">
-          {session.activeRound.cells.map((cell, index) => (
-            <motion.button
-              key={index}
-              data-reflex-cell={index}
-              data-reflex-cell-odd={index === session.activeRound.oddIndex}
-              onClick={() => session.tap(index)}
-              initial={{ scale: 0.7, opacity: 0 }}
-              animate={
-                session.lastMiss && index !== session.activeRound?.oddIndex
-                  ? { scale: [1, 0.9, 1], x: [0, -4, 4, 0] }
-                  : { scale: 1, opacity: 1 }
-              }
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              disabled={session.myTapAt !== null}
-              className={`flex aspect-square items-center justify-center rounded-xl bg-[#1c1a20] transition ${
-                session.myTapAt !== null && index === session.activeRound?.oddIndex ? "ring-2 ring-[#1f9d55]" : ""
-              }`}
-            >
-              <ReflexShape cell={cell} />
-            </motion.button>
-          ))}
-        </div>
+        <ReflexMatchGrid session={session} activeRound={session.activeRound} />
       )}
 
       {session.phase === "result" && session.result && (

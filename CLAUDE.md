@@ -968,3 +968,75 @@ jouer ensuite. Prefixe de code `U`.
     que soit le temps que ça prend — pas de délai arbitraire à deviner.
 - **Pas encore fait** : 3 jeux du roadmap restent à construire (Copy Cat ensuite selon l'ordre de
   priorité — voir `docs/GAMES-ROADMAP-DRAFT.json`).
+
+## Copy Cat
+Huitième mini-jeu du hub, sixième construit depuis le roadmap du workflow multi-agents (voir
+`docs/GAMES-ROADMAP-DRAFT.json`) — mimicry photobooth à deux, `config.copyCat.rounds` = 4 manches
+(pair, contrairement à l'impair de Doodle Duel : Copy Cat veut un partage 50/50 exact poseur·se/
+mimic sur le match). **Premier jeu du hub à capturer réellement une photo depuis la caméra et à la
+transférer à l'autre** — tous les jeux précédents n'échangeaient que du texte/état de jeu, jamais
+d'image.
+- **AUCUN chrono nulle part, dans aucune phase — un choix de conception aussi explicite que le
+  calcul local de Word Sonar** : le·la poseur·se prend son temps devant sa caméra, le·la mimic
+  prend le sien pour reproduire la pose. Retour direct de la leçon qui a fait déplacer Duo Doodle
+  hors de la séance photo (voir plus haut, tout en haut de ce fichier) : un 3·2·1 chronométré tue
+  un moment d'expression/mimicry encore plus sûrement qu'il n'a tué le dessin en direct.
+- **Deux transferts d'image chunkés PAR MANCHE sur le même canal** (référence du poseur, puis
+  tentative du mimic) — jamais réutilisé `lib/capture/image-transfer.ts` de la bande photo de base,
+  câblé en dur sur un seul transfert ambiant à la fois (`RealtimeChannel`/`RealtimeMessage`), faux
+  ici où deux transferts logiquement distincts se succèdent à chaque manche. Fix (même piège que la
+  spec l'identifiait) : le tampon de réception est tagué `(round, role)` à l'ouverture de chaque
+  transfert, et tout chunk qui ne correspond pas au tag actuellement attendu est silencieusement
+  ignoré plutôt que de corrompre un tampon partagé.
+- **Transition de phase gardée sur `img-end`, jamais `img-meta`** : si l'écran du·de la mimic
+  basculait dès l'ouverture du transfert (avant que tous les chunks soient arrivés), le calque
+  fantôme afficherait un JPEG partiel/corrompu pendant toute la durée du transfert.
+- **Dé-miroir INCONDITIONNEL des deux côtés** (`captureFrame(video, { mirrored: true })`),
+  contrairement au flux photo de base qui ne dé-miroir que l'hôte (`mirrored: isInitiator`, voir
+  `use-capture-session.ts`) : ici la donnée stockée doit être en vraie orientation pour les DEUX
+  rôles, pour une notation et un export équitables des deux côtés.
+- **Calque fantôme mirroté à l'affichage UNIQUEMENT, jamais sur la donnée stockée** — piège explicite
+  de la spec, vérifié avant tout test plutôt que découvert en testant : l'aperçu vidéo en direct du
+  mimic reste CSS-mirroté (`-scale-x-100`, convention selfie déjà partout ailleurs dans l'app), donc
+  la référence (vraie orientation) superposée par-dessus doit recevoir le MÊME `-scale-x-100`
+  purement à l'affichage (`CopyCatGhostOverlay.tsx`), sinon "la main droite de l'autre" tombe du
+  côté opposé de l'écran et casser complètement l'intuition spatiale de "copie cette pose".
+- **Seul·e le·la poseur·se note** (Nailé / Presque / Pas tout à fait) — même principe que l'arbitrage
+  du·de la dessinateur·rice de Doodle Duel : iel seul·e connaît l'intention visée. L'interface du·de
+  la mimic n'a AUCUN bouton de verdict dans le DOM (pas seulement désactivé).
+- **Bug réel trouvé en testant, avant tout commit** : la balise `<video>` de la phase "posing" et
+  celle de "mimic-prep" sont deux nœuds DOM DIFFÉRENTS (deux branches JSX distinctes selon la phase,
+  jamais le même élément persistant) — un simple `useEffect(() => { video.srcObject = localStream },
+  [localStream])` ne redéclenche que si `localStream` change de référence, jamais quand seule la
+  phase change et qu'un NOUVEAU nœud `<video>` se monte avec le même flux. Résultat observé : la
+  capture du·de la mimic échouait systématiquement avec "vidéo pas encore prête"
+  (videoWidth/videoHeight à 0), le flux n'ayant jamais été branché sur ce nœud précis. Fix dans
+  `CopyCatRoundStage.tsx` : un callback ref (`bindVideo`) qui branche `srcObject` à CHAQUE montage,
+  quel que soit le nœud — remplace l'effet, qui devient alors redondant (React détache/rattache déjà
+  le callback ref si `localStream` change, via `useCallback` avec `localStream` en dépendance).
+- **Rôle transmis nulle part** (contrairement à Word Sonar/Edge Letters, qui transmettent
+  explicitement le rôle par précaution) : `poserIsInitiatorForRound(round) = round % 2 === 0` se
+  déduit identiquement des deux côtés à partir de `isInitiator` + `round` partagé, jamais négocié.
+- **Un seul message fait le travail de "lancer la manche 0" ET "manche suivante"**
+  (`copycat-advance { round }`) — gardé par la CIBLE elle-même (comparée au dernier "advancedTo"
+  déjà appliqué) plutôt que par un `id` séparé comme les autres jeux : les index de manche sont déjà
+  naturellement monotones, pas besoin d'un compteur additionnel.
+- **`copycat-hello` en one-shot, pas de renvoi périodique comme `uttt-ready`** — déviation
+  volontaire et réfléchie de la même classe de robustesse : contrairement à Ultimate Tic-Tac-Toe (la
+  toute première annonce partait automatiquement dès la connexion, sans aucun geste humain
+  intercalé), Copy Cat garde un bouton "Lancer la partie" explicite — le temps de réaction humain
+  entre "connecté" et le clic garantit déjà que l'invité·e écoute depuis longtemps, la course
+  structurelle qui a forcé le renvoi périodique sur UTTT ne s'applique pas ici.
+- **Écran de récap séparé** (contrairement à Connect Duo/Fleet Siege/Ultimate Tic-Tac-Toe) : Copy Cat
+  est fait de manches distinctes comme Doodle Duel/Edge Letters/Duo Quiz, donc caméra coupée à
+  l'arrivée sur le récap. Carte récap (`lib/copy-cat/compose-recap.ts`) : première du hub à afficher
+  de VRAIES photos plutôt que des formes géométriques — réutilise `loadImage`/`clipRoundRect` déjà
+  exportés par `lib/capture/compose-strip.ts` (chargement async d'une image depuis une data URL)
+  plutôt que de les réinventer.
+- Vérifié bout en bout : `e2e/tests/copy-cat.spec.ts` (partie complète de 4 manches, rôles
+  poseur·se/mimic alternés, deux transferts d'image par manche, notation testée, "Manche suivante"/
+  "Voir le récap" cliqué alternativement par le·la poseur·se et le·la mimic pour couvrir les deux
+  chemins, récap téléchargeable, "Rejouer" testé des deux côtés indépendamment) + suite e2e complète
+  rejouée sans régression — réussi après correction du bug de callback ref trouvé en testant.
+- **Pas encore fait** : 2 jeux du roadmap restent à construire (Reflex Match ensuite selon l'ordre
+  de priorité — voir `docs/GAMES-ROADMAP-DRAFT.json`).

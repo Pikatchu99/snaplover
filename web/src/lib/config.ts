@@ -121,6 +121,16 @@ export const config = {
      * Letters/Word Sonar). */
     revealPauseMs: 1500,
   },
+  copyCat: {
+    /** Pair (contrairement à l'impair de Doodle Duel, qui évite une égalité
+     * "qui a dessiné en dernier") : Copy Cat veut un partage 50/50 exact
+     * poseur·se/mimique sur le match, jamais un tour de plus d'un côté. */
+    rounds: 4,
+    /** Opacité du calque fantôme (référence semi-transparente superposée à
+     * la caméra du·de la mimique) — assez visible pour guider la pose,
+     * assez faible pour voir sa propre caméra derrière. */
+    ghostOpacity: 0.35,
+  },
   challenge: {
     /** Largeur colonne sticker relative à cellWidth — voir docs/STICKER-CHALLENGES.md
      * (décision produit : même taille que les photos, ou au maximum 25% plus petit). */

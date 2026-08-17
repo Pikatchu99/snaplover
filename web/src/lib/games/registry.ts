@@ -1,4 +1,4 @@
-import { Anchor, Circle, Grid3x3, Lightbulb, Palette, Radar, SpellCheck2, type LucideIcon } from "lucide-react";
+import { Anchor, Circle, Grid3x3, Lightbulb, Palette, Radar, Repeat2, SpellCheck2, type LucideIcon } from "lucide-react";
 
 // Registre central des rooms — SEULE source de vérité pour le type de room
 // (photo + chaque mini-jeu), son préfixe de code, ses routes et sa promo
@@ -107,6 +107,16 @@ export const GAMES = [
     name: "Ultimate Tic-Tac-Toe",
     icon: Grid3x3,
     promoNamespace: "landing.uttt",
+  },
+  {
+    kind: "copy-cat",
+    prefix: "M",
+    roomPath: "/copy-cat/r",
+    joinPath: "/copy-cat/join",
+    createPath: "/copy-cat",
+    name: "Copy Cat",
+    icon: Repeat2,
+    promoNamespace: "landing.copyCat",
   },
 ] as const satisfies readonly GameDefinition[];
 

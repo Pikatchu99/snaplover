@@ -1095,6 +1095,82 @@ encoche ajoutée) — à repérer et taper en premier.
   que la résolution attend bien le délai maximal plutôt que de conclure immédiatement — jusqu'au
   récap téléchargeable et "Rejouer" testé des deux côtés indépendamment) + suite e2e complète
   rejouée sans régression — réussi du premier coup, deux fois de suite.
-- **Pas encore fait** : 1 jeu du roadmap initial reste à construire — Bingo, le dernier des 8
-  (`docs/GAMES-ROADMAP-DRAFT.json`). Les 7 précédents (Connect Duo, Edge Letters, Fleet Siege, Duo
-  Quiz, Ultimate Tic-Tac-Toe, Copy Cat, Reflex Match) sont tous livrés.
+
+## Bingo
+Huitième et dernier mini-jeu du roadmap initial du workflow multi-agents
+(`docs/GAMES-ROADMAP-DRAFT.json`) — le bingo classique 75 numéros (colonnes B-I-N-G-O), en direct à
+deux. Chaque manche, un·e seul·e donne les numéros (rôle alterné par parité, même principe que
+`drawerIsInitiatorForRound`/`callerIsInitiatorForRound` déjà établi ailleurs dans ce hub), les deux
+marquent automatiquement leur PROPRE carte 5x5 privée et réclament une ligne dès qu'elle est
+complète — jamais de tour, ni pour marquer ni pour réclamer (même principe que Word Sonar/Edge
+Letters/Reflex Match : le rôle qui alterne gouverne uniquement le rythme du tirage, jamais qui a le
+droit d'agir).
+- **Schéma d'engagement puis révélation (commit-then-reveal), premier du hub** : contrairement aux
+  autres jeux, ici le·la donneur·se de numéros pourrait silencieusement biaiser l'ordre de tirage en
+  faveur de sa propre carte — un risque de triche qu'aucun autre jeu du hub n'a (Word Sonar/Edge
+  Letters n'ont rien à biaiser, l'info cachée y est symétrique et validée localement). Fix
+  cryptographique (`lib/bingo/commit.ts`, SHA-256 via `crypto.subtle.digest`) : avant d'appeler le
+  premier numéro, le·la donneur·se engage `SHA-256(salt + séquence.join(","))` (`bingo-draw-commit`)
+  sans révéler ni le salt ni la séquence ; à la fin de la manche, iel révèle les deux
+  (`bingo-draw-reveal`) et **seul l'AUTRE côté** recalcule le hash et vérifie que le PRÉFIXE déjà
+  appelé correspond exactement à l'engagement pris (le·la donneur·se ne se revérifie pas — iel ne
+  peut pas se mentir à soi-même sur sa propre séquence). Une divergence est détectée (badge non
+  bloquant + `console.warn`), jamais corrigée rétroactivement — la manche déjà décidée reste
+  décidée, cohérent avec la limite déjà acceptée partout ailleurs dans cette architecture P2P sans
+  serveur de confiance.
+- **Fenêtre de grâce pour départager deux réclamations quasi simultanées**
+  (`config.bingo.claimGraceMs` = 400ms, mécanisme nouveau, aucun précédent exact dans le hub) : dès
+  la première réclamation valide d'une manche, un court minuteur démarre ; si la réclamation
+  opposée arrive avant qu'il n'expire, il est annulé et les deux sont comparées immédiatement ;
+  sinon il expire et tranche avec ce qui est connu. Nécessaire ici précisément parce qu'aucune
+  autorité unique ne juge une réclamation (voir plus bas) — sans cette fenêtre, la comparaison
+  pourrait juger un côté gagnant simplement parce que son message réseau est arrivé en premier,
+  jamais parce que sa ligne s'est complétée en premier dans l'ordre de tirage partagé.
+- **Aucune autorité unique ne décide qui a gagné une réclamation** — chaque côté revalide
+  indépendamment CHAQUE réclamation (la sienne ET celle de l'autre) contre son PROPRE journal de
+  numéros appelés (identique des deux côtés par construction, puisque diffusé un par un et reçu en
+  ordre sur le data channel) : `completingIndex()` (`lib/bingo/draw-order.ts`) renvoie la position
+  dans ce journal à laquelle le DERNIER numéro d'une ligne est tombé — l'index le plus bas gagne,
+  une égalité exacte est une vraie égalité déclarée (pas un "premier arrivé"), une ligne dont un
+  numéro n'a jamais été appelé est silencieusement rejetée (réclamation invalide, jamais un côté qui
+  "décide" pour l'autre).
+- **La carte ne quitte JAMAIS l'appareil de qui l'a générée** (`lib/bingo/card.ts`) — seule la ligne
+  RÉELLEMENT réclamée révèle ses numéros (`bingo-claim` porte `lineNumbers`, jamais le reste de la
+  carte), même principe que le mot secret de Word Sonar ou les cases d'une ligne d'Edge Letters :
+  aucun besoin de voir la carte complète de l'autre pour vérifier une réclamation.
+- **Bouton "Lancer la partie" explicite, déviation volontaire de la spec** (qui suggérait un
+  démarrage automatique sans aucun geste humain, façon Ultimate Tic-Tac-Toe) : l'auto-démarrage
+  d'UTTT a causé un vrai bug de course cette session (la boucle de retry `uttt-ready` s'arrêtait
+  trop tôt, voir plus haut) — rien ne justifiait de risquer de reproduire cette même classe de bug
+  ici sans bénéfice réel. Un clic humain explicite offre déjà la même marge de sécurité qu'un hello
+  one-shot (Connect Duo/Copy Cat), sans avoir besoin d'un renvoi périodique comme `uttt-ready`. Pour
+  la même raison, pas de `bingo-hello` ni de `bingo-resync` dédiés (la spec en suggérait) : le clic
+  de lancement retire le besoin du premier, et aucun autre jeu du hub n'a de reprise de connexion
+  sur mesure — tous s'appuient sur la bannière de reconnexion générique déjà fournie par
+  `useRoomConnection`, Bingo suit le même précédent plutôt que d'être une exception isolée.
+- **Un seul message unifie "lancer la manche 0" et "manche suivante"** (`bingo-advance{round}`,
+  gardé par la monotonie de `round` via `advancedToRef`, même principe que
+  `copycat-advance`/`duoquiz-round-start` déjà établi ailleurs dans ce hub) — pas de message séparé
+  comme la spec le suggérait.
+- **Marquage automatique** (`BingoCardGrid.tsx`) plutôt que manuel — garde l'expérience rapide et
+  décontractée, cohérent avec le ton du reste du hub (même choix que Word Sonar pour son tableau de
+  lettres connues).
+- **Test e2e : le vrai tirage aléatoire est bien trop lent pour un test fiable** — une simulation
+  Monte-Carlo (2000 parties, réplique exacte de l'algorithme de mélange et des 12 lignes possibles)
+  donne une médiane de ~42 tirages avant qu'UNE SEULE ligne ne se complète naturellement (~150s
+  réels à `config.bingo.callIntervalMs` = 3.5s, jusqu'à ~190s au 90e percentile) — inenvisageable
+  pour un test CI fiable, trois manches de suite qui plus est. Solution retenue : `Math.random` figé
+  côté navigateur (`page.evaluate`, AVANT tout clic "Lancer la partie" — `generateCard()`/
+  `shuffle75()` n'y touchent qu'à partir de ce moment, voir `beginRound`/`startCalling`) à une
+  constante choisie par recherche pour compléter la colonne B en exactement 5 tirages, avec le VRAI
+  algorithme de mélange de production — aucune modification ni contournement du code livré, juste
+  sa source d'aléa pendant le test. Ne PAS reproduire ce mécanisme pour un jeu où la valeur du
+  contenu généré (pas seulement son délai) importe pour le test.
+- Vérifié bout en bout : `e2e/tests/bingo.spec.ts` (victoire de l'hôte manche 0, victoire de
+  l'invité·e manche 1 — rôle de donneur·se alterné dans les deux sens —, égalité volontaire manche
+  2 via deux réclamations quasi simultanées vérifiant la fenêtre de grâce, récap téléchargeable,
+  Rejouer sans reconnexion des deux côtés) — passé 4 fois de suite (jeu sensible au timing) + suite
+  e2e complète (23 tests) rejouée sans régression.
+- **Roadmap initial du workflow multi-agents (`docs/GAMES-ROADMAP-DRAFT.json`) complété** : les 8
+  jeux candidats sont tous livrés — Connect Duo, Edge Letters, Fleet Siege, Duo Quiz, Ultimate
+  Tic-Tac-Toe, Copy Cat, Reflex Match, Bingo.

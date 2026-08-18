@@ -1,4 +1,4 @@
-import { Anchor, Circle, Grid3x3, Lightbulb, Palette, Radar, Repeat2, SpellCheck2, Zap, type LucideIcon } from "lucide-react";
+import { Anchor, Circle, Grid3x3, Hash, Lightbulb, Palette, Radar, Repeat2, SpellCheck2, Zap, type LucideIcon } from "lucide-react";
 
 // Registre central des rooms — SEULE source de vérité pour le type de room
 // (photo + chaque mini-jeu), son préfixe de code, ses routes et sa promo
@@ -127,6 +127,16 @@ export const GAMES = [
     name: "Reflex Match",
     icon: Zap,
     promoNamespace: "landing.reflexMatch",
+  },
+  {
+    kind: "bingo",
+    prefix: "B",
+    roomPath: "/bingo/r",
+    joinPath: "/bingo/join",
+    createPath: "/bingo",
+    name: "Bingo",
+    icon: Hash,
+    promoNamespace: "landing.bingo",
   },
 ] as const satisfies readonly GameDefinition[];
 

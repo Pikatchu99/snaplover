@@ -147,6 +147,29 @@ export const config = {
      * défaite injustifiée). */
     roundTimeoutMs: 5_000,
   },
+  bingo: {
+    /** Même nombre que Doodle Duel. */
+    rounds: 3,
+    /** Rythme d'appel des numéros — assez lent pour marquer sa carte à
+     * l'œil, assez rapide pour garder la tension. */
+    callIntervalMs: 3_500,
+    cardSize: 5,
+    /** Plages B-I-N-G-O classiques du bingo américain 75 numéros. */
+    columns: [
+      { letter: "B", min: 1, max: 15 },
+      { letter: "I", min: 16, max: 30 },
+      { letter: "N", min: 31, max: 45 },
+      { letter: "G", min: 46, max: 60 },
+      { letter: "O", min: 61, max: 75 },
+    ] as const,
+    maxDraws: 75,
+    /** Fenêtre de grâce après la toute première réclamation valide d'une
+     * manche, avant de trancher — laisse le temps à une seconde
+     * réclamation quasi simultanée de l'autre côté d'arriver et d'être
+     * comparée équitablement (voir CLAUDE.md "Bingo"), plutôt que de
+     * couronner injustement qui a cliqué en premier. */
+    claimGraceMs: 400,
+  },
   challenge: {
     /** Largeur colonne sticker relative à cellWidth — voir docs/STICKER-CHALLENGES.md
      * (décision produit : même taille que les photos, ou au maximum 25% plus petit). */

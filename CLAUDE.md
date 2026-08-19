@@ -606,6 +606,571 @@ que l'auteur avait en tête.
   trouvée avec position révélée, tentative directe gagnante des deux côtés, alternance de qui
   interroge en premier par manche, récap téléchargeable) + suite e2e complète rejouée sans
   régression.
-- **Pas encore fait** : promotion sur la landing — en attente d'un bloc "Jeux" unifié listant Doodle
-  Duel + Word Sonar plutôt que d'empiler des sections promo plein-écran par jeu (même décision prise
-  pour l'ancien Mind Match, toujours valable).
+- Promotion sur la landing : voir "Registre des jeux" ci-dessous — Word Sonar apparaît désormais
+  dans le bloc "Jeux" unifié plutôt que dans une section plein-écran dédiée.
+
+## Registre des jeux (`lib/games/registry.ts`)
+Suite à la demande explicite de l'auteur de transformer SnapLover en "hub de jeux" (le photobooth
+restant le pilier, toujours mis en avant en premier — voir plus bas), le registre devient la SEULE
+source de vérité pour tout ce qui concernait jusqu'ici trois endroits maintenus à la main en
+parallèle (et qui avaient déjà chacun raté une mise à jour au moins une fois) :
+- **Préfixe de code par type** (`ROOM_KIND_PREFIX`, utilisé par `lib/room-code.ts`) — évite la
+  collision entre types de room décrite plus haut ("Room codes : préfixe par type de jeu").
+- **Route de room par type** (`ROOM_KIND_PATH`, utilisé par `InlineJoinField.tsx`) — pour rediriger
+  un code collé vers la bonne room sans requête réseau.
+- **Disallow robots.ts** — généré par un `.flatMap` sur `GAMES`, plus de liste à jour à la main à
+  chaque nouveau jeu (voir `app/robots.ts`).
+- **Carte sur la landing** (`components/landing/GamesHubPromo.tsx`) — une section "Jeux" unique,
+  une carte compacte par entrée de `GAMES` (icône, nom, accroche, CTA), plutôt que la section
+  plein-écran par jeu de `DoodleDuelPromo.tsx` (premier jet, supprimé à cette occasion — intenable
+  dès le second jeu, comme anticipé).
+Ajouter un jeu au hub ne devrait désormais toucher QUE : ses propres fichiers de jeu (hook/
+composants/types/routes) + une entrée dans `GAMES` + les clés i18n `landing.<promoNamespace>`
+(eyebrow/headline/cta, voir la structure compacte de `landing.wordSonar`) — plus aucune des quatre
+listes ci-dessus à modifier séparément.
+- **Le photobooth n'est PAS dans `GAMES`** — c'est le pilier du produit (voir demande explicite de
+  l'auteur), pas un mini-jeu du hub : sa propre page dédiée, son propre traitement hero sur la
+  landing, aucune carte dans la grille "Jeux". Il garde néanmoins une entrée dans le système de
+  préfixe de code (`PHOTO_ROOM`, kind `"photo"`) puisque ce mécanisme protège TOUS les types de
+  room, pas seulement les mini-jeux.
+- **`RoomKind` dérive maintenant du registre** (`"photo" | (typeof GAMES)[number]["kind"]`), plus
+  une simple union à jour à la main dans `lib/room-code.ts` — un jeu ajouté à `GAMES` élargit le
+  type automatiquement partout où `RoomKind` est utilisé.
+
+## Connect Duo
+Troisième mini-jeu du hub, premier construit à partir de la démarche voulue par l'auteur : après
+la transformation en "hub de jeux", un workflow multi-agents a généré, scoré et spécifié 8 jeux
+candidats (Connect Duo, Edge Letters, Fleet Siege, Duo Quiz, Ultimate Tic-Tac-Toe, Copy Cat,
+Reflex Match, Bingo — voir `docs/GAMES-ROADMAP-DRAFT.json` pour les specs complètes des 8).
+Connect Duo a été choisi en premier précisément parce qu'il est le moins risqué de la liste : un
+Puissance 4 classique, sans aucune information cachée ni hasard à gérer.
+- **Aucune autorité à négocier, contrairement à Doodle Duel/Word Sonar** : le plateau, le tour
+  courant et la victoire/l'égalité sont TOUJOURS des fonctions pures du même log de coups partagé
+  (`lib/connect-duo/board.ts` `buildBoard`/`checkWinner`), jamais un verdict transmis séparément —
+  aucun côté n'a besoin de "faire confiance" à l'autre pour une information secrète, il n'y a
+  structurellement rien à cacher. Un seul type de message de jeu
+  (`{ t: "connectduo-move"; index; column }`), le reste (grille, tour, victoire) se déduit.
+- **L'alternance de tour EST la mécanique ici, pas une gêne à éviter** : contrairement à la
+  tentative de mot entier de Word Sonar (jamais soumise à un tour, retour utilisateur explicite),
+  laisser un joueur poser deux jetons avant la réponse de l'autre changerait le résultat de la
+  partie, pas seulement son rythme — les deux joueurs raisonnent sur le MÊME plateau partagé tour
+  par tour. Les cellules hors tour sont désactivées côté UI, et un coup reçu dont l'`index` ne
+  correspond pas au prochain coup attendu est silencieusement ignoré (défense, pas mécanisme de
+  confiance — l'UI empêche déjà l'envoi d'un coup illégal).
+- **Poignée de main `connectduo-hello` + `connectduo-start` explicite** : l'invité·e envoie
+  `connectduo-hello` dès que son listener réseau est attaché (comme le hello/config de la photo),
+  mais ça ne suffit PAS à faire passer les deux côtés à l'écran de jeu — l'hôte doit encore cliquer
+  "Lancer la partie" (`connectduo-start`), sinon l'invité·e (dont le hello part dès la connexion,
+  avant tout clic de l'hôte) verrait l'écran de jeu avant l'hôte. Bug trouvé et corrigé avant tout
+  test en écrivant le hook : le premier jet mettait `hasStarted = true` sur la réception de N'IMPORTE
+  QUEL message, y compris ce hello.
+- **Pas d'écran de récap séparé** (contrairement à Doodle Duel/Word Sonar) : le résultat s'affiche
+  directement sous le plateau, "Rejouer" repart immédiatement sans quitter l'écran. Conséquence
+  directe : **pas de coupure de caméra à la fin d'une partie** — les autres jeux coupent
+  `localStream` en arrivant sur leur écran de récap (vie privée, une fois la partie terminée), mais
+  ici ça casserait irrémédiablement "Rejouer" (un `MediaStreamTrack` arrêté ne redémarre jamais).
+  Piège identifié avant d'écrire le code (pas un bug trouvé en testant) en comparant à
+  `WordSonarClient.tsx`/`DuelClient.tsx`, qui ont ce même effet mais un vrai écran de récap séparé.
+- **"Rejouer" avec la même garde d'idempotence que les 3 jeux précédents** (`connectduo-rematch`,
+  `id` monotone + ref locale) — même classe de bug déjà rencontrée et corrigée sur Doodle Duel/Mind
+  Match/Word Sonar (`duel-next-round`/`mindmatch-advance`/`wordsonar-advance`), anticipée dès la
+  conception plutôt que redécouverte une 4e fois.
+- **Aucune config à choisir** (contrairement à Word Sonar, qui a la longueur du mot) : la salle
+  d'attente n'a qu'un bouton "Lancer la partie", aucun réglage — l'hôte joue toujours en premier
+  (jetons corail), l'invité·e toujours en second (jetons encre), fixé une fois pour toutes par
+  `isInitiator`, jamais renégocié y compris sur un rematch.
+- **Couleurs, retour utilisateur réel après un premier test** : les jetons de l'invité·e étaient à
+  l'encre sombre (`#1c1712`) dans le tout premier jet — invisibles sur le fond déjà sombre de
+  l'écran de jeu, et la case vide (papier clair `#fbf7f1`) se lisait comme "déjà remplie d'un jeton
+  blanc". Fix : jetons de l'invité·e passés au papier clair (vrai contraste), case vide passée à un
+  simple trou sombre (`#1c1a20`, un ton au-dessus du fond `#0d0b0f` du plateau) — jamais de violet
+  ici (réservé exclusivement au chemin "rejoindre", voir convention Doodle Duel).
+- **Animation de chute ajoutée après coup** (déférée en v1 pour prouver le concept vite, comme prévu
+  dès le départ) — avec Framer Motion, pas GSAP comme suggéré par l'auteur : déjà la librairie
+  d'animation du projet, largement suffisante pour un ressort de gravité, une deuxième dépendance
+  d'animation n'apportait rien. Chaque jeton ne joue sa chute qu'une seule fois : une case vide ne
+  rend rien de `motion`, donc le composant ne monte dans l'arbre React qu'au moment exact où le jeton
+  est posé — `initial` de Framer Motion ne se rejoue jamais après un premier montage, les jetons déjà
+  posés ne ré-animent donc jamais sur les coups suivants, sans code de garde supplémentaire.
+- **Carte récap partageable ajoutée après coup** — retour utilisateur explicite : "tous les jeux
+  doivent avoir ça" (un résultat partageable, comme Doodle Duel/Word Sonar en ont déjà). Connect Duo
+  était le seul jeu du hub à ne pas en avoir, la spec générée par le workflow l'ayant explicitement
+  reporté en "v1.1" pour prouver le concept vite. Snapshot du plateau final façon carte Wordle
+  (`lib/connect-duo/compose-recap.ts`), composé à la fin de partie — mais PAS un écran de récap
+  séparé comme les autres jeux : les boutons télécharger/partager s'ajoutent directement sous le
+  plateau existant (voir plus haut, pas d'écran séparé pour ne jamais casser "Rejouer" via une
+  caméra coupée). **Règle retenue pour tout futur jeu du hub : un résultat partageable est
+  obligatoire dès le premier ship, plus un "v1.1" à reporter.**
+- Vérifié bout en bout : `e2e/tests/connect-duo.spec.ts` (alternance stricte vérifiée y compris le
+  refus d'un coup hors tour côté UI, victoire par alignement vertical, carte récap téléchargeable,
+  "Rejouer" réinitialise les deux côtés sans recharger) + suite e2e complète rejouée sans régression.
+- **Pas encore fait** : les 7 autres jeux du roadmap restent à construire, dans l'ordre de priorité
+  du workflow (Edge Letters ensuite — reprend le "mot en commun" de départ de l'auteur, façon
+  "starts with X, ends with Y").
+
+## Edge Letters
+Quatrième mini-jeu du hub, deuxième construit depuis le roadmap du workflow multi-agents (voir
+`docs/GAMES-ROADMAP-DRAFT.json`) — reprend le "starts with X, ends with Y" de l'idée de départ de
+l'auteur. Chaque manche, les deux joueur·euses choisissent CHACUN·E une lettre (l'un·e le DÉBUT,
+l'autre la FIN, rôle qui alterne par manche) puis courent librement (aucun tour) à taper un vrai
+mot français qui les respecte.
+- **Prérequis explicitement flaggé par la spec avant tout code** : une liste de mots français à
+  embarquer côté client pour valider les tentatives — et puisque ce repo est PUBLIC et EST l'infra
+  de prod (voir §"Open source & auto-hébergement"), la licence de cette liste devait être confirmée
+  avec l'auteur, pas devinée. Recherchée et vérifiée avant tout code (pas de confiance en mémoire
+  générale) : `an-array-of-french-words` (MIT, ~336k mots, maintenue par un mainteneur open-source
+  reconnu) — filtrée aux mots simples (sans formes composées à trait d'union) et pré-normalisée
+  (minuscules, sans accents) en `lib/text/french-word-list.json` (318 883 entrées, ~750 Ko gzippé),
+  licence complète dans `french-word-list.LICENSE.txt` à côté. Chargée via `import()` dynamique
+  (`lib/text/word-list.ts`) — ne bloat jamais le bundle des autres pages.
+- **Aucun tour pendant la course — c'est le point central du jeu, pas un raccourci UX** : réponse
+  directe aux deux bugs de tour déjà rencontrés dans cette app (message "next round" manquant de
+  Doodle Duel, tentative de Word Sonar initialement soumise à un tour). La seule chose "de tour"
+  ici est le RÔLE (qui choisit quelle lettre) — jamais une action gatée.
+- **Un·e seul·e arbitre par manche, même parité que le choix de rôle, volontairement** (voir
+  `roundAuthorityIsInitiator` dans `hooks/use-edge-letters-session.ts`) : une seule fonction, une
+  seule source de vérité, jamais deux parités indépendantes qui pourraient dériver. L'arbitre est
+  la SEULE à émettre `edgeletters-round-result` — l'autre côté n'affirme jamais une victoire de son
+  propre chef ("j'ai tapé en premier"), iel soumet sa tentative puis ATTEND toujours ce message.
+  Avant de créditer QUELQUE tentative que ce soit (y compris la sienne), l'arbitre la revalide
+  indépendamment avec la même fonction `isValidEdgeLettersWord` déjà passée localement par
+  l'émetteur·rice — jamais confiance aveugle en un client modifié.
+- **Validation locale AVANT tout envoi réseau — simplification volontaire par rapport à Word
+  Sonar** : une tentative invalide ne touche jamais le réseau (contrairement à Word Sonar, où
+  chaque tentative DOIT transiter puisque seul·e l'adversaire connaît le mot secret à vérifier) —
+  ici, aucun secret à protéger, une tentative ratée ne coûte donc rien à personne.
+- **Chrono de choix de lettre purement LOCAL** (`config.edgeLetters.pickDurationMs`, 15s généreux,
+  même leçon "jamais de pression de temps surprise" que les autres jeux) : si non choisie à temps,
+  le client tire lui-même une lettre au hasard, aucune coordination réseau nécessaire pour ce
+  repli — seul le côté en retard doit agir.
+- **Chrono de course, déviation volontaire de la spec générée** : la spec suggérait un chrono
+  symétrique des deux côtés déclenchant chacun son propre message `edgeletters-race-timeout`,
+  gardé par une idempotence par manche. Simplifié : seul le chrono de L'ARBITRE déclenche le
+  verdict de match nul à son expiration (réutilise directement `edgeletters-round-result` avec
+  `winner: null`, pas de message séparé) — cohérent avec le principe "une seule autorité, un seul
+  verdict" déjà établi pour les tentatives, l'autre côté se contente d'afficher un compte à rebours
+  qui s'arrête sans rien déclencher.
+- **`role` transmis explicitement** dans `edgeletters-letter-pick` plutôt que redéduit de la parité
+  de manche à la réception — retire toute une classe de bug "les deux côtés ne sont plus d'accord
+  sur qui a quel rôle", au prix de quelques octets par message (même précaution que la spec l'avait
+  identifiée).
+- **5 manches toujours jouées jusqu'au bout**, même si le score est déjà joué (même simplicité que
+  Doodle Duel/Word Sonar — pas d'arrêt anticipé à gérer). Récap canvas multi-lignes (une par
+  manche : lettres + mot trouvé + qui a gagné), score en en-tête, téléchargeable/partageable dès le
+  premier ship (voir règle "tous les jeux doivent avoir ça" plus haut) via le
+  `lib/share-or-download.ts` déjà partagé.
+- Vérifié bout en bout : `e2e/tests/edge-letters.spec.ts` (5 manches complètes, rôles et arbitrage
+  alternés à chaque manche, tentative gagnante testée à la fois via le chemin "l'arbitre reçoit et
+  juge la tentative de l'autre" ET "l'arbitre gagne via sa propre tentative", récap téléchargeable)
+  + suite e2e complète rejouée sans régression — réussi du premier coup, y compris la logique
+  d'arbitrage tournant la plus complexe du hub à ce jour.
+- **Pas encore fait** : 6 jeux du roadmap restent à construire (Fleet Siege ensuite — bataille
+  navale classique, réutilise directement le principe "qui répond calcule localement" de Word
+  Sonar).
+
+## Fleet Siege
+Cinquième mini-jeu du hub, troisième construit depuis le roadmap du workflow multi-agents (voir
+`docs/GAMES-ROADMAP-DRAFT.json`) — la bataille navale classique, en direct à deux. Grille 8x8, 3
+navires chacun·e (tailles 4/3/2, `config.fleetSiege`), volontairement plus petit que la bataille
+navale traditionnelle (10x10, 5 navires) pour rester cohérent avec le positionnement "session
+rapide" du reste du hub.
+- **Premier jeu du hub avec une VRAIE information cachée à protéger** (contrairement à Connect Duo,
+  qui n'a structurellement rien à cacher) — mais **aucune autorité à négocier pour autant** :
+  extension spatiale directe du principe déjà établi par Word Sonar (qui a la main sur son propre
+  mot secret calcule localement la réponse), appliquée ici au plateau entier. Chaque flotte est la
+  seule source de vérité de son propre propriétaire (`lib/fleet-siege/board.ts`
+  `computeFireOutcome`), et ne quitte JAMAIS l'appareil qui l'a placée tant que la partie est en
+  cours — seul le verdict (touché/raté/coulé/partie terminée) traverse le réseau, en réponse
+  directe à un tir précis. Le seul moment où un plateau complet est jamais transmis
+  (`siege-reveal-board`) est APRÈS que l'issue est déjà tranchée des deux côtés, symétriquement
+  (gagnant·e ET perdant·e l'envoient) — purement cosmétique pour l'écran de révélation côte à côte.
+- **Le seul mécanisme du hub où le tour EST la règle, pas une gêne à éviter** — contrairement à Word
+  Sonar (question libre) et Edge Letters (course libre), la valeur de chaque tir dépend réellement
+  de connaître le résultat des précédents : pas de "réponse déjà connue" à livrer en avance. Le tour
+  se déduit uniquement de la parité du compteur de tirs partagé + qui tire en premier ce match
+  (`shooterForShotIndex` dans `hooks/use-fleet-siege-session.ts`) — jamais un message "à toi de
+  jouer" séparé, le canal ordonné/fiable garantissant qu'une paire tir/résultat se termine toujours
+  avant le tir suivant. Le·la défenseur·euse revalide quand même la parité du `shotIndex` reçu et
+  ignore silencieusement toute incohérence (tir dupliqué/désordonné) — défense bon marché, pas un
+  mécanisme de confiance (même esprit que le calcul local déjà accepté ailleurs).
+- **"Qui tire en premier" alterne à chaque match via le MÊME compteur que la garde d'idempotence du
+  rematch** (`matchIndex`/`siege-rematch id`) — délibérément un seul compteur partagé pour les deux
+  usages plutôt que deux compteurs indépendants qui pourraient dériver l'un de l'autre (match 0 →
+  hôte en premier, match 1 → invité·e en premier, etc., jamais renégocié explicitement).
+- **Pas d'écran de récap séparé** (même choix que Connect Duo, pour la même raison) : la révélation
+  et les boutons télécharger/partager/rejouer s'affichent directement sous les deux plateaux,
+  "Rejouer" repart en placement sur la MÊME connexion sans recharger — donc pas de coupure caméra en
+  fin de partie ici non plus (un `MediaStreamTrack` arrêté ne redémarre jamais).
+- **Placement 100% local, aucune validation croisée possible ni nécessaire** : bornes/chevauchement
+  vérifiés uniquement côté client qui place (`lib/fleet-siege/placement.ts`), pas de règle
+  d'adjacence (les navires peuvent se toucher, gardé simple). "Aléatoire" ne décide que des propres
+  données secrètes de qui clique — même nature que Word Sonar choisissant son mot en privé, aucun
+  hasard partagé à synchroniser entre les deux côtés.
+- **Carte récap** (`lib/fleet-siege/compose-recap.ts`) : les deux flottes révélées côte à côte,
+  snapshot façon carte de résultat Wordle — dès le premier ship (règle "tous les jeux doivent avoir
+  ça" plus haut), via le `lib/share-or-download.ts` déjà partagé.
+- Vérifié bout en bout : `e2e/tests/fleet-siege.spec.ts` (placement manuel des deux flottes à des
+  coordonnées connues, tour strictement alterné avec refus implicite de tirer hors tour côté UI,
+  coulage complet d'une flotte en 9 tirs entrelacés avec 8 tirs "à l'aveugle" de l'autre côté, écran
+  de révélation + récap téléchargeable, "Rejouer" remet les deux côtés en placement avec le premier
+  tireur inversé au match suivant) + suite e2e complète rejouée sans régression — réussi du premier
+  coup.
+- **Pas encore fait** : 5 jeux du roadmap restent à construire (Duo Quiz ensuite selon l'ordre de
+  priorité — voir `docs/GAMES-ROADMAP-DRAFT.json`).
+
+## Duo Quiz
+Sixième mini-jeu du hub, quatrième construit depuis le roadmap du workflow multi-agents (voir
+`docs/GAMES-ROADMAP-DRAFT.json`) — 8 questions de culture générale identiques des deux côtés,
+piochées dans une banque statique bilingue (`lib/duo-quiz/question-bank.json`, 100 questions,
+`config.duoQuiz.rounds` = 8 par partie). Fenêtre de réponse `config.duoQuiz.roundDurationMs` = 15s,
+volontairement bien plus courte que les 60s de Doodle Duel — se souvenir d'un fait est immédiat,
+contrairement à dessiner.
+- **Aucun tour DANS une manche — les deux répondent au même instant** : contrairement à
+  Doodle Duel (dessinateur·rice/deveneur·euse) ou Fleet Siege (tour la règle), rien n'est
+  asymétrique ici, donc rien ne justifierait d'attendre — même principe que la tentative de mot
+  entier de Word Sonar, jamais soumise à un tour.
+- **L'hôte reste seul·e arbitre de manche pour TOUTE la session, jamais d'alternance** —
+  contrairement à Doodle Duel (dessinateur·rice qui change à chaque manche) ou Edge Letters
+  (arbitre qui change à chaque manche) : il n'y a structurellement rien à cacher ici, la banque de
+  questions (texte ET bonne réponse) est publique et identique dans les deux bundles avant même le
+  début de la partie. Le·la "pouvoir" de l'hôte se limite à l'ORDRE des questions (mélange
+  Fisher-Yates local, jamais transmis ni à reproduire côté invité·e) — zéro avantage d'information
+  ou de score, un modèle de confiance plus simple que tous les autres jeux du hub.
+- **Déviation volontaire de la spec générée, pour une vraie raison propre à cette app bilingue** :
+  la spec suggérait de transmettre le texte complet de la question/des choix sur le réseau ("pour
+  que les deux affichent un texte identique"). Cette app est fr/en (next-intl) — si le texte
+  voyageait sur le réseau, un·e invité·e en anglais verrait la question dans la langue de l'hôte.
+  Fix : seul `questionId` traverse `duoquiz-round-start` ; chaque client résout le prompt/les choix
+  dans SA PROPRE locale via la banque bilingue partagée (`lib/duo-quiz/pick-questions.ts`) — jamais
+  de texte de jeu en dur envoyé sur le réseau, cohérent avec la convention i18n déjà établie
+  (IDs sur le réseau/dans la config, labels résolus localement). Par la même logique, `durationMs`
+  et le nombre total de manches ne sont pas non plus transmis (constantes partagées de `config.ts`,
+  jamais négociées — même principe que la grille/les tailles de navires de Fleet Siege).
+- **Chaque camp grade sa PROPRE réponse localement** (via la banque publique, par `questionId`) et
+  n'envoie QUE le verdict booléen — jamais le choix exact ni la bonne réponse, qui ne sont une
+  information nouvelle pour personne. `duoquiz-round-end` est une pure balise de synchronisation
+  (pas de `correctIndex` à bord, déjà retrouvable localement) : son seul rôle est de garantir que
+  les deux écrans révèlent au MÊME instant — jamais un calcul local sur son propre chrono, sinon la
+  réponse apparaîtrait en avance chez qui a fini son décompte en premier pendant que l'autre
+  choisit encore.
+- **Manche terminée par le premier de deux déclencheurs locaux** (les deux verdicts connus, OU le
+  propre chrono de l'hôte expiré) — gardée par `roundEndedRef`, même classe de bug que les autres
+  jeux du hub mais ici deux déclencheurs locaux sur UN SEUL client plutôt que deux humains qui
+  cliquent. Une réponse absente à l'expiration compte comme fausse.
+- **Enchaînement AUTOMATIQUE vers la manche suivante après la pause de révélation**
+  (`config.duoQuiz.revealPauseMs` = 1,5s) — AUCUN clic manuel, contrairement à "Manche suivante"
+  d'Edge Letters/Word Sonar : cohérent avec l'absence de tour, la manche suivante n'attend
+  l'action de personne. `duoquiz-game-over` porte le score final comme filet de sécurité canonique
+  (au cas où un `duoquiz-answer-result` se serait perdu en route), pour que les deux récaps
+  affichent toujours le même total.
+- **Bug réel trouvé avant tout test, en écrivant `replay()`** : la première version remettait
+  `phase` à `"lobby"` sans jamais repasser `hasStarted` à `false` — `DuoQuizClient.tsx` n'aiguille
+  que sur `hasStarted` pour choisir entre salle d'attente et écran de jeu, donc l'invité·e serait
+  resté·e coincé·e sur l'écran de manche (vide, aucune question chargée) après un "Rejouer" plutôt
+  que de revenir à la salle d'attente. Fix : `replay()` repasse aussi `hasStarted` à `false`. En
+  creusant ce point, le même souci semble présent dans `use-duel-session.ts`/
+  `use-edge-letters-session.ts` (`replay()` ne réinitialise pas non plus `hasStarted` sur ces deux
+  jeux) — Doodle Duel s'en sort car `DuelRoundStage.tsx` gère explicitement un cas `phase ===
+  "lobby"` propre, mais `EdgeLettersRoundStage.tsx` n'a pas cette branche et retournerait `null`.
+  Non corrigé ici (hors périmètre de cette session de travail, jeux déjà livrés séparément) —
+  signalé pour un futur passage dédié plutôt que corrigé à la volée.
+- **Banque bilingue, licence non applicable** : contrairement à la liste de mots français d'Edge
+  Letters (dataset tiers), ces 100 questions de culture générale sont rédigées directement pour ce
+  projet — pas de fichier de licence nécessaire. Choisies volontairement "increvables" (géographie,
+  sciences, histoire, nature, art/littérature, mythologie, langue, gastronomie, astronomie, culture
+  générale) plutôt que liées à l'actualité, pour ne jamais devenir fausses avec le temps.
+  **Élargie de 24 à 100 sur retour explicite de l'auteur** ("vas au moins à 100 questions") après
+  avoir testé le jeu et remarqué qu'avec seulement 24 questions pour 8 piochées par partie, deux
+  parties de suite recroisaient vite les mêmes questions — chaque nouvelle question revalidée par un
+  passage de vérification dédié (script one-off comparant chaque `correctIndex` résolu en fr ET en
+  en, plutôt qu'une simple relecture) : un vrai bug d'indexation trouvé et corrigé avant tout test
+  (q100 : "l'étoile la plus proche de la Terre" listait bien "Le Soleil" en premier choix mais
+  pointait `correctIndex: 1`, soit "Proxima Centauri" — la bonne réponse à cette question classique
+  est bien le Soleil lui-même, une étoile).
+- Vérifié bout en bout : `e2e/tests/duo-quiz.spec.ts` (partie complète de 8 questions, une manche à
+  fin anticipée avec vérification qu'aucune révélation n'apparaît chez l'invité·e avant sa propre
+  réponse, une manche terminée par expiration du chrono côté invité·e silencieux, récap
+  téléchargeable, "Rejouer" testé des deux côtés indépendamment sans reconnexion) + suite e2e
+  complète rejouée sans régression — réussi du premier coup une fois le bug `replay()` corrigé.
+- **Pas encore fait** : 4 jeux du roadmap restent à construire (Ultimate Tic-Tac-Toe ensuite selon
+  l'ordre de priorité — voir `docs/GAMES-ROADMAP-DRAFT.json`).
+
+## Ultimate Tic-Tac-Toe
+Septième mini-jeu du hub, cinquième construit depuis le roadmap du workflow multi-agents (voir
+`docs/GAMES-ROADMAP-DRAFT.json`) — le morpion classique élevé à la puissance 9 : un méta-plateau
+3x3 de neuf sous-plateaux 3x3, où la case jouée décide dans quel sous-plateau l'adversaire doit
+jouer ensuite. Prefixe de code `U`.
+- **Aucune information cachée nulle part — le seul jeu du hub dans ce cas** (contrairement à Fleet
+  Siege/Word Sonar/Edge Letters, chacun avec un secret à protéger d'un côté) : le plateau entier
+  est public des deux côtés en permanence. Conséquence directe : aucune autorité de manche à
+  négocier pour la légalité des coups ou la détection de victoire — les deux côtés font tourner
+  EXACTEMENT les mêmes fonctions pures importées de `lib/uttt/win-check.ts`
+  (`isLegalMove`/`checkSubBoardResult`/`checkMetaResult`/`activeBoard`), jamais deux copies de la
+  même règle qui pourraient dériver silencieusement l'une de l'autre. Chaque côté revalide quand
+  même le coup reçu de l'autre avec cette même fonction avant de l'appliquer — défense contre un
+  bug client (ex. un décalage d'index), jamais un mécanisme de confiance puisqu'il n'y a
+  structurellement rien à cacher entre deux ami·es qui jouent ensemble.
+- **Le seul mécanisme du hub où le tour EST strictement la règle** (comme Fleet Siege, contrairement
+  à Word Sonar/Edge Letters/Duo Quiz) — la légalité d'un coup dépend directement du coup précédent
+  (quel sous-plateau devient "actif"), aucune réponse à livrer en avance n'a de sens ici.
+- **Logique de légalité vérifiée AVANT tout test UI**, via un script one-off (pas de framework de
+  tests unitaires dans ce repo — seulement Playwright e2e, voir CLAUDE.md "Tests") rejouant
+  `lib/uttt/win-check.ts` contre des états de plateau construits à la main : confirme en particulier
+  le piège explicitement signalé par la spec — un sous-plateau NUL lève la contrainte de plateau
+  actif exactement comme un sous-plateau GAGNÉ, pas seulement ce dernier.
+- **Salle d'attente la plus simple du hub, un vrai changement de design par rapport aux 6 jeux
+  précédents** : aucun bouton "Lancer la partie". La partie démarre automatiquement dès que les
+  deux "uttt-ready" se sont croisés (voir `hooks/use-uttt-session.ts`) — cohérent avec l'absence
+  totale de configuration ou de secret à préparer (contrairement à Fleet Siege qui a une vraie phase
+  de placement, ou Word Sonar qui a une longueur de mot à choisir).
+- **Bug réel de course trouvé et corrigé AVANT tout commit, en écrivant précisément ce handshake
+  "uttt-ready"** (repéré grâce à des logs de debug temporaires côté navigateur, retirés ensuite) :
+  le renvoi périodique du "ready" s'arrêtait dès réception du "ready" du·de la partenaire — mais
+  recevoir le ready de l'autre ne prouve RIEN sur le fait que mon propre ready lui soit bien
+  parvenu (aucun accusé de réception dans ce protocole). Résultat observé : le·la premier·ère à
+  recevoir le ready de l'autre arrêtait ses propres tentatives avant même d'avoir réussi à envoyer
+  la sienne (le tout premier envoi, tenté avant que le data channel soit réellement "open", était
+  silencieusement perdu) — l'autre côté restait bloqué indéfiniment en salle d'attente. Fix : le
+  renvoi est maintenant borné par un NOMBRE DE TENTATIVES fixe (~5s), jamais conditionné à ce qui a
+  été reçu de l'autre côté.
+- **Pas d'écran de récap séparé** (même choix que Connect Duo/Fleet Siege, pour la même raison —
+  partie continue, pas de manches) : la révélation et les boutons télécharger/partager/rejouer
+  s'affichent directement sous le plateau, la caméra ne s'arrête donc jamais. Contrairement à Doodle
+  Duel/Edge Letters/Duo Quiz (récap en plusieurs lignes, un par manche), le récap ici est un
+  snapshot UNIQUE du méta-plateau final (`lib/uttt/compose-recap.ts`) : chaque sous-plateau décidé
+  s'y affiche comme un grand X/O/trait, façon partie physique.
+- Vérifié bout en bout : `e2e/tests/uttt.spec.ts` — une séquence de 17 coups générée et vérifiée
+  par un script one-off indépendant (rejouant `lib/uttt/win-check.ts` contre l'historique construit
+  à la main) exerçant le routage forcé normal, un coup forcé vers un sous-plateau DÉJÀ DÉCIDÉ (le
+  17e et dernier coup, qui libère le choix de X puisque le sous-plateau visé est déjà gagné par O),
+  jusqu'à une victoire méta de l'hôte, plus le récap téléchargeable et "Rejouer" — passé 4 fois de
+  suite pour confirmer la robustesse du fix de course sur le handshake.
+- **Tutoriel de règles ajouté sur retour utilisateur explicite** : après un premier test réel,
+  "je comprends pas les règles" — la règle du routage forcé n'est pas intuitive, et un simple
+  paragraphe de texte dans la salle d'attente (`rulesText`) ne suffisait pas. Ajout de
+  `components/uttt/UtttTutorial.tsx`, un tutoriel visuel en 3 étapes (le plateau dans le plateau,
+  le routage forcé illustré par un diagramme avec la case jouée + le sous-plateau qui devient
+  jouable, le coup libre quand le sous-plateau visé est déjà décidé) affiché automatiquement à la
+  connexion — même schéma qu'un précédent déjà existant dans ce repo (`challengeTutorial` du mode
+  Challenge photo, `components/room/Lobby.tsx`) : un tap à la fois, un seul bouton dont le libellé
+  change à la dernière étape. Diagrammes en divs simples réutilisant les mêmes classes visuelles
+  que `UtttBoard.tsx` (anneau corail = plateau jouable), pas de canvas ni d'image — rien de
+  spécifique à prévisualiser contrairement aux vrais stickers du mode Challenge, juste une
+  mécanique toujours identique. Un lien "Revoir les règles" permet de le rouvrir volontairement
+  après l'avoir fermé, tant que la partie n'a pas commencé.
+  - **Changement structurel nécessaire, pas juste un ajout d'UI** : la partie démarrait jusque-là
+    automatiquement dès la connexion (voir plus haut), donc le tutoriel se serait fait
+    interrompre en plein milieu par le début de partie. Fix dans `hooks/use-uttt-session.ts` :
+    l'effet d'écoute réseau (toujours actif dès que le data channel existe) et l'effet d'annonce
+    du "uttt-ready" (qui ne se déclenche désormais qu'une fois `readyToStart` vrai — passé par
+    `UtttClient.tsx` comme `tutorialDismissed`) sont maintenant deux effets SÉPARÉS. Chaque côté
+    ne peut donc structurellement jamais démarrer avant d'avoir fermé son propre tutoriel, quel
+    que soit le temps que ça prend — pas de délai arbitraire à deviner.
+- **Pas encore fait** : 3 jeux du roadmap restent à construire (Copy Cat ensuite selon l'ordre de
+  priorité — voir `docs/GAMES-ROADMAP-DRAFT.json`).
+
+## Copy Cat
+Huitième mini-jeu du hub, sixième construit depuis le roadmap du workflow multi-agents (voir
+`docs/GAMES-ROADMAP-DRAFT.json`) — mimicry photobooth à deux, `config.copyCat.rounds` = 4 manches
+(pair, contrairement à l'impair de Doodle Duel : Copy Cat veut un partage 50/50 exact poseur·se/
+mimic sur le match). **Premier jeu du hub à capturer réellement une photo depuis la caméra et à la
+transférer à l'autre** — tous les jeux précédents n'échangeaient que du texte/état de jeu, jamais
+d'image.
+- **AUCUN chrono nulle part, dans aucune phase — un choix de conception aussi explicite que le
+  calcul local de Word Sonar** : le·la poseur·se prend son temps devant sa caméra, le·la mimic
+  prend le sien pour reproduire la pose. Retour direct de la leçon qui a fait déplacer Duo Doodle
+  hors de la séance photo (voir plus haut, tout en haut de ce fichier) : un 3·2·1 chronométré tue
+  un moment d'expression/mimicry encore plus sûrement qu'il n'a tué le dessin en direct.
+- **Deux transferts d'image chunkés PAR MANCHE sur le même canal** (référence du poseur, puis
+  tentative du mimic) — jamais réutilisé `lib/capture/image-transfer.ts` de la bande photo de base,
+  câblé en dur sur un seul transfert ambiant à la fois (`RealtimeChannel`/`RealtimeMessage`), faux
+  ici où deux transferts logiquement distincts se succèdent à chaque manche. Fix (même piège que la
+  spec l'identifiait) : le tampon de réception est tagué `(round, role)` à l'ouverture de chaque
+  transfert, et tout chunk qui ne correspond pas au tag actuellement attendu est silencieusement
+  ignoré plutôt que de corrompre un tampon partagé.
+- **Transition de phase gardée sur `img-end`, jamais `img-meta`** : si l'écran du·de la mimic
+  basculait dès l'ouverture du transfert (avant que tous les chunks soient arrivés), le calque
+  fantôme afficherait un JPEG partiel/corrompu pendant toute la durée du transfert.
+- **Dé-miroir INCONDITIONNEL des deux côtés** (`captureFrame(video, { mirrored: true })`),
+  contrairement au flux photo de base qui ne dé-miroir que l'hôte (`mirrored: isInitiator`, voir
+  `use-capture-session.ts`) : ici la donnée stockée doit être en vraie orientation pour les DEUX
+  rôles, pour une notation et un export équitables des deux côtés.
+- **Calque fantôme mirroté à l'affichage UNIQUEMENT, jamais sur la donnée stockée** — piège explicite
+  de la spec, vérifié avant tout test plutôt que découvert en testant : l'aperçu vidéo en direct du
+  mimic reste CSS-mirroté (`-scale-x-100`, convention selfie déjà partout ailleurs dans l'app), donc
+  la référence (vraie orientation) superposée par-dessus doit recevoir le MÊME `-scale-x-100`
+  purement à l'affichage (`CopyCatGhostOverlay.tsx`), sinon "la main droite de l'autre" tombe du
+  côté opposé de l'écran et casser complètement l'intuition spatiale de "copie cette pose".
+- **Seul·e le·la poseur·se note** (Nailé / Presque / Pas tout à fait) — même principe que l'arbitrage
+  du·de la dessinateur·rice de Doodle Duel : iel seul·e connaît l'intention visée. L'interface du·de
+  la mimic n'a AUCUN bouton de verdict dans le DOM (pas seulement désactivé).
+- **Bug réel trouvé en testant, avant tout commit** : la balise `<video>` de la phase "posing" et
+  celle de "mimic-prep" sont deux nœuds DOM DIFFÉRENTS (deux branches JSX distinctes selon la phase,
+  jamais le même élément persistant) — un simple `useEffect(() => { video.srcObject = localStream },
+  [localStream])` ne redéclenche que si `localStream` change de référence, jamais quand seule la
+  phase change et qu'un NOUVEAU nœud `<video>` se monte avec le même flux. Résultat observé : la
+  capture du·de la mimic échouait systématiquement avec "vidéo pas encore prête"
+  (videoWidth/videoHeight à 0), le flux n'ayant jamais été branché sur ce nœud précis. Fix dans
+  `CopyCatRoundStage.tsx` : un callback ref (`bindVideo`) qui branche `srcObject` à CHAQUE montage,
+  quel que soit le nœud — remplace l'effet, qui devient alors redondant (React détache/rattache déjà
+  le callback ref si `localStream` change, via `useCallback` avec `localStream` en dépendance).
+- **Rôle transmis nulle part** (contrairement à Word Sonar/Edge Letters, qui transmettent
+  explicitement le rôle par précaution) : `poserIsInitiatorForRound(round) = round % 2 === 0` se
+  déduit identiquement des deux côtés à partir de `isInitiator` + `round` partagé, jamais négocié.
+- **Un seul message fait le travail de "lancer la manche 0" ET "manche suivante"**
+  (`copycat-advance { round }`) — gardé par la CIBLE elle-même (comparée au dernier "advancedTo"
+  déjà appliqué) plutôt que par un `id` séparé comme les autres jeux : les index de manche sont déjà
+  naturellement monotones, pas besoin d'un compteur additionnel.
+- **`copycat-hello` en one-shot, pas de renvoi périodique comme `uttt-ready`** — déviation
+  volontaire et réfléchie de la même classe de robustesse : contrairement à Ultimate Tic-Tac-Toe (la
+  toute première annonce partait automatiquement dès la connexion, sans aucun geste humain
+  intercalé), Copy Cat garde un bouton "Lancer la partie" explicite — le temps de réaction humain
+  entre "connecté" et le clic garantit déjà que l'invité·e écoute depuis longtemps, la course
+  structurelle qui a forcé le renvoi périodique sur UTTT ne s'applique pas ici.
+- **Écran de récap séparé** (contrairement à Connect Duo/Fleet Siege/Ultimate Tic-Tac-Toe) : Copy Cat
+  est fait de manches distinctes comme Doodle Duel/Edge Letters/Duo Quiz, donc caméra coupée à
+  l'arrivée sur le récap. Carte récap (`lib/copy-cat/compose-recap.ts`) : première du hub à afficher
+  de VRAIES photos plutôt que des formes géométriques — réutilise `loadImage`/`clipRoundRect` déjà
+  exportés par `lib/capture/compose-strip.ts` (chargement async d'une image depuis une data URL)
+  plutôt que de les réinventer.
+- Vérifié bout en bout : `e2e/tests/copy-cat.spec.ts` (partie complète de 4 manches, rôles
+  poseur·se/mimic alternés, deux transferts d'image par manche, notation testée, "Manche suivante"/
+  "Voir le récap" cliqué alternativement par le·la poseur·se et le·la mimic pour couvrir les deux
+  chemins, récap téléchargeable, "Rejouer" testé des deux côtés indépendamment) + suite e2e complète
+  rejouée sans régression — réussi après correction du bug de callback ref trouvé en testant.
+- **Pas encore fait** : 2 jeux du roadmap restent à construire (Reflex Match ensuite selon l'ordre
+  de priorité — voir `docs/GAMES-ROADMAP-DRAFT.json`).
+
+## Reflex Match
+Neuvième mini-jeu du hub, septième construit depuis le roadmap du workflow multi-agents (voir
+`docs/GAMES-ROADMAP-DRAFT.json`) — course de réflexes à deux, meilleur des `config.reflexMatch.rounds`
+= 7 manches (impair, même raison que Doodle Duel). Grille fixe 3x3 de neuf formes procédurales
+(`lib/reflex-match/generate-round.ts`) : huit identiques, une seule diffère (rotation, teinte, ou
+encoche ajoutée) — à repérer et taper en premier.
+- **Premier jeu du hub avec une vraie fenêtre de course dans le TEMPS à arbitrer** (contrairement à
+  Ultimate Tic-Tac-Toe, rien de temporel là-bas) : la grille doit se révéler au MÊME instant réel
+  chez les deux, sans quoi l'autorité de manche (qui mint la graine) aurait toujours une longueur
+  d'avance mécanique — elle connaît la graine avant même que le message parte sur le réseau.
+- **Horloge synchronisée réimplémentée sous protocole propre, jamais réutilisée telle quelle** :
+  `lib/realtime/clock-sync.ts`/`lib/realtime/schedule-capture.ts` (déjà prouvés pour le compte à
+  rebours 3·2·1 de la bande photo) sont câblés en dur sur `RealtimeChannel`/`RealtimeMessage`. Seule
+  la formule pure est dupliquée (`lib/reflex-match/clock-sync.ts` : `offset = s + rtt/2 - r`,
+  meilleur échantillon par RTT le plus faible), le ping/pong est réimplémenté sous les messages
+  `reflex-ping`/`reflex-pong` propres à ce jeu — même reasoning déjà appliqué à Copy Cat pour
+  `image-transfer.ts`.
+- **La référence d'horloge reste toujours l'hôte (offset 0), même si l'AUTORITÉ DE MANCHE alterne**
+  (hôte manches paires, invité·e impaires, `authorityIsInitiatorForRound`, même parité que
+  `drawerIsInitiatorForRound` de Doodle Duel) — ces deux notions sont indépendantes : qui a
+  l'autorité cette manche convertit simplement SON PROPRE horodatage local vers l'heure de
+  référence via son propre offset (0 pour l'hôte, mesuré une fois pour l'invité·e à la connexion),
+  jamais besoin d'une synchronisation bidirectionnelle.
+- **Aucun rendu anticipé, y compris pour l'autorité elle-même** : le rendu de la grille ET
+  l'acceptation des taps sont bloqués derrière le MÊME instant `revealAt` (converti via l'offset de
+  chacun·e) des deux côtés — l'autorité programme sa propre révélation exactement comme l'autre
+  côté, jamais un accès direct anticipé juste parce qu'elle a généré la graine en premier.
+- **Taper n'est JAMAIS soumis à un tour** — seule l'autorité (qui mint la graine et arbitre)
+  alterne par manche, jamais qui a le droit de taper : course libre dès la révélation, même
+  principe que la tentative de mot entier de Word Sonar ou la course sans tour d'Edge Letters. Un
+  faux départ est structurellement impossible : les cases ne sont même pas montées dans le DOM
+  avant la phase "active".
+- **L'autorité attend le délai maximal avant de conclure par défaut, jamais l'instant où SA PROPRE
+  tentative arrive** — piège explicitement identifié dans la spec, vérifié dès la conception :
+  résoudre dès qu'un seul côté a tapé transformerait une latence réseau tout à fait normale en
+  défaite injustifiée pour l'autre côté. L'arbitrage résout dès que les DEUX tentatives sont
+  connues (rien à gagner à attendre plus dans ce cas), sinon attend `config.reflexMatch.roundTimeoutMs`
+  avant de conclure avec ce qui est connu.
+- **Mort subite** : au-delà des 7 manches nominales, si les scores restent à égalité (une manche
+  nulle — personne n'a tapé à temps — compte comme une manche jouée mais aucun point), on rejoue
+  une manche de plus jusqu'à ce qu'un score strictement supérieur se dégage. Le message
+  `reflex-advance` porte un `matchOver` explicite plutôt qu'un simple `round >= config.X.rounds`
+  (comme Copy Cat/Duo Quiz) car le nombre total de manches n'est plus fixe une fois la mort subite
+  entamée.
+- **Rendu SVG plutôt que canvas** (déviation volontaire de la suggestion de la spec, qui proposait
+  un module façon `lib/frames/paint.ts`) : les cases doivent être cliquables individuellement et
+  animées (Framer Motion) — un canvas demanderait un hit-testing manuel par forme et s'anime mal,
+  un SVG se comporte comme n'importe quel élément DOM.
+- Vérifié bout en bout : `e2e/tests/reflex-match.spec.ts` (une case ratée sans effet sur la manche,
+  6 manches où les deux tapent la bonne case avec un léger décalage volontaire pour vérifier la
+  comparaison réelle de deux horodatages, une 7e et dernière manche où un seul côté tape — vérifie
+  que la résolution attend bien le délai maximal plutôt que de conclure immédiatement — jusqu'au
+  récap téléchargeable et "Rejouer" testé des deux côtés indépendamment) + suite e2e complète
+  rejouée sans régression — réussi du premier coup, deux fois de suite.
+
+## Bingo
+Huitième et dernier mini-jeu du roadmap initial du workflow multi-agents
+(`docs/GAMES-ROADMAP-DRAFT.json`) — le bingo classique 75 numéros (colonnes B-I-N-G-O), en direct à
+deux. Chaque manche, un·e seul·e donne les numéros (rôle alterné par parité, même principe que
+`drawerIsInitiatorForRound`/`callerIsInitiatorForRound` déjà établi ailleurs dans ce hub), les deux
+marquent automatiquement leur PROPRE carte 5x5 privée et réclament une ligne dès qu'elle est
+complète — jamais de tour, ni pour marquer ni pour réclamer (même principe que Word Sonar/Edge
+Letters/Reflex Match : le rôle qui alterne gouverne uniquement le rythme du tirage, jamais qui a le
+droit d'agir).
+- **Schéma d'engagement puis révélation (commit-then-reveal), premier du hub** : contrairement aux
+  autres jeux, ici le·la donneur·se de numéros pourrait silencieusement biaiser l'ordre de tirage en
+  faveur de sa propre carte — un risque de triche qu'aucun autre jeu du hub n'a (Word Sonar/Edge
+  Letters n'ont rien à biaiser, l'info cachée y est symétrique et validée localement). Fix
+  cryptographique (`lib/bingo/commit.ts`, SHA-256 via `crypto.subtle.digest`) : avant d'appeler le
+  premier numéro, le·la donneur·se engage `SHA-256(salt + séquence.join(","))` (`bingo-draw-commit`)
+  sans révéler ni le salt ni la séquence ; à la fin de la manche, iel révèle les deux
+  (`bingo-draw-reveal`) et **seul l'AUTRE côté** recalcule le hash et vérifie que le PRÉFIXE déjà
+  appelé correspond exactement à l'engagement pris (le·la donneur·se ne se revérifie pas — iel ne
+  peut pas se mentir à soi-même sur sa propre séquence). Une divergence est détectée (badge non
+  bloquant + `console.warn`), jamais corrigée rétroactivement — la manche déjà décidée reste
+  décidée, cohérent avec la limite déjà acceptée partout ailleurs dans cette architecture P2P sans
+  serveur de confiance.
+- **Fenêtre de grâce pour départager deux réclamations quasi simultanées**
+  (`config.bingo.claimGraceMs` = 400ms, mécanisme nouveau, aucun précédent exact dans le hub) : dès
+  la première réclamation valide d'une manche, un court minuteur démarre ; si la réclamation
+  opposée arrive avant qu'il n'expire, il est annulé et les deux sont comparées immédiatement ;
+  sinon il expire et tranche avec ce qui est connu. Nécessaire ici précisément parce qu'aucune
+  autorité unique ne juge une réclamation (voir plus bas) — sans cette fenêtre, la comparaison
+  pourrait juger un côté gagnant simplement parce que son message réseau est arrivé en premier,
+  jamais parce que sa ligne s'est complétée en premier dans l'ordre de tirage partagé.
+- **Aucune autorité unique ne décide qui a gagné une réclamation** — chaque côté revalide
+  indépendamment CHAQUE réclamation (la sienne ET celle de l'autre) contre son PROPRE journal de
+  numéros appelés (identique des deux côtés par construction, puisque diffusé un par un et reçu en
+  ordre sur le data channel) : `completingIndex()` (`lib/bingo/draw-order.ts`) renvoie la position
+  dans ce journal à laquelle le DERNIER numéro d'une ligne est tombé — l'index le plus bas gagne,
+  une égalité exacte est une vraie égalité déclarée (pas un "premier arrivé"), une ligne dont un
+  numéro n'a jamais été appelé est silencieusement rejetée (réclamation invalide, jamais un côté qui
+  "décide" pour l'autre).
+- **La carte ne quitte JAMAIS l'appareil de qui l'a générée** (`lib/bingo/card.ts`) — seule la ligne
+  RÉELLEMENT réclamée révèle ses numéros (`bingo-claim` porte `lineNumbers`, jamais le reste de la
+  carte), même principe que le mot secret de Word Sonar ou les cases d'une ligne d'Edge Letters :
+  aucun besoin de voir la carte complète de l'autre pour vérifier une réclamation.
+- **Bouton "Lancer la partie" explicite, déviation volontaire de la spec** (qui suggérait un
+  démarrage automatique sans aucun geste humain, façon Ultimate Tic-Tac-Toe) : l'auto-démarrage
+  d'UTTT a causé un vrai bug de course cette session (la boucle de retry `uttt-ready` s'arrêtait
+  trop tôt, voir plus haut) — rien ne justifiait de risquer de reproduire cette même classe de bug
+  ici sans bénéfice réel. Un clic humain explicite offre déjà la même marge de sécurité qu'un hello
+  one-shot (Connect Duo/Copy Cat), sans avoir besoin d'un renvoi périodique comme `uttt-ready`. Pour
+  la même raison, pas de `bingo-hello` ni de `bingo-resync` dédiés (la spec en suggérait) : le clic
+  de lancement retire le besoin du premier, et aucun autre jeu du hub n'a de reprise de connexion
+  sur mesure — tous s'appuient sur la bannière de reconnexion générique déjà fournie par
+  `useRoomConnection`, Bingo suit le même précédent plutôt que d'être une exception isolée.
+- **Un seul message unifie "lancer la manche 0" et "manche suivante"** (`bingo-advance{round}`,
+  gardé par la monotonie de `round` via `advancedToRef`, même principe que
+  `copycat-advance`/`duoquiz-round-start` déjà établi ailleurs dans ce hub) — pas de message séparé
+  comme la spec le suggérait.
+- **Marquage automatique** (`BingoCardGrid.tsx`) plutôt que manuel — garde l'expérience rapide et
+  décontractée, cohérent avec le ton du reste du hub (même choix que Word Sonar pour son tableau de
+  lettres connues).
+- **Test e2e : le vrai tirage aléatoire est bien trop lent pour un test fiable** — une simulation
+  Monte-Carlo (2000 parties, réplique exacte de l'algorithme de mélange et des 12 lignes possibles)
+  donne une médiane de ~42 tirages avant qu'UNE SEULE ligne ne se complète naturellement (~150s
+  réels à `config.bingo.callIntervalMs` = 3.5s, jusqu'à ~190s au 90e percentile) — inenvisageable
+  pour un test CI fiable, trois manches de suite qui plus est. Solution retenue : `Math.random` figé
+  côté navigateur (`page.evaluate`, AVANT tout clic "Lancer la partie" — `generateCard()`/
+  `shuffle75()` n'y touchent qu'à partir de ce moment, voir `beginRound`/`startCalling`) à une
+  constante choisie par recherche pour compléter la colonne B en exactement 5 tirages, avec le VRAI
+  algorithme de mélange de production — aucune modification ni contournement du code livré, juste
+  sa source d'aléa pendant le test. Ne PAS reproduire ce mécanisme pour un jeu où la valeur du
+  contenu généré (pas seulement son délai) importe pour le test.
+- Vérifié bout en bout : `e2e/tests/bingo.spec.ts` (victoire de l'hôte manche 0, victoire de
+  l'invité·e manche 1 — rôle de donneur·se alterné dans les deux sens —, égalité volontaire manche
+  2 via deux réclamations quasi simultanées vérifiant la fenêtre de grâce, récap téléchargeable,
+  Rejouer sans reconnexion des deux côtés) — passé 4 fois de suite (jeu sensible au timing) + suite
+  e2e complète (23 tests) rejouée sans régression.
+- **Roadmap initial du workflow multi-agents (`docs/GAMES-ROADMAP-DRAFT.json`) complété** : les 8
+  jeux candidats sont tous livrés — Connect Duo, Edge Letters, Fleet Siege, Duo Quiz, Ultimate
+  Tic-Tac-Toe, Copy Cat, Reflex Match, Bingo.

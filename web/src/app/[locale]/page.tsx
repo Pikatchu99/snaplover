@@ -4,7 +4,7 @@ import { Logo } from "@/components/landing/Logo";
 import { HeroStrips } from "@/components/landing/HeroStrips";
 import { InlineJoinField } from "@/components/landing/InlineJoinField";
 import { PackOfTheDay } from "@/components/landing/PackOfTheDay";
-import { DoodleDuelPromo } from "@/components/landing/DoodleDuelPromo";
+import { GamesHubPromo } from "@/components/landing/GamesHubPromo";
 import { Link } from "@/i18n/navigation";
 import { SITE_URL } from "@/lib/site";
 import { getDailyChallenge } from "@/lib/stickers/daily-pack";
@@ -100,6 +100,18 @@ export default async function LandingPage({ params }: LandingPageProps) {
           </div>
 
           <p className="text-xs text-[#8c8378]">{t("landing.noAccount")}</p>
+
+          {/* Renvoi vers la section "Jeux" (ancre #jeux, voir GamesHubPromo.tsx)
+              — le photobooth reste seul sujet du hero (voir CLAUDE.md "Registre
+              des jeux" : jamais une carte de jeu ici), ce lien sert seulement à
+              faire savoir dès l'arrivée que le hub existe aussi. */}
+          <a
+            href="#jeux"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-[#1c1712] underline-offset-2 hover:underline"
+          >
+            {t("landing.gamesHub.heroCta")}
+            <ArrowRight className="size-3.5" />
+          </a>
         </div>
 
         <div className="relative hidden flex-1 items-center justify-center overflow-hidden bg-[#161319] md:flex">
@@ -115,7 +127,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
 
       <PackOfTheDay packId={dailyChallenge.packId} stickerIds={dailyChallenge.stickerIds} />
 
-      <DoodleDuelPromo />
+      <GamesHubPromo />
 
       <section className="bg-[#fbf7f1] px-6 py-16 md:px-16">
         <div className="mx-auto flex max-w-5xl flex-col gap-10">

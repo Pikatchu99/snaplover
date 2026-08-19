@@ -26,8 +26,6 @@ export function DoodleCanvas({ canvasRef, strokes, interactive, onPointerDown, o
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
-    // TEMPORAIRE — diagnostic CI doodle.spec.ts, à retirer.
-    console.debug(`[doodle] repaint strokes=${strokes.length} canvas=${canvas.width}x${canvas.height}`);
     redrawStrokes(ctx, strokes, canvas.width, canvas.height);
   }, [strokes, canvasRef]);
 

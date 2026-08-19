@@ -41,6 +41,14 @@ export default defineConfig({
         "--use-fake-ui-for-media-stream",
         "--use-gl=angle",
         "--use-angle=swiftshader",
+        // Rasterise le canvas 2D côté CPU. Sans ça, sur les runners Linux
+        // (où swiftshader est réellement actif, contrairement à macOS qui
+        // ignore largement ces flags), un clearRect n'était reflété ni à
+        // l'écran ni dans getImageData : doodle.spec.ts voyait le calque du
+        // partenaire encore encré 5 s après un effacement pourtant bien reçu
+        // et bien repeint à vide côté appli — logs applicatifs strictement
+        // identiques entre un run local vert et un run CI rouge.
+        "--disable-accelerated-2d-canvas",
         "--mute-audio",
       ],
     },

@@ -8,12 +8,12 @@ import { config } from "@/lib/config";
 // vers quelle route rediriger un code collé dans le champ générique "coller
 // le lien / code" (voir InlineJoinField.tsx, qui redirigeait toujours vers
 // /r/, même pour un code de duel).
-export type RoomKind = "photo" | "duel" | "mindmatch";
+export type RoomKind = "photo" | "duel" | "word-sonar";
 
 const ROOM_KIND_PREFIX: Record<RoomKind, string> = {
   photo: "P",
   duel: "D",
-  mindmatch: "M",
+  "word-sonar": "W",
 };
 
 const ROOM_CODE_RE = /^[A-Z0-9]{4,8}$/;

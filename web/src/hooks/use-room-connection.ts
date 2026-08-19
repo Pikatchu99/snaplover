@@ -31,6 +31,7 @@ export function useRoomConnection(roomCode: string) {
   const [status, setStatus] = useState<RoomConnectionStatus>("requesting-camera");
   const [dataChannel, setDataChannel] = useState<RTCDataChannel | null>(null);
   const [isInitiator, setIsInitiator] = useState(false);
+  const [connectionType, setConnectionType] = useState<"direct" | "relay" | null>(null);
 
   const peerRef = useRef<ReturnType<typeof createPeerConnection> | null>(null);
   // Au moins une allocation TURN rejetée (creds invalides, quota fournisseur
@@ -77,7 +78,10 @@ export function useRoomConnection(roomCode: string) {
         onTurnCandidateError: () => {
           hadTurnErrorRef.current = true;
         },
-        onConnectionTypeKnown: trackConnectionType,
+        onConnectionTypeKnown: (type) => {
+          trackConnectionType(type);
+          setConnectionType(type);
+        },
       });
 
       peerRef.current = peer;
@@ -106,6 +110,7 @@ export function useRoomConnection(roomCode: string) {
           peerRef.current = null;
           setRemoteStream(null);
           setDataChannel(null);
+          setConnectionType(null);
           setStatus("waiting-for-peer");
           break;
         case "full":
@@ -136,5 +141,5 @@ export function useRoomConnection(roomCode: string) {
 
   const effectiveStatus: RoomConnectionStatus = mediaStatus === "denied" ? "camera-denied" : status;
 
-  return { localStream, remoteStream, status: effectiveStatus, dataChannel, isInitiator, retryCamera };
+  return { localStream, remoteStream, status: effectiveStatus, dataChannel, isInitiator, connectionType, retryCamera };
 }

@@ -18,7 +18,10 @@ function staticCredentials(turnUrls: string[], username: string, credential: str
 // configurés via env (voir .env.example) — aucune adresse d'infra en dur ici.
 // Voir SNAPROOM-SPEC.md §11 — jamais de secret TURN durable dans le bundle client,
 // cette fonction ne doit être appelée que côté serveur (route handler).
-export function buildIceServers(): IceServer[] {
+// `includeTurn` (voir lib/webrtc/turn-rate-limit.ts) : au-delà du quota par IP,
+// on continue de répondre avec STUN seul plutôt que de bloquer l'app — le
+// direct P2P reste possible, seul le relais (le vrai coût) est coupé.
+export function buildIceServers(includeTurn = true): IceServer[] {
   const stunUrls = (process.env.STUN_URLS ?? "")
     .split(",")
     .map((url) => url.trim())
@@ -29,6 +32,8 @@ export function buildIceServers(): IceServer[] {
   }
 
   const iceServers: IceServer[] = stunUrls.length > 0 ? [{ urls: stunUrls }] : [];
+
+  if (!includeTurn) return iceServers;
 
   const turnUrls = (process.env.TURN_URLS ?? "")
     .split(",")

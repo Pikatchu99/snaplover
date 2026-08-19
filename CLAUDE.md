@@ -525,3 +525,87 @@ oublie.
   trait en direct, bonne réponse insensible aux accents/casse, récap téléchargeable) + partie
   complète rejouée à la main plusieurs fois, carte récap inspectée à l'œil (mots, résultats, dessins
   miniatures et footer de marque tous corrects à pleine résolution).
+
+## Room codes : préfixe par type de jeu
+En préparant l'ajout d'un second jeu, un bug latent est apparu : `signaling/` range toutes les
+rooms dans une seule `Map<code, RoomEntry>`, sans aucune notion de type — un code de room photo et
+un code de duel pouvaient collisionner (le premier arrivé "possède" ce code, peu importe la route
+par laquelle il est arrivé), et le champ générique "coller le lien / code" de la landing
+(`InlineJoinField.tsx`) redirigeait toujours vers `/r/`, quel que soit le type de code collé. Fix
+choisi (voir `lib/room-code.ts`) : chaque code généré commence désormais par un caractère qui
+encode son type (`P`=photo, `D`=duel, `W`=word-sonar, table `ROOM_KIND_PREFIX`), décodé côté client
+par `roomKindFromCode()` — aucun changement du protocole signaling nécessaire (qui reste inconscient
+du concept de "type"), et aucune requête réseau pour la landing (dispatch purement local). Les
+pages de jonction dédiées (`/join`, `/duel/join`, `/word-sonar/join`) vérifient maintenant aussi
+que le code collé correspond bien au type attendu (sinon même message d'erreur générique "code
+invalide"), pas seulement son format. Compromis accepté : ce changement de format invalide tout lien
+de room partagé avant cette date — acceptable, les rooms étant déjà conçues comme éphémères
+(§"Aucune BDD" plus haut), pas destinées à être conservées en favoris.
+
+## Word Sonar
+Deuxième mini-jeu à deux (après Doodle Duel), né d'une vraie soirée jeux de l'auteur — plusieurs
+petits jeux à deux (Bingo, Tic-Tac-Toe Ultimate, "un mot en commun", "bataille navale de lettres")
+partagent la même mécanique de fond : deux pairs, un salon éphémère, un protocole réseau minimal sur
+le `dataChannel` existant. Vision produit : faire de SnapLover un "hub" de jeux rapides pour ami·es
+à distance, pas juste une cabine photo. **Un premier jeu ("Mind Match", convergence de mots) a été
+construit puis abandonné sans merger** — retour direct de l'auteur après test : ce n'était pas le
+bon mécanisme, celui vraiment joué en soirée était la bataille navale de lettres décrite ci-dessous.
+Leçon retenue : quand l'auteur délègue le choix du jeu ("choisis toi-même"), reconfirmer le
+mécanisme exact avant de construire plutôt que de deviner à partir d'une liste vague — un jeu
+entièrement fonctionnel mais hors-sujet ne vaut rien s'il ne correspond pas à l'expérience réelle
+que l'auteur avait en tête.
+- **Règles** : chacun·e choisit un mot secret d'une longueur convenue (`config.wordSonar.minLength`
+  à `maxLength`, 4 à 8, choisie par l'hôte dans la salle d'attente — voir
+  `components/word-sonar/WordSonarLobby.tsx`). Tour par tour (`config.wordSonar.turnDurationMs` par
+  tour, 30s — qui a la main possède et déclenche son propre timeout, même principe que
+  `duel.roundDurationMs`), qui a la main choisit : demander si une lettre est dans le mot de l'autre
+  (si oui, TOUTES ses positions sont révélées, pas juste une occurrence), ou tenter de deviner le
+  mot entier. Premier·ère à deviner le mot de l'autre gagne la manche ; `config.wordSonar.rounds`
+  manches (3), interrogateur·rice alterné·e à chaque manche par pure parité de l'index
+  (`askerIsInitiatorForRound` dans `hooks/use-word-sonar-session.ts`) — jamais transmis sur le
+  réseau, même principe que `drawerIsInitiatorForRound` côté Doodle Duel.
+- **Le mot secret ne quitte JAMAIS l'appareil de qui l'a choisi** : la réponse à une question
+  ("as-tu telle lettre ?") ou à une tentative est calculée localement par qui répond, à partir de
+  SON PROPRE mot — jamais transmis en clair sur le réseau. Autorité unique par question/tentative
+  (comme Doodle Duel où qui dessine juge les essais), sauf qu'ici l'autorité change de main à
+  CHAQUE question, pas seulement à chaque manche.
+- **Passage du tour déduit, pas transmis explicitement** : après toute question (résultat reçu) ou
+  tentative ratée, les deux côtés basculent `isMyTurn` de façon déterministe à partir du MÊME
+  message (`wordsonar-letter-result`/`wordsonar-guess-result` avec `correct:false`) — jamais de
+  message réseau dédié "à toi de jouer", le canal ordonné du data channel suffit.
+- **Chrono par tour, propriété du côté actif** — retour explicite de l'auteur ("on doit miser sur
+  l'expérience... on peut mettre un timer") : si qui a la main laisse s'écouler `turnDurationMs`
+  sans agir, SON PROPRE client déclenche le timeout et envoie `wordsonar-turn-timeout` (même
+  principe de propriété du chrono que `confirmStartDrawing`/`endRound` côté Doodle Duel — jamais le
+  côté qui attend qui décide que le temps est écoulé, sous peine de désynchro sur un léger décalage
+  d'horloge entre les deux navigateurs).
+- **Interface repensée sur retour explicite de l'auteur**, pas la conception initiale : la première
+  intention était un simple flux de questions/réponses en texte. Retour reçu avant implémentation
+  ("quand il demande la lettre il met ça dans la case... s'il a déjà trouvé le mot il écrit le reste
+  et fait valider") → design final : un tableau de `length` cases représentant ce qu'on sait du mot
+  de l'autre (case verrouillée dès qu'une lettre y est trouvée par une question), une grille
+  alphabet A-Z (grisée/barrée si lettre absente, vert si trouvée, désactivée une fois posée), et les
+  cases vides restent éditables à tout moment pour tenter une devinette complète — voir
+  `components/word-sonar/WordSonarRoundStage.tsx` `buildKnownBoard`/`askedLetterState`.
+- **Récap** (`lib/word-sonar/compose-recap.ts`, `components/word-sonar/WordSonarRecap.tsx`) : même
+  gabarit texte que le récap Mind Match avorté (une ligne par manche : mot trouvé + gagné/perdu),
+  score en en-tête, footer de marque, même helper `lib/share-or-download.ts`.
+- **Comparaison de mots/lettres partagée avec Doodle Duel** : `lib/text/normalize-word.ts`
+  (`normalizeWord`/`isSameWord`/`letterPositions`) extrait de `lib/doodle-duel/pick-word.ts` à cette
+  occasion — même besoin exact (casse/accents insensibles) dans les deux jeux, second appelant réel
+  qui justifie l'extraction, pas de sur-généralisation prématurée.
+- **Bulles caméra partagées avec Doodle Duel** : `components/duel/DuelFaceBubbles.tsx` généralisé en
+  `components/room/FaceBubbles.tsx` (labels "toi"/"partenaire" passés en props) à cette occasion —
+  même raisonnement que pour `normalizeWord`.
+- **Aucun prénom à saisir** (contrairement à `/create`), labels génériques "Toi"/"Partenaire" — même
+  choix de scope que Doodle Duel. La longueur du mot EST en revanche un réglage nécessaire (contrai-
+  rement à Doodle Duel/l'ancien Mind Match qui n'ont besoin d'aucune config) : choisie par l'hôte
+  dans la salle d'attente et communiquée à l'invité·e via `wordsonar-start`, jamais encodée dans
+  l'URL de room (cohérent avec le choix "aucune config à saisir pour l'invité·e" des autres jeux).
+- Vérifié bout en bout : `e2e/tests/word-sonar.spec.ts` (3 manches : élimination de lettre, lettre
+  trouvée avec position révélée, tentative directe gagnante des deux côtés, alternance de qui
+  interroge en premier par manche, récap téléchargeable) + suite e2e complète rejouée sans
+  régression.
+- **Pas encore fait** : promotion sur la landing — en attente d'un bloc "Jeux" unifié listant Doodle
+  Duel + Word Sonar plutôt que d'empiler des sections promo plein-écran par jeu (même décision prise
+  pour l'ancien Mind Match, toujours valable).

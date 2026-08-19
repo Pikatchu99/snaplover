@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
 import { Mic, MicOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -51,19 +50,21 @@ function FaceBubble({ stream, mirrored, muted, label, micToggle }: FaceBubblePro
   );
 }
 
-interface DuelFaceBubblesProps {
+interface FaceBubblesProps {
   localStream: MediaStream | null;
   remoteStream: MediaStream | null;
+  youLabel: string;
+  partnerLabel: string;
 }
 
 // Bulles rondes façon Loom, visibles pendant TOUTE la partie (pas seulement
-// la salle d'attente) — voir hooks/use-duel-session.ts. Avant ce composant,
-// la vidéo ET l'audio disparaissaient dès qu'on commençait à dessiner (plus
-// aucun <video>/<audio> monté à l'écran de manche) : retour utilisateur réel
-// après test, corrigé en gardant ces bulles montées sur tous les écrans de
-// jeu (DuelClient.tsx), pas seulement DuelLobby.
-export function DuelFaceBubbles({ localStream, remoteStream }: DuelFaceBubblesProps) {
-  const t = useTranslations("duelRound");
+// la salle d'attente) — né dans Doodle Duel (voir hooks/use-duel-session.ts) :
+// avant ce composant, la vidéo ET l'audio disparaissaient dès qu'on
+// commençait à jouer (plus aucun <video>/<audio> monté à l'écran de manche) —
+// retour utilisateur réel après test. Généralisé (labels en props, pas de
+// useTranslations interne) au second jeu qui en a eu besoin (Word Sonar) —
+// chaque jeu garde ses propres clés i18n ("duelRound"/"wordSonarRound").
+export function FaceBubbles({ localStream, remoteStream, youLabel, partnerLabel }: FaceBubblesProps) {
   const [micEnabled, setMicEnabled] = useState(true);
 
   function toggleMic() {
@@ -78,10 +79,10 @@ export function DuelFaceBubbles({ localStream, remoteStream }: DuelFaceBubblesPr
         stream={localStream}
         mirrored
         muted
-        label={t("you")}
+        label={youLabel}
         micToggle={{ enabled: micEnabled, onToggle: toggleMic }}
       />
-      <FaceBubble stream={remoteStream} label={t("partner")} />
+      <FaceBubble stream={remoteStream} label={partnerLabel} />
     </div>
   );
 }

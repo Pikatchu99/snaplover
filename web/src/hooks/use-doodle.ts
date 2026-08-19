@@ -52,6 +52,8 @@ export function useDoodle({ dataChannel }: UseDoodleOptions) {
 
     function handleMessage(event: MessageEvent) {
       const message = JSON.parse(event.data as string) as RealtimeMessage;
+      // TEMPORAIRE — diagnostic CI doodle.spec.ts, à retirer.
+      if (typeof message.t === "string" && message.t.startsWith("doodle")) console.debug(`[doodle] recv ${message.t}`);
       if (message.t === "doodle-points") {
         setPeerStrokes((prev) => {
           const existing = prev.find((stroke) => stroke.id === message.strokeId);

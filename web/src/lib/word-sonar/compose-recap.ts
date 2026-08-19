@@ -1,38 +1,27 @@
-import type { WordSonarRoundResult } from "@/types/word-sonar";
+import type { WordSonarResult } from "@/types/word-sonar";
 
 // Layout fixe (pas de config.ts : purement visuel, jamais retouché en dehors
-// d'une passe design) — une ligne par manche, même esprit que
-// lib/mindmatch/compose-recap.ts (pas de dessin à composer, juste du texte).
+// d'une passe design) — une seule carte (partie unique, pas de manches) :
+// résultat + les deux mots + footer de marque.
 const WIDTH = 480;
+const HEIGHT = 320;
 const MARGIN = 40;
-const HEADER_HEIGHT = 90;
-const ROW_HEIGHT = 72;
-const FOOTER_HEIGHT = 60;
-const ROW_RADIUS = 16;
 
 interface ComposeRecapOptions {
-  scoreText: string;
+  outcomeText: string;
+  myWordLabel: string;
+  peerWordLabel: string;
   footerText: string;
-  wonLabel: string;
-  lostLabel: string;
 }
 
-function roundRectPath(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + w, y, x + w, y + h, r);
-  ctx.arcTo(x + w, y + h, x, y + h, r);
-  ctx.arcTo(x, y + h, x, y, r);
-  ctx.arcTo(x, y, x + w, y, r);
-  ctx.closePath();
-}
-
-// Composite la carte récap d'une partie Word Sonar : score + une ligne par
-// manche (mot trouvé + qui a gagné) + footer de marque.
-export async function composeWordSonarRecap(rounds: WordSonarRoundResult[], options: ComposeRecapOptions): Promise<string> {
+// Composite la carte récap d'une partie Word Sonar : résultat (gagné/perdu/
+// match nul), les deux mots révélés, footer de marque — même esprit visuel
+// que les autres jeux (lib/doodle-duel/compose-recap.ts), mais une seule
+// carte puisqu'il n'y a plus de manches.
+export async function composeWordSonarRecap(result: WordSonarResult, options: ComposeRecapOptions): Promise<string> {
   const canvas = document.createElement("canvas");
   canvas.width = WIDTH;
-  canvas.height = HEADER_HEIGHT + rounds.length * (ROW_HEIGHT + 16) + FOOTER_HEIGHT;
+  canvas.height = HEIGHT;
 
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("2D canvas context unavailable");
@@ -40,39 +29,28 @@ export async function composeWordSonarRecap(rounds: WordSonarRoundResult[], opti
   ctx.fillStyle = "#fbf7f1";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+  ctx.textAlign = "center";
+  ctx.fillStyle = result.outcome === "won" ? "#1f9d55" : "#1c1712";
+  ctx.font = "800 24px system-ui, sans-serif";
+  ctx.fillText(options.outcomeText, canvas.width / 2, 64);
+
+  ctx.fillStyle = "#8c8378";
+  ctx.font = "500 14px system-ui, sans-serif";
+  ctx.fillText(options.myWordLabel, canvas.width / 2, 130);
   ctx.fillStyle = "#1c1712";
-  ctx.textAlign = "center";
-  ctx.font = "800 26px system-ui, sans-serif";
-  ctx.fillText(options.scoreText, canvas.width / 2, 52);
+  ctx.font = "700 28px system-ui, sans-serif";
+  ctx.fillText(result.myWord, canvas.width / 2, 162);
 
-  let y = HEADER_HEIGHT;
-  for (const round of rounds) {
-    const x = MARGIN;
-    const rowWidth = canvas.width - MARGIN * 2;
+  ctx.fillStyle = "#8c8378";
+  ctx.font = "500 14px system-ui, sans-serif";
+  ctx.fillText(options.peerWordLabel, canvas.width / 2, 216);
+  ctx.fillStyle = "#1c1712";
+  ctx.font = "700 28px system-ui, sans-serif";
+  ctx.fillText(result.peerWord ?? "…", canvas.width / 2, 248);
 
-    ctx.save();
-    roundRectPath(ctx, x, y, rowWidth, ROW_HEIGHT, ROW_RADIUS);
-    ctx.clip();
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(x, y, rowWidth, ROW_HEIGHT);
-    ctx.restore();
-
-    ctx.textAlign = "left";
-    ctx.fillStyle = "#1c1712";
-    ctx.font = "700 22px system-ui, sans-serif";
-    ctx.fillText(round.word, x + 24, y + 32);
-
-    ctx.fillStyle = round.iWon ? "#1f9d55" : "#8c8378";
-    ctx.font = "500 14px system-ui, sans-serif";
-    ctx.fillText(round.iWon ? options.wonLabel : options.lostLabel, x + 24, y + 54);
-
-    y += ROW_HEIGHT + 16;
-  }
-
-  ctx.textAlign = "center";
   ctx.fillStyle = "#8c8378";
   ctx.font = "600 13px system-ui, sans-serif";
-  ctx.fillText(options.footerText, canvas.width / 2, canvas.height - FOOTER_HEIGHT / 2);
+  ctx.fillText(options.footerText, canvas.width / 2, canvas.height - MARGIN / 2);
 
   return canvas.toDataURL("image/png");
 }

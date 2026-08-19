@@ -1,0 +1,155 @@
+name: CI
+
+# Barrière de régression sur chaque PR (et sur main après merge) : lint,
+# typecheck, build de prod, puis la suite Playwright complète. Jusqu'ici,
+# aucun workflow ne rejouait les tests — deploy-preview.yml prouve seulement
+# que l'image Docker build, jamais que l'appli fonctionne encore, et la suite
+# e2e n'était relancée qu'à la main en local.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Un nouveau push sur la même PR annule la run précédente (elle porte sur un
+# commit déjà obsolète). Sur main, on ne s'annule jamais : chaque commit
+# mergé doit avoir son propre verdict.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  # Node 22 = même major que l'image de prod (voir web/Dockerfile,
+  # node:22-alpine) — la CI ne doit jamais valider sur un runtime que la prod
+  # n'utilise pas.
+  NODE_VERSION: "22"
+  # Ce repo n'a pas de package.json à la racine (workspace pnpm décrit
+  # uniquement par pnpm-workspace.yaml), donc pnpm/action-setup ne peut pas
+  # lire un champ `packageManager` — la version doit être explicite ici.
+  PNPM_VERSION: "11.5.0"
+
+jobs:
+  quality:
+    name: Lint & typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Lint (web)
+        run: pnpm --filter web run lint
+
+      - name: Typecheck (web)
+        run: pnpm --filter web run typecheck
+
+      - name: Typecheck (signaling)
+        run: pnpm --filter signaling run typecheck
+
+  build:
+    name: Production build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # `next build` typecheck plus strictement que `tsc --noEmit` seul : il
+      # régénère d'abord les types de routes de .next/types, que le job
+      # quality ne voit jamais sur un checkout vierge. Un vrai échec de ce
+      # genre est déjà arrivé (voir 938bf5d, reflex-match). deploy-preview.yml
+      # build aussi l'image, mais seulement sur certains chemins et jamais sur
+      # une PR de fork (pas d'accès aux secrets) — ce job, lui, tourne
+      # toujours.
+      #
+      # Aucune NEXT_PUBLIC_* fournie ici volontairement : ce job vérifie que
+      # le code compile, il ne produit aucune image déployable (celles-ci sont
+      # figées dans le bundle au build, voir web/Dockerfile).
+      - name: Build (web)
+        run: pnpm --filter web run build
+
+      - name: Build (signaling)
+        run: pnpm --filter signaling run build
+
+  e2e:
+    name: E2E (shard ${{ matrix.shard }}/${{ strategy.job-total }})
+    runs-on: ubuntu-latest
+    # La suite fait de la vraie synchro WebRTC temps réel avec `workers: 1`
+    # (voir e2e/playwright.config.ts) : elle est longue par construction, pas
+    # parce qu'elle traîne. On la découpe sur 2 runners — chacun démarre ses
+    # propres serveurs web+signaling, donc `workers: 1` reste respecté à
+    # l'intérieur de chaque shard. Pas plus de 2 : chaque shard repaie
+    # l'install pnpm + le téléchargement de Chromium (~2-3 min), donc au-delà
+    # l'overhead mange le gain sur une suite qui tourne en quelques minutes.
+    # fail-fast: false — un shard rouge ne doit pas annuler l'autre, sinon on
+    # ne sait pas si la panne est locale à quelques tests ou générale.
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # --with-deps installe aussi les libs système dont Chromium a besoin sur
+      # un runner nu (fontconfig, libnss3...). Chromium seul : la suite ne
+      # cible aucun autre navigateur.
+      - name: Install Chromium (Playwright)
+        run: pnpm --filter e2e exec playwright install --with-deps chromium
+
+      # STUN_URLS suit la règle du repo (voir CLAUDE.md "Aucune valeur d'infra
+      # en dur") : jamais écrite en dur ici. Si la variable de repo n'est pas
+      # définie, playwright.config.ts avertit et retombe sur un STUN public —
+      # sans conséquence ici, les deux pairs étant sur le même localhost.
+      - name: Run Playwright
+        working-directory: e2e
+        env:
+          STUN_URLS: ${{ vars.E2E_STUN_URLS }}
+        run: pnpm exec playwright test --shard=${{ matrix.shard }}/${{ strategy.job-total }}
+
+      # Les traces ne sont produites qu'en cas d'échec
+      # (`trace: "retain-on-failure"`) — elles rejouent la session pas à pas,
+      # de loin le moyen le plus rapide de diagnostiquer un échec de synchro
+      # temps réel qu'on ne reproduit pas en local.
+      - name: Upload traces on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-trace-shard-${{ matrix.shard }}
+          path: e2e/test-results/
+          # Un shard peut échouer avant d'avoir produit la moindre trace (ex.
+          # un serveur qui ne démarre pas) — ne pas transformer ça en second
+          # échec qui masquerait le vrai.
+          if-no-files-found: ignore
+          retention-days: 7

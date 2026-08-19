@@ -1,145 +1,108 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { isSameWord, letterPositions } from "@/lib/text/normalize-word";
+import { isSameWord } from "@/lib/text/normalize-word";
 import { config } from "@/lib/config";
 import type { WordSonarMessage } from "@/types/word-sonar-realtime";
-import type { WordSonarEvent, WordSonarPhase, WordSonarRoundResult } from "@/types/word-sonar";
+import type { WordSonarPhase, WordSonarResult } from "@/types/word-sonar";
 
 interface UseWordSonarSessionOptions {
   dataChannel: RTCDataChannel | null;
   isInitiator: boolean;
+  /** Voir hooks/use-room-connection.ts — null tant que non résolu. */
+  connectionType: "direct" | "relay" | null;
 }
 
-// Orchestration d'une partie Word Sonar : `config.wordSonar.rounds` manches,
-// chacune consistant à deviner le mot secret de l'autre en alternant
-// question ("as-tu telle lettre ?", position(s) révélée(s) si oui) ou
-// tentative du mot entier. Le mot secret de chacun·e ne quitte JAMAIS son
-// appareil : la réponse à une question est calculée localement par qui
-// répond, à partir de SON PROPRE mot (jamais transmis en clair) — même
-// principe d'autorité unique que Doodle Duel (qui dessine juge les essais),
-// sauf qu'ici l'autorité change de main à CHAQUE question/tentative, pas
-// seulement à chaque manche.
+// Orchestration d'une partie Word Sonar : chacun·e choisit un mot secret,
+// puis la vraie conversation ("as-tu telle lettre ? à quelle position ?")
+// se passe À L'ORAL entre les deux joueur·euses (caméra/micro déjà branchés
+// via FaceBubbles.tsx) — l'app n'a aucun protocole pour ça. Son seul rôle
+// pendant la partie : laisser chacun·e tenter le mot entier à tout moment
+// (jamais soumis à un tour, voir guessWord ci-dessous) et, une fois la
+// partie terminée, révéler les deux mots des deux côtés.
 //
 // Comme le reste de ce projet : le listener réseau est monté une seule fois
 // (effet à deps [dataChannel]) et ne doit jamais lire une variable de state
 // fermée par sa closure au montage — tout ce qu'il lit passe par une ref
-// tenue à jour par un effet dédié (ou directement mutée pour les refs
-// sensibles au timing, comme `roundStartAtRef`/`roundEndedRef` dans
-// use-duel-session.ts).
-export function useWordSonarSession({ dataChannel, isInitiator }: UseWordSonarSessionOptions) {
+// tenue à jour par un effet dédié.
+export function useWordSonarSession({ dataChannel, isInitiator, connectionType }: UseWordSonarSessionOptions) {
   const [hasStarted, setHasStarted] = useState(false);
   const [phase, setPhase] = useState<WordSonarPhase>("lobby");
-  const [roundIndex, setRoundIndex] = useState(0);
+  // Incrémenté à chaque nouvelle partie (voir resetForNewGame) — utilisé
+  // comme clé de remontage de WordSonarRoundStage (WordSonarClient.tsx) pour
+  // repartir d'un état local UI vierge (cases de tentative) après "Rejouer".
+  const [gameId, setGameId] = useState(0);
   const [length, setLength] = useState<number>(config.wordSonar.defaultLength);
   const [myWord, setMyWord] = useState<string | null>(null);
   const [myWordReady, setMyWordReady] = useState(false);
   const [peerWordReady, setPeerWordReady] = useState(false);
-  const [isMyTurn, setIsMyTurn] = useState(false);
   const [awaitingResult, setAwaitingResult] = useState(false);
-  const [turnRemainingMs, setTurnRemainingMs] = useState<number>(config.wordSonar.turnDurationMs);
-  const [events, setEvents] = useState<WordSonarEvent[]>([]);
-  const [rounds, setRounds] = useState<WordSonarRoundResult[]>([]);
-  const [lastResult, setLastResult] = useState<WordSonarRoundResult | null>(null);
+  const [gameRemainingMs, setGameRemainingMs] = useState<number>(config.wordSonar.gameDurationMs);
+  const [result, setResult] = useState<WordSonarResult | null>(null);
+  // Ce que je sais de l'avancée de mon·ma partenaire sur MON mot — jamais
+  // les lettres, seulement quelles cases iel a remplies (voir
+  // types/word-sonar-realtime.ts "wordsonar-progress").
+  const [peerProgress, setPeerProgress] = useState<boolean[]>([]);
 
-  const roundIndexRef = useRef(0);
   const lengthRef = useRef<number>(config.wordSonar.defaultLength);
   const myWordRef = useRef<string | null>(null);
   const myWordReadyRef = useRef(false);
   const peerWordReadyRef = useRef(false);
-  const isMyTurnRef = useRef(false);
   const awaitingResultRef = useRef(false);
-  const turnsRef = useRef(0);
-  const turnDeadlineRef = useRef(0);
-  const turnEndedRef = useRef(true);
-  // Tentatives de mot entier déjà essayées cette manche — une tentative de
-  // mot n'est PAS soumise au tour (voir plus bas), donc sans cette garde une
-  // même frappe complète pourrait se re-soumettre en boucle pendant que la
-  // case est éditée lettre par lettre autour d'une valeur déjà tentée.
+  const connectionTypeRef = useRef(connectionType);
   const triedWordsRef = useRef<Set<string>>(new Set());
-  // Garde contre le double-avancement après une révélation — même bug de
-  // classe déjà rencontré et corrigé côté Doodle Duel/Mind Match (voir
-  // types/word-sonar-realtime.ts "wordsonar-advance").
-  const advancedRef = useRef(false);
+  const gameDeadlineRef = useRef(0);
+  // Garde unique contre toute double-résolution de fin de partie (victoire
+  // ET timeout pourraient en théorie se chevaucher de quelques ms) — une
+  // fois vraie, plus aucun message de fin n'est traité une seconde fois.
+  const gameEndedRef = useRef(false);
 
-  useEffect(() => {
-    roundIndexRef.current = roundIndex;
-  }, [roundIndex]);
   useEffect(() => {
     lengthRef.current = length;
   }, [length]);
-
-  const totalRounds = config.wordSonar.rounds;
-  const isLastRound = roundIndex >= totalRounds - 1;
+  useEffect(() => {
+    connectionTypeRef.current = connectionType;
+  }, [connectionType]);
 
   function send(message: WordSonarMessage) {
     if (dataChannel?.readyState === "open") dataChannel.send(JSON.stringify(message));
   }
 
-  function pushEvent(event: WordSonarEvent) {
-    turnsRef.current += 1;
-    setEvents((prev) => [...prev, event]);
-  }
-
-  // Qui pose la première question de chaque manche — pure fonction de
-  // l'index, jamais transmise : les deux côtés la déduisent identiquement
-  // (même principe que `drawerIsInitiatorForRound` côté Doodle Duel).
-  const askerIsInitiatorForRound = (index: number) => index % 2 === 0;
-
-  function tickTurnTimer() {
-    const remain = turnDeadlineRef.current - Date.now();
-    setTurnRemainingMs(Math.max(0, remain));
+  // Chrono global de partie — actif UNIQUEMENT sur une connexion relayée
+  // (voir CLAUDE.md "Word Sonar" : borne le coût du relais TURN, ne rythme
+  // pas la partie elle-même, qui se joue à l'oral). Les deux côtés tick
+  // localement à partir du même instant logique (l'entrée en phase
+  // "playing", quasi simultanée des deux côtés), mais seul l'hôte déclare
+  // le timeout — jamais les deux, pour éviter toute course sur un léger
+  // décalage d'horloge entre les deux navigateurs.
+  function tickGameClock() {
+    if (gameEndedRef.current) return;
+    const remain = gameDeadlineRef.current - Date.now();
+    setGameRemainingMs(Math.max(0, remain));
     if (remain <= 0) {
-      if (isMyTurnRef.current && !turnEndedRef.current) {
-        turnEndedRef.current = true;
-        handleMyTurnTimeout();
-      }
+      if (isInitiator) declareTimeout();
       return;
     }
-    requestAnimationFrame(tickTurnTimer);
+    requestAnimationFrame(tickGameClock);
   }
 
-  function startTurnTimer() {
-    turnEndedRef.current = false;
-    turnDeadlineRef.current = Date.now() + config.wordSonar.turnDurationMs;
-    setTurnRemainingMs(config.wordSonar.turnDurationMs);
-    tickTurnTimer();
-  }
-
-  function flipTurnToMe() {
-    isMyTurnRef.current = true;
-    setIsMyTurn(true);
-    startTurnTimer();
-  }
-
-  function flipTurnToPeer() {
-    isMyTurnRef.current = false;
-    setIsMyTurn(false);
-    startTurnTimer();
+  function declareTimeout() {
+    if (gameEndedRef.current) return;
+    gameEndedRef.current = true;
+    send({ t: "wordsonar-timeout" });
+    send({ t: "wordsonar-reveal", word: myWordRef.current ?? "" });
+    setResult({ outcome: "draw", myWord: myWordRef.current ?? "", peerWord: null });
+    setPhase("ended");
   }
 
   function maybeStartPlaying() {
     if (!myWordReadyRef.current || !peerWordReadyRef.current) return;
-    const iAskFirst = askerIsInitiatorForRound(roundIndexRef.current) === isInitiator;
-    isMyTurnRef.current = iAskFirst;
-    setIsMyTurn(iAskFirst);
-    startTurnTimer();
     setPhase("playing");
-  }
-
-  function finalizeRound(iWon: boolean, word: string) {
-    turnEndedRef.current = true;
-    advancedRef.current = false;
-    const result: WordSonarRoundResult = { round: roundIndexRef.current, iWon, word, turns: turnsRef.current };
-    setLastResult(result);
-    setRounds((prev) => [...prev, result]);
-    setPhase("reveal");
-  }
-
-  function handleMyTurnTimeout() {
-    pushEvent({ askerIsMe: true, kind: "skip" });
-    send({ t: "wordsonar-turn-timeout" });
-    flipTurnToPeer();
+    if (connectionTypeRef.current === "relay") {
+      gameDeadlineRef.current = Date.now() + config.wordSonar.gameDurationMs;
+      setGameRemainingMs(config.wordSonar.gameDurationMs);
+      tickGameClock();
+    }
   }
 
   useEffect(() => {
@@ -152,44 +115,41 @@ export function useWordSonarSession({ dataChannel, isInitiator }: UseWordSonarSe
       if (message.t === "wordsonar-start") {
         lengthRef.current = message.length;
         setLength(message.length);
-        roundIndexRef.current = 0;
-        setRoundIndex(0);
-        resetForNewRound();
+        resetForNewGame();
         setPhase("picking");
       } else if (message.t === "wordsonar-word-ready") {
         peerWordReadyRef.current = true;
         setPeerWordReady(true);
         maybeStartPlaying();
-      } else if (message.t === "wordsonar-ask-letter") {
-        // Je réponds : calculé à partir de MON mot, jamais transmis en clair.
-        const positions = letterPositions(myWordRef.current ?? "", message.letter);
-        pushEvent({ askerIsMe: false, kind: "letter", letter: message.letter, positions });
-        send({ t: "wordsonar-letter-result", letter: message.letter, positions });
-        flipTurnToMe();
-      } else if (message.t === "wordsonar-letter-result") {
-        pushEvent({ askerIsMe: true, kind: "letter", letter: message.letter, positions: message.positions });
-        awaitingResultRef.current = false;
-        setAwaitingResult(false);
-        flipTurnToPeer();
       } else if (message.t === "wordsonar-guess-word") {
-        // Une tentative de mot entier n'est jamais soumise au tour (voir
-        // guessWord ci-dessous) : ni la réponse (ici) ni l'échec (branche
-        // "wordsonar-guess-result") ne font passer le tour — seul un
-        // "as-tu la lettre X ?" fait alterner qui interroge.
+        if (gameEndedRef.current) return;
+        // Je réponds : calculé à partir de MON mot, jamais transmis en clair.
         const correct = isSameWord(message.word, myWordRef.current ?? "");
-        pushEvent({ askerIsMe: false, kind: "guess", word: message.word, correct });
         send({ t: "wordsonar-guess-result", word: message.word, correct });
-        if (correct) finalizeRound(false, myWordRef.current ?? "");
+        if (correct) {
+          gameEndedRef.current = true;
+          setResult({ outcome: "lost", myWord: myWordRef.current ?? "", peerWord: null });
+          setPhase("ended");
+        }
       } else if (message.t === "wordsonar-guess-result") {
-        pushEvent({ askerIsMe: true, kind: "guess", word: message.word, correct: message.correct });
         awaitingResultRef.current = false;
         setAwaitingResult(false);
-        if (message.correct) finalizeRound(true, message.word);
-      } else if (message.t === "wordsonar-turn-timeout") {
-        pushEvent({ askerIsMe: false, kind: "skip" });
-        flipTurnToMe();
-      } else if (message.t === "wordsonar-advance") {
-        if (message.round === roundIndexRef.current) applyAdvance();
+        if (gameEndedRef.current) return;
+        if (message.correct) {
+          gameEndedRef.current = true;
+          send({ t: "wordsonar-reveal", word: myWordRef.current ?? "" });
+          setResult({ outcome: "won", myWord: myWordRef.current ?? "", peerWord: message.word });
+          setPhase("ended");
+        }
+      } else if (message.t === "wordsonar-reveal") {
+        // Complète la révélation côté perdant·e (ou des deux côtés en cas de
+        // match nul) — indépendant de gameEndedRef, c'est justement le
+        // message qui suit une fin de partie déjà déclarée localement.
+        setResult((prev) => (prev ? { ...prev, peerWord: message.word } : prev));
+      } else if (message.t === "wordsonar-timeout") {
+        declareTimeout();
+      } else if (message.t === "wordsonar-progress") {
+        setPeerProgress(message.filled);
       }
     }
 
@@ -198,42 +158,30 @@ export function useWordSonarSession({ dataChannel, isInitiator }: UseWordSonarSe
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataChannel]);
 
-  function resetForNewRound() {
+  function resetForNewGame() {
     myWordRef.current = null;
     setMyWord(null);
     myWordReadyRef.current = false;
     setMyWordReady(false);
     peerWordReadyRef.current = false;
     setPeerWordReady(false);
-    setEvents([]);
-    turnsRef.current = 0;
-    turnEndedRef.current = true;
+    awaitingResultRef.current = false;
+    setAwaitingResult(false);
     triedWordsRef.current = new Set();
-  }
-
-  function applyAdvance() {
-    if (advancedRef.current) return;
-    advancedRef.current = true;
-
-    if (roundIndexRef.current >= totalRounds - 1) {
-      setPhase("recap");
-      return;
-    }
-    roundIndexRef.current += 1;
-    setRoundIndex(roundIndexRef.current);
-    resetForNewRound();
-    setPhase("picking");
+    gameEndedRef.current = false;
+    setResult(null);
+    setGameRemainingMs(config.wordSonar.gameDurationMs);
+    setPeerProgress([]);
+    setGameId((id) => id + 1);
   }
 
   // Lancement (hôte uniquement, voir WordSonarLobby.tsx) — communique la
-  // longueur de mot choisie, jamais rechangée en cours de partie.
+  // longueur de mot choisie.
   function launch(chosenLength: number) {
     setHasStarted(true);
     lengthRef.current = chosenLength;
     setLength(chosenLength);
-    roundIndexRef.current = 0;
-    setRoundIndex(0);
-    resetForNewRound();
+    resetForNewGame();
     send({ t: "wordsonar-start", length: chosenLength });
     setPhase("picking");
   }
@@ -249,24 +197,15 @@ export function useWordSonarSession({ dataChannel, isInitiator }: UseWordSonarSe
     maybeStartPlaying();
   }
 
-  function askLetter(letter: string) {
-    if (!isMyTurnRef.current || awaitingResultRef.current) return;
-    const normalized = letter.trim().toUpperCase();
-    if (!normalized) return;
-    awaitingResultRef.current = true;
-    setAwaitingResult(true);
-    send({ t: "wordsonar-ask-letter", letter: normalized });
-  }
-
-  // Contrairement à askLetter, une tentative de mot entier n'est PAS soumise
-  // au tour — retour utilisateur réel après test : quelqu'un ayant déjà
-  // déduit le mot devait attendre que l'autre joue avant de pouvoir
-  // soumettre sa tentative, alors qu'en vrai on "lâche la réponse" dès qu'on
-  // la connaît, sans attendre son tour officiel. Seul `awaitingResult` (un
-  // aller-retour réseau à la fois) et `triedWordsRef` (jamais retenter deux
-  // fois le même mot dans la même manche) protègent cette action.
+  // Contrairement à un jeu à tour comme Doodle Duel, une tentative de mot
+  // entier n'attend JAMAIS de tour — retour utilisateur réel après test :
+  // quelqu'un ayant déjà déduit le mot (à l'oral) devait attendre le tour de
+  // l'autre avant de pouvoir valider sa réponse, alors qu'en vrai on "lâche
+  // la réponse" dès qu'on la connaît. Seuls `awaitingResult` (un aller-
+  // retour réseau à la fois) et `triedWordsRef` (jamais retenter deux fois
+  // le même mot) protègent cette action.
   function guessWord(word: string) {
-    if (awaitingResultRef.current) return;
+    if (gameEndedRef.current || awaitingResultRef.current) return;
     const trimmed = word.trim().toUpperCase();
     if (trimmed.length !== lengthRef.current || triedWordsRef.current.has(trimmed)) return;
     triedWordsRef.current.add(trimmed);
@@ -275,45 +214,41 @@ export function useWordSonarSession({ dataChannel, isInitiator }: UseWordSonarSe
     send({ t: "wordsonar-guess-word", word: trimmed });
   }
 
-  function continueAfterReveal() {
-    send({ t: "wordsonar-advance", round: roundIndexRef.current });
-    applyAdvance();
+  // Diffuse quelles cases de MON carnet de notes sont remplies (jamais les
+  // lettres) — retour utilisateur : "chaque joueur doit savoir où en est
+  // son adversaire sur son mot", pour que le remplissage du carnet de
+  // l'autre soit visible en direct, comme un indicateur de progression.
+  function sendProgress(filled: boolean[]) {
+    send({ t: "wordsonar-progress", filled });
   }
 
   // "Rejouer" — repart pour une partie fraîche sur la MÊME connexion, sans
   // recharger la page ni renégocier WebRTC (même convention que les autres
-  // jeux). Repasse par "lobby" (pas directement "picking") : la longueur du
-  // mot redevient un choix de l'hôte, comme au tout premier lancement.
+  // jeux). Repasse par "lobby" : la longueur du mot redevient un choix de
+  // l'hôte, comme au tout premier lancement.
   function replay() {
-    roundIndexRef.current = 0;
-    setRoundIndex(0);
-    resetForNewRound();
-    setRounds([]);
-    setLastResult(null);
+    resetForNewGame();
     setPhase("lobby");
   }
 
   return {
     hasStarted,
     phase,
-    round: roundIndex,
-    totalRounds,
-    isLastRound,
+    gameId,
     length,
     myWord,
     myWordReady,
     peerWordReady,
-    isMyTurn,
     awaitingResult,
-    turnRemainingMs,
-    events,
-    rounds,
-    lastResult,
+    /** Le chrono n'a de sens que sur une connexion relayée — voir uiNotes. */
+    isRelayTimed: connectionType === "relay",
+    gameRemainingMs,
+    result,
+    peerProgress,
     launch,
     submitWord,
-    askLetter,
     guessWord,
-    continueAfterReveal,
+    sendProgress,
     replay,
   };
 }

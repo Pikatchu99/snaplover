@@ -35,8 +35,16 @@ export function useDoodle({ dataChannel }: UseDoodleOptions) {
   const pendingPointsRef = useRef<DoodlePoint[]>([]);
   const rafRef = useRef<number | null>(null);
 
+  // Jamais d'échec silencieux (voir CLAUDE.md) : un message perdu ici laisse
+  // les deux calques durablement désynchronisés — typiquement "Effacer" qui
+  // vide le calque local sans jamais atteindre le partenaire, sans que rien
+  // ne le signale.
   function send(message: RealtimeMessage) {
-    if (dataChannel?.readyState === "open") dataChannel.send(JSON.stringify(message));
+    if (dataChannel?.readyState !== "open") {
+      console.warn(`[doodle] message "${message.t}" non envoyé — data channel ${dataChannel?.readyState ?? "absent"}`);
+      return;
+    }
+    dataChannel.send(JSON.stringify(message));
   }
 
   useEffect(() => {

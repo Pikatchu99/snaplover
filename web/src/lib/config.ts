@@ -67,17 +67,20 @@ export const config = {
     roundDurationMs: 60_000,
   },
   wordSonar: {
-    rounds: 3,
     /** Longueur de mot proposée par défaut à l'hôte (voir CLAUDE.md "Word
      * Sonar") — bornes larges pour rester jouable en français (min. 4,
      * max. 8, au-delà l'alphabet 26 lettres devient dur à mémoriser). */
     defaultLength: 6,
     minLength: 4,
     maxLength: 8,
-    /** Chrono par tour — qui a la main possède et déclenche son propre
-     * timeout (même principe que `duel.roundDurationMs`), passe le tour si
-     * personne n'agit à temps. */
-    turnDurationMs: 30_000,
+    /** Partie unique du début à la fin (pas de manches) — chrono global
+     * appliqué UNIQUEMENT quand la connexion passe par le relais TURN (voir
+     * CLAUDE.md "Word Sonar" — le vrai jeu se joue à l'oral entre les deux
+     * joueur·euses, ce chrono existe pour borner le coût du relais, pas pour
+     * rythmer la partie). Match nul si personne n'a deviné à temps. */
+    gameDurationMs: 5 * 60_000,
+    /** Sous ce seuil restant, l'affichage du chrono passe en rouge. */
+    gameClockWarningMs: 60_000,
   },
   edgeLetters: {
     /** Nombre de manches — toujours jouées jusqu'au bout même si le score
@@ -179,5 +182,17 @@ export const config = {
      * pour tout le monde au MVP ; à rendre configurable si trop court/long
      * selon les stickers une fois testé en usage réel. */
     revealMs: 4000,
+  },
+  turnRateLimit: {
+    /** Limite l'émission de creds TURN par IP — le vrai point de contrôle du
+     * coût de relais (voir CLAUDE.md), s'applique à TOUTE room (photo +
+     * chaque mini-jeu), pas seulement à Word Sonar. Au-delà, /api/turn-
+     * credentials continue de répondre (jamais un blocage total de l'app)
+     * mais sans entrée TURN — le direct P2P reste possible, seul le relais
+     * est coupé. Fenêtre glissante en mémoire (pas de BDD), remise à zéro à
+     * chaque redéploiement — acceptable, même philosophie que les rooms
+     * éphémères de signaling/. */
+    maxPerWindow: 5,
+    windowMs: 60 * 60_000,
   },
 } as const;

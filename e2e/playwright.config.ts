@@ -41,6 +41,14 @@ export default defineConfig({
         "--use-fake-ui-for-media-stream",
         "--use-gl=angle",
         "--use-angle=swiftshader",
+        // Rasterise le canvas 2D côté CPU. Sans ça, sur les runners Linux
+        // (où swiftshader est réellement actif, contrairement à macOS qui
+        // ignore largement ces flags), un clearRect n'était reflété ni à
+        // l'écran ni dans getImageData : doodle.spec.ts voyait le calque du
+        // partenaire encore encré 5 s après un effacement pourtant bien reçu
+        // et bien repeint à vide côté appli — logs applicatifs strictement
+        // identiques entre un run local vert et un run CI rouge.
+        "--disable-accelerated-2d-canvas",
         "--mute-audio",
       ],
     },
@@ -52,7 +60,10 @@ export default defineConfig({
       port: SIGNALING_PORT,
       env: { PORT: String(SIGNALING_PORT) },
       reuseExistingServer: false,
-      timeout: 20_000,
+      // Un runner GitHub part d'un cache vide et a bien moins de CPU qu'une
+      // machine de dev : ces délais valent pour un démarrage à froid, pas
+      // pour la lenteur d'un serveur en bonne santé.
+      timeout: process.env.CI ? 90_000 : 20_000,
     },
     {
       command: `pnpm --filter web exec next dev --port ${WEB_PORT}`,
@@ -69,7 +80,10 @@ export default defineConfig({
         STUN_URLS: STUN_URLS ?? "stun:stun.l.google.com:19302",
       },
       reuseExistingServer: false,
-      timeout: 30_000,
+      // Idem, en pire : cette route dynamique doit finir de compiler avant
+      // que Playwright ne considère le serveur prêt (voir le commentaire
+      // `url:` ci-dessus), et Turbopack compile à froid sur un runner.
+      timeout: process.env.CI ? 180_000 : 30_000,
     },
   ],
 });

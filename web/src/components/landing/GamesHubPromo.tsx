@@ -8,21 +8,28 @@ import { GAMES } from "@/lib/games/registry";
 // (DoodleDuelPromo.tsx, le tout premier jeu, avait ce gabarit — plus tenable
 // dès le second jeu). Ajouter un jeu au registre suffit à le faire
 // apparaître ici, aucune modification de ce fichier nécessaire.
+//
+// Poids visuel augmenté par rapport à PackOfTheDay (headline plus grande,
+// conteneur plus large) : à 10 jeux, cette section n'est plus un simple
+// promo à un CTA, c'est le second pilier du produit après le photobooth
+// (voir CLAUDE.md "Registre des jeux" — le photobooth garde son propre
+// traitement hero, jamais une carte ici). `id="jeux"` sert d'ancre à un
+// lien de renvoi placé dans le hero (voir page.tsx).
 export async function GamesHubPromo() {
   const t = await getTranslations();
 
   return (
-    <section className="bg-white px-6 py-16 md:px-16">
-      <div className="mx-auto flex max-w-4xl flex-col items-center gap-8 text-center">
+    <section id="jeux" className="bg-white px-6 py-16 md:px-16">
+      <div className="mx-auto flex max-w-5xl flex-col items-center gap-8 text-center">
         <span className="text-xs font-semibold tracking-widest text-[#fb5a46] uppercase">
           {t("landing.gamesHub.eyebrow")}
         </span>
-        <h2 className="font-heading text-2xl font-extrabold text-[#1c1712] sm:text-3xl">
+        <h2 className="font-heading text-3xl font-extrabold text-[#1c1712] sm:text-4xl">
           {t("landing.gamesHub.headline")}
         </h2>
         <p className="max-w-xl text-base text-[#8c8378] sm:text-lg">{t("landing.gamesHub.subtitle")}</p>
 
-        <div className="grid w-full gap-4 sm:grid-cols-2">
+        <div className="grid w-full gap-4 sm:grid-cols-2 md:grid-cols-3">
           {GAMES.map((game) => {
             const Icon = game.icon;
             return (
@@ -35,6 +42,9 @@ export async function GamesHubPromo() {
                   <Icon className="size-6" />
                 </div>
                 <p className="font-heading text-lg font-bold text-[#1c1712]">{game.name}</p>
+                <span className="rounded-full bg-[#fbf7f1] px-2.5 py-1 text-xs font-medium text-[#8c8378]">
+                  {t(`${game.promoNamespace}.tag`)}
+                </span>
                 <p className="text-sm text-[#8c8378]">{t(`${game.promoNamespace}.headline`)}</p>
                 <span className="inline-flex items-center gap-1.5 text-sm font-medium text-[#fb5a46]">
                   {t(`${game.promoNamespace}.cta`)}

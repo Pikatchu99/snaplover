@@ -41,8 +41,10 @@ const fr = {
     noAccount: "Sans compte · Directement dans le navigateur · Téléchargement PNG",
     gamesHub: {
       eyebrow: "Le hub",
-      headline: "Des jeux rapides à deux",
-      subtitle: "Entre deux séances photo, retrouvez-vous pour une manche ou trois — sans rien installer.",
+      headline: "10 jeux à deux, aucune installation",
+      subtitle:
+        "Une bataille navale, un bingo, un morpion revisité… De quoi se retrouver entre deux séances photo, sans jamais quitter le navigateur.",
+      heroCta: "Découvrir les 10 jeux à deux",
     },
     doodleDuel: {
       eyebrow: "Nouveau",
@@ -50,51 +52,61 @@ const fr = {
       subtitle:
         "Un mot secret, l'un dessine en direct, l'autre devine. 3 manches, les rôles s'inversent à chaque fois.",
       steps: ["Un mot secret", "Tu dessines en direct", "Iel devine"],
+      tag: "Dessin & devine",
       cta: "Jouer à Doodle Duel",
     },
     wordSonar: {
       eyebrow: "Nouveau",
       headline: "Devinez le mot secret de l'autre",
+      tag: "Mot secret",
       cta: "Jouer à Word Sonar",
     },
     connectDuo: {
       eyebrow: "Nouveau",
       headline: "Puissance 4, en direct",
+      tag: "Stratégie",
       cta: "Jouer à Connect Duo",
     },
     edgeLetters: {
       eyebrow: "Nouveau",
       headline: "Un mot qui commence et finit pile",
+      tag: "Mots",
       cta: "Jouer à Edge Letters",
     },
     fleetSiege: {
       eyebrow: "Nouveau",
       headline: "Bataille navale, en direct",
+      tag: "Bataille navale",
       cta: "Jouer à Fleet Siege",
     },
     duoQuiz: {
       eyebrow: "Nouveau",
       headline: "Culture générale, en direct",
+      tag: "Quiz",
       cta: "Jouer à Duo Quiz",
     },
     uttt: {
       eyebrow: "Nouveau",
       headline: "Morpion Ultimate, en direct",
+      tag: "Plateau",
       cta: "Jouer à Ultimate Tic-Tac-Toe",
     },
     copyCat: {
       eyebrow: "Nouveau",
       headline: "Imite la pose de l'autre",
+      tag: "Mimique",
       cta: "Jouer à Copy Cat",
     },
     reflexMatch: {
       eyebrow: "Nouveau",
       headline: "Le·la plus rapide gagne",
+      tag: "Réflexes",
       cta: "Jouer à Reflex Match",
     },
     bingo: {
       eyebrow: "Nouveau",
       headline: "Le bingo classique, en direct",
+      tag: "Bingo",
       cta: "Jouer au Bingo",
     },
     /** Aperçu décoratif (hero) — pas de vraies données, juste illustratif. */

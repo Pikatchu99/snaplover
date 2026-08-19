@@ -40,59 +40,71 @@ const en = {
     noAccount: "No account · Right in your browser · PNG download",
     gamesHub: {
       eyebrow: "The hub",
-      headline: "Quick games for two",
-      subtitle: "Between two photo sessions, catch up for a round or three — nothing to install.",
+      headline: "10 games for two, nothing to install",
+      subtitle:
+        "A naval battle, a game of bingo, a reinvented tic-tac-toe… Plenty of ways to reconnect between photo sessions, right in the browser.",
+      heroCta: "Discover the 10 two-player games",
     },
     doodleDuel: {
       eyebrow: "New",
       headline: "Draw, guess, together",
       subtitle: "One secret word, one of you draws live, the other guesses. 3 rounds, roles swap every time.",
       steps: ["A secret word", "You draw live", "They guess"],
+      tag: "Draw & guess",
       cta: "Play Doodle Duel",
     },
     wordSonar: {
       eyebrow: "New",
       headline: "Guess each other's secret word",
+      tag: "Secret word",
       cta: "Play Word Sonar",
     },
     connectDuo: {
       eyebrow: "New",
       headline: "Connect Four, live",
+      tag: "Strategy",
       cta: "Play Connect Duo",
     },
     edgeLetters: {
       eyebrow: "New",
       headline: "A word that starts and ends just right",
+      tag: "Words",
       cta: "Play Edge Letters",
     },
     fleetSiege: {
       eyebrow: "New",
       headline: "Battleship, live",
+      tag: "Naval battle",
       cta: "Play Fleet Siege",
     },
     duoQuiz: {
       eyebrow: "New",
       headline: "General knowledge, live",
+      tag: "Trivia",
       cta: "Play Duo Quiz",
     },
     uttt: {
       eyebrow: "New",
       headline: "Ultimate Tic-Tac-Toe, live",
+      tag: "Board game",
       cta: "Play Ultimate Tic-Tac-Toe",
     },
     copyCat: {
       eyebrow: "New",
       headline: "Mimic the other's pose",
+      tag: "Mimicry",
       cta: "Play Copy Cat",
     },
     reflexMatch: {
       eyebrow: "New",
       headline: "Fastest one wins",
+      tag: "Reflexes",
       cta: "Play Reflex Match",
     },
     bingo: {
       eyebrow: "New",
       headline: "Classic bingo, live",
+      tag: "Bingo",
       cta: "Play Bingo",
     },
     /** Decorative preview (hero) — not real data, illustrative only. */

@@ -100,6 +100,18 @@ export default async function LandingPage({ params }: LandingPageProps) {
           </div>
 
           <p className="text-xs text-[#8c8378]">{t("landing.noAccount")}</p>
+
+          {/* Renvoi vers la section "Jeux" (ancre #jeux, voir GamesHubPromo.tsx)
+              — le photobooth reste seul sujet du hero (voir CLAUDE.md "Registre
+              des jeux" : jamais une carte de jeu ici), ce lien sert seulement à
+              faire savoir dès l'arrivée que le hub existe aussi. */}
+          <a
+            href="#jeux"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-[#1c1712] underline-offset-2 hover:underline"
+          >
+            {t("landing.gamesHub.heroCta")}
+            <ArrowRight className="size-3.5" />
+          </a>
         </div>
 
         <div className="relative hidden flex-1 items-center justify-center overflow-hidden bg-[#161319] md:flex">

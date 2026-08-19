@@ -79,12 +79,18 @@ test("Bingo : victoire hôte, victoire invité·e, égalité volontaire → réc
   await expect(host.getByText("Ton·ta partenaire a crié Bingo en premier·ère.")).toBeVisible({ timeout: 10_000 });
   await host.getByRole("button", { name: "Manche suivante" }).click();
 
-  // Manche 2 (dernière) : les deux réclament coup sur coup → égalité, pas
-  // "premier arrivé sur le réseau".
+  // Manche 2 (dernière) : les deux réclament quasi simultanément → égalité,
+  // pas "premier arrivé sur le réseau". Les deux clics sont lancés SANS
+  // s'attendre l'un l'autre (Promise.all, pas deux `await` séquentiels) :
+  // chaque `.click()` inclut son propre scroll/hover/attente d'actionabilité,
+  // et les enchaîner ajoutait assez de latence réelle pour dépasser la
+  // fenêtre de grâce de 400ms (`config.bingo.claimGraceMs`) sous charge —
+  // l'hôte gagnait alors seul avant que le clic de l'invité·e n'atteigne un
+  // bouton déjà démonté (phase passée à "reveal"), un vrai flake trouvé en
+  // rejouant la suite e2e complète.
   await waitClaimArmed(host);
   await waitClaimArmed(guest);
-  await claimButton(host).click();
-  await claimButton(guest).click();
+  await Promise.all([claimButton(host).click(), claimButton(guest).click()]);
   await expect(host.getByText("Égalité — les deux ont complété en même temps !")).toBeVisible({ timeout: 10_000 });
   await expect(guest.getByText("Égalité — les deux ont complété en même temps !")).toBeVisible({ timeout: 10_000 });
 
